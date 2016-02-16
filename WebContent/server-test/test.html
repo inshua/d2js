@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js2/dataset2.js"></script>
+<script src="../jslib/d2js2/render2.js"></script>
+<script src="../jslib/d2js2/pipelines.js"></script>
+
+</head>
+<body>
+	<div class=container>
+		<h1>test load data</h1>
+		<p>Last Name: <input id="txName"> <button onclick="loadData()">query</button></p>
+		<P>
+			<textarea rows="10" cols="60" id="txOutput"></textarea>
+		</P>
+		
+		<h1>test update row</h1>
+		<p>(Origin: Hogarth) Last Name: <input id="txName2"> <button onclick="updateData()">upate</button></p>
+		<P>
+			<textarea rows="10" cols="60" id="txOutput2"></textarea>
+		</P>
+	</div>
+</body>
+<script>
+	function loadData(){
+		$.get('test.d2js', {_m : 'fetch', last_name : $('#txName').val()}, function(tx){
+			$('#txOutput').val(JSON.stringify(tx, null, '\t'));
+		});
+	}
+	
+	function updateData(){
+		$.get('test.d2js', {_m : 'testUpdate', id : 1644, last_name : $('#txName2').val()}, function(tx){
+			$('#txOutput2').val(JSON.stringify(tx, null, '\t'));
+		});
+	}
+	
+</script>
+</html>

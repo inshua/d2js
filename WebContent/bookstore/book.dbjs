@@ -1,0 +1,36 @@
+d2js.fetch = function(params){
+	sql{.
+		select b.*, a.name author_name from book b, author a where b.author = a.id
+		code{. 
+			if(params.title){ 
+				sql{. and strpos(b.title, :title) > 0  .}
+			}
+			if(params.kind){
+				sql{. and b.kind = :kind  .}
+			}
+			if(params.author && params.author instanceof Array && params.author.length){
+				params.author = $ARRAY('int', params.author);
+				sql{. and b.author = ANY(:author) .}
+			} else if(params.author && (params.author *= 1)){
+				sql{. and b.author = :author .}
+			}
+		.}
+	.}
+	sql = this.orderBy(sql, params._sorts, {'b.title' : 'asc'});
+	return this.query(sql, params, params._page);
+}
+
+d2js.create = function(rcd){
+	logger.info('add book ' + JSON.stringify(rcd));
+	this.insertRow('book', rcd, ['title', 'author', 'publish_date', 'kind', 'isbn', 'remarks'])
+}
+
+d2js.modify = function(rcd){
+	logger.info('edit book ' + JSON.stringify(rcd));
+	this.updateRow('book', rcd, ['id', 'title', 'author', 'publish_date', 'kind', 'isbn', 'remarks'])
+}
+
+d2js.destroy = function(rcd){
+	logger.info('delete book ' + JSON.stringify(rcd));
+	this.deleteRow('book', rcd)
+}

@@ -1,0 +1,87 @@
+d2js.test = function(){
+	sql{.
+			select 1 from a sql /*asdfa
+				asdf
+			
+				sdf comment*/
+			code{.
+				if(a == 0){
+					sql{. and a 
+						=
+						0
+							code{.
+								if(b == 2){
+									sql{.
+										and 
+										b
+										=
+										2
+									.}
+								}
+							.}
+						   .}
+				}
+			.}
+	.}
+	return this.query(dog);
+}
+
+d2js.test = function(){
+	sql{.
+			select 1 
+			from 
+			a 
+			
+			
+			sql sql{. embed
+			.}
+			e2
+	.}
+	return this.query(dog);
+}
+
+d2js.test = function(){
+	sql{.(dog)
+			select 1 from a sql{. embed .}  sql{.(cat) bad .}
+	.}
+	return this.query(dog);
+}
+
+d2js.test = function(){
+	sql{.(dog)
+			select 1 from a sql{. embed .}  sql{.(cat) bad .}
+	.}
+	return this.query(dog);
+}
+
+d2js.test = function(){
+	sql{.(dog)
+			select 1 from a
+	.}
+	return this.query(dog);
+}
+
+d2js.test = function(){
+	sql{.
+			select 1 from a sql{. insql sql{. more depth .}  .}
+	.}
+	return this.query(sql);
+}
+
+d2js.test = function(){
+	sql{.
+			select 1 from a sql{. insql .}
+	.}
+	return this.query(sql);
+}
+
+d2js.test = function(){
+	sql{.
+			select 1 from a
+	.}
+	return this.query(sql);
+}
+
+
+
+

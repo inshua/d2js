@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>JSSP SAMPLES</title>
+<meta charset="utf-8">
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<style>
+	dd {
+	font-size: xx-large;
+	margin: 16px;
+	}	
+	dt{
+	margin : 8px;
+	padding-left: 64px;
+	}	
+	pre{
+	font-size: large;
+	word-wrap: break-word; word-break: normal;
+	}	
+</style> 
+</head>
+<body class="container">
+
+<dl>
+<dd><a href="test1.jssp">输出的三种方式</a></dd>
+<dt>
+	<dl>
+		<li>[%= %] 原样输出</li>
+		<li>[%- %] 按HTML格式输出。比如做论坛内容时，用户可能编写HTML加大加亮甚至插入脚本，使用这种方式，&gt; &lt; 会转为 &amp;gt; &amp;lt; 使这种行为落空</li>
+		<li>[%~ %] JSON 化之后输出。适合将服务器端对象直接输出到客户端。 如 &lt;script&gt; var o = [%~ serverSideObject %] &lt;/script&gt;
+	</dl>
+</dt>
+
+<dd><a href="request-session-test.jssp">测试 REQUEST SESSION</a></dd>
+<dt>
+	在 JSSP 里，SESSION 和 REQUEST 做了相应的封装，可以使用 session['attribute'] (或  session.attribute)访问session属性，使用 request['param'] 访问请求参数。
+</dt>
+
+<dd><a href="template-test/main.jssp">模板</a></dd>
+<dt>
+	使用 includeJssp() 实现模板效果。<br>
+	真正应用时，有两种做法。<p></p>
+	第一种母版+定制。母版就是 main.jsp。特列化页面形如
+	<p> 
+	sample.jssp<br>
+	-----------<br>
+		session.menuPage = 'menu.jsssp';<br>
+		session.bodyPage = 'sample-body.jssp';<br>
+		includeJssp('main.jssp')<br>
+	</p> 
+	
+	母版中，使用 includeJssp(session.menuPage) 的形式，将特列化子页面置入。<p>
+	需要说明的是，这可能是仅有两个页面间传递初始化信息的方式。 includeJssp 的页面发生在不同脚本引擎，故无法共享变量，全局变量方式无效。使用 QueryString 的方式如 includeJssp(page.jssp?param) 也是无效的，包含的页面和全局页面系使用同一个 request。<p></p>
+	
+	第二种做法是使用参数特列化母版页面，此时母版页面实际上是一个原型。这种特例化方法如：
+	<p>
+		母版页面  prototype.jssp<br>
+		---------------------<br>
+		include(request.menuPage);<br>
+		include(request.bodyPage);		
+	</p>
+	这样一来，通过改变查询参数，就可以从同一个原型母版页面生成不同的特例化页面。如浏览器网址使用  prototype.jssp?bodyPage=sample-body.jssp，该原型式模板页面即可将 sample-body.jssp 当做body包含进来。
+</dt>
+
+<dd><a href="application-test.jssp">全局驻留APPLICATION变量</a></dd>
+<dt>
+<pre>
+	全局驻留APPLICATION变量，所有用户可共享，重新登录不丢失，只有重启服务器才会丢失。	 			
+</pre>
+</dt>
+
+<dd><a href="binary-test.jssp">二进制测试</a></dd>
+<dt>
+	在 JSSP 中可以直接输出字节数组。示例为输出一个四字节数据的效果。显然可以用这种方式输出图片等等附件。
+</dt>
+
+<dd><a href="upload-image.jssp">使用 Part 获取上传图片、使用 setHttpCallback 显示图片</a></dd>
+<dt>
+<pre>这个例子演示如何处理 multipart form，tomat7 遵循 servlet3.0 规范，使得获取 multipart form 的过程变得很简单。
+代码通过 request.getParts()，获取所有 Part，并挨个将其输出。图片数据使用下面的方法获得 
+
+	var strm = part.getInputStream();
+	arr = com.softview.common.io.StreamUtil.inputStreamToByteArray(strm);
+	 			
+</pre>
+</dt>
+
+<dd><a href="classic-db.jssp">传统的意大利面方式的数据库访问和HTML代码混合</a></dd>
+<dt>
+<pre>每个 jssp 实际上都是 d2js, jssp 页面生成函数名为 d2js.jssp = function(){} 的一个 d2js，因此，同样可以使用  this.query this.execute this.call 等方法访问数据库。
+示例中使用 query 获得了一个查询结果集——格式为 {columns : [{name : 字段名, type : 数据类型}, ], rows : [{字段名: 值}]}
+并使用数组 forEach 将其输出为表格。
+特别留意 [% } %] 书写形式造成的代码识读优势。 
+	 			
+</pre>
+</dt>
+
+<dd><a href="using-d2js.jssp">服务器端调用 *.d2js 示例</a></dd>
+<dt>
+<pre>显然，也可以通过调用 callD2js(anotherD2js, params) 调用另一个 d2js 中的函数。
+这种做法的优势是数据和表现分离，数据代码集中于 d2js 文件中。这样，d2js 可以不但可以充当前台的数据库提供者，也可以充当后台网页的数据库提供者。	 			
+</pre>
+</dt>
+
+</dl>
+</body>
+</html>

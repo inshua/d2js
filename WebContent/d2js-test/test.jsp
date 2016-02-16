@@ -1,0 +1,1 @@
+<%= request.getServletContext().getContextPath() %>

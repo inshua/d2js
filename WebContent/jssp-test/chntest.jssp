@@ -1,0 +1,20 @@
+<html>
+<head><title>中文测试</title></head>
+<body>
+
+	[%= request.content %]
+
+	<form action="chntest.jssp" method="post">
+		<textarea name="content">中文
+		</textarea>
+		<input type="submit">
+	</form>
+	
+	
+	<form action="chntest.jssp" method="get">
+	<textarea name="content">中文
+	</textarea>
+	<input type="submit">
+</form>
+</body>
+</html>

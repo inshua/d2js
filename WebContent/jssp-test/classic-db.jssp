@@ -1,0 +1,28 @@
+<html>
+
+<head><title>classic db operation</title></head>
+<body>
+
+[% var r = this.query('select * from author order by id', []); %]
+	
+<table border="1">
+<caption>authors</caption>
+<thead>
+[%	r.columns.forEach(function(col){ %]
+	<td>[%= col.name %]</td>	
+[%	}); %]
+</thead>
+
+[%	r.rows.forEach(function(row){ %]
+<tr>
+	[%	r.columns.forEach(function(col){ %]
+		<td>[%= row[col.name] %]</td>
+	[%	}); %]
+</tr>				
+	
+[%	}); %]
+
+</table>
+</body>
+
+</html>

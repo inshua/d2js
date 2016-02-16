@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Namespace: Pipelines</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Namespace: Pipelines</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="d2js.html">d2js</a><a href="d2js.Collectors.html">.Collectors</a>.</span>Pipelines</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>所有收集器的管道函数</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line31">line 31</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id=".c"><span class="type-signature">(static) </span>c<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>常用 html 元素收集器管道函数。收集 html element 的 value 属性或 innerHTML 属性。<br>通常收集器写为 c|s 前者由控件获取内容，后者设置到对象，中间可插入其它管道，如 c|n|s</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line139">line 139</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".check"><span class="type-signature">(static) </span>check<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>复选框勾中状态收集器。单独使用时，勾中为 true, 未勾中为 false</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line154">line 154</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".d"><span class="type-signature">(static) </span>d<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>日期转换管道。将值转为 Date 类型。用法 collector=&quot;c|d|s&quot;</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line199">line 199</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".dict"><span class="type-signature">(static) </span>dict<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>将词典收集为词典值</p>
+<p>用法：</p>
+<pre class="prettyprint source lang-html"><code>&lt;tag dict=&quot;gender&quot; data=&quot;xxx&quot; collector=&quot;c|dict({M : 'Male', F : 'Female'})|s&quot;></code></pre><p>或</p>
+<pre class="prettyprint source lang-html"><code>&lt;script>Dicts.gender = {M : 'Male', F : 'Female'};&lt;/script>
+&lt;tag dict=&quot;gender&quot; data=&quot;xxx&quot; collector=&quot;c|dict|s&quot;></code></pre>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_pipelines.js.html">d2js/pipelines.js</a>, <a href="d2js_pipelines.js.html#line161">line 161</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".m"><span class="type-signature">(static) </span>m<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>molecule收集器管道。<br>对支持 getValue 的 molecule 收集。<br>用法: colector=&quot;m|s&quot;</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line216">line 216</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".n"><span class="type-signature">(static) </span>n<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>数字转换管道。将值转为数字类型。用法 collector=&quot;c|n|s&quot;</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line184">line 184</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 16 2016 23:09:40 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

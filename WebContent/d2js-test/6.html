@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1>repeater</h1>
+		<div data="#author,error" renderer="stderr"></div>
+		
+		<div data="#author,rows" renderer="repeater">
+			<h2>author</h2>
+			<hr>
+			<h2 repeater="true"><span data=name renderer="std"></span><small data="email" renderer="std"></small></h2>
+			
+			<nav>
+				<ul class="pagination" data="#author" renderer="pagination">
+				</ul>
+			</nav>
+		</div>
+		
+
+		
+	</div>
+</body>
+<script>
+	
+	var table = new d2js.DataTable('author', 'author.d2js', {pageSize : 3});
+	
+	table.load({ _m : 'fetch'}, function(error){d2js.render(null, this);});
+</script>
+</html>

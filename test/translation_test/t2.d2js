@@ -1,0 +1,15 @@
+d2js.test = function(){
+	var sql = sql{.()
+			select *, 'ab/*a comment */' c from a
+			code{.
+				if(a == 1/* comment 'string' */){
+					sql{.
+						and b = 2		// in sql
+					.}
+				}
+			.}
+		.}
+	return this.query(sql);
+}
+
+

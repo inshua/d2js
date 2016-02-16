@@ -1,0 +1,41 @@
+<html>
+
+<head><title>Author</title></head>
+<body>
+[%
+	sql{.
+		select * from author 
+		sql{.?(request.name)
+			where strpos(name, ?) > 0
+		.} 
+		order by name
+	.} 
+	var r = this.query(sql, [request.name]); 
+%]
+
+<form action="author.jssp" method="get">
+	Last Name : <input name="name">
+	<input type="submit">
+</form>
+
+<table border="1">
+<caption>authors</caption>
+<thead>
+[%	r.columns.forEach(function(col){ %]
+	<td>[%= col.name %]</td>	
+[%	}); %]
+</thead>
+
+[%	r.rows.forEach(function(row){ %]
+<tr>
+	[%	r.columns.forEach(function(col){ %]
+		<td>[%= row[col.name] %]</td>
+	[%	}); %]
+</tr>				
+	
+[%	}); %]
+
+</table>
+</body>
+
+</html>

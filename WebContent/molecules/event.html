@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>d2js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+    <script src="../jslib/jquery-1.10.2.js"></script>
+    <script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+	<div id="outside">
+		<div id="test">
+			CLICK
+		</div>
+	</div>
+</body>
+<script>
+	$(function(){
+		$('#test').on('click', function(){
+			console.log('e1')
+		});	
+		$('#test').on('click', function(){
+			console.log('e2')
+		});
+		$('#outside').on('click', function(){
+			console.log('e on outside')
+		});
+	})
+</script>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>molecule samples</title>
+<meta charset="utf-8">
+<link href="./jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="./jslib/jquery-1.10.2.js"></script>
+<script src="./jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+</head>
+<body class="container">
+	<h1>d2js</h1>
+	d2js 是一套前后端数据访问框架，前端设计与 ADO.net的DataSet近似，但不采取灵敏的数据绑定方案，而是通过主动调用 d2js.render和d2js.collect手工绑定和收集变动。
+	<br>
+	d2js后端使用 jdk8 上的 js 引擎 nashorn 实现了一套数据接口，设计理念为让一个文件支持多种操作，支持 restful 方式访问。
+	<br>
+	<a href="d2js-test/index.html">技术要点</a>
+	
+	
+	<h1>jssp</h1>
+	JSSP是JavaScript Server Page的简称，采用js语言编写服务器端脚本，与jsp类似。不同之处主要有：
+	<br>1.	JSSP用[% %] 作为代码块括号
+	<br>2.	JSSP有[%= %]，[%~ %] [%- %] 等三种输出方式
+	<br>3.	JSSP 是d2js的变种。<br>JSSP页面转换后生成的代码为
+	
+	<pre>
+	d2js.jssp = function(params){
+		out.print(‘<html>\n’);
+		out.print(‘<head>\n’);
+	...
+	}
+	</pre>
+	
+	因此，jssp也可以使用所有d2js技术。
+
+	<br>
+	<a href="jssp-test/index.html">技术要点</a>
+	
+	
+	<h1>molecule.js</h1>
+	molecule.js 是一套前端组件化框架，可以方便的将一块html内容抽取为组件。
+	<br>
+	<a href="molecule-test/index.html">技术要点</a>
+</body>
+</html>

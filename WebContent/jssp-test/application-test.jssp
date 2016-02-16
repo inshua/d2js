@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+hello [%= session.getId() %], your info is  [%~ application.info %]
+
+<form action="application-test.d2js?_m=test" method="post">
+	<input type="text" name="name" value="[%= application.name %]">
+	<input type="submit">
+</form>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>书</title>
+	<meta charset="utf-8">
+	<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+	<script src="../jslib/jquery-1.10.2.js"></script>
+	<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+[% var r = this.callD2js('book.d2js', 'fetch', params); %]
+
+<div class="container">
+	<table class="table table-striped">
+	<caption>book</caption>
+	<thead>
+		<tr>
+	[%	r.columns.forEach(function(col){ %]
+		<th>[%= col.name %]</th>	
+	[%	}); %]
+		</tr>
+	</thead>
+	
+	[%	r.rows.forEach(function(row){ %]
+	<tr>
+		[%	r.columns.forEach(function(col){ %]
+			<td>[%= row[col.name] %]</td>
+		[%	}); %]
+	</tr>				
+		
+	[%	}); %]
+	
+	</table>
+	
+	<a class="btn btn-primary" href="book-add.html">+</a>	
+</div>
+</body>
+
+</html>

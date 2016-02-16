@@ -1,0 +1,51 @@
+<!-- This is just an additional tools after we use a IDE env. -->
+<project name="org.siphon.d2js" basedir="." default="default">
+	<property file="build.properties" />
+
+	<path id="classpath">
+		<fileset dir="${CATALINA_HOME}/lib">
+	        <include name="*.jar"/>
+	    </fileset>
+		<fileset dir="${dir.weblib}">
+			<include name="**.jar" />
+			<exclude name="${ant.project.name}.jar" />
+		</fileset>
+	</path>
+
+	<target name="compile">
+		<delete dir="${dir.bin}"></delete>
+		<mkdir dir="${dir.bin}"/>
+		<javac srcdir="${dir.src}" debug="on" destdir="${dir.bin}" classpathref="classpath" includeantruntime="true" includejavaruntime="true" encoding="utf-8" />
+		<jar destfile="${dir.weblib}/${ant.project.name}.jar">
+			<fileset dir="${dir.bin}" includes="**">
+				<exclude name="log4j.properties" />
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="default">
+		<antcall target="compile" />
+		<delete file="${project.war}" />
+		<mkdir dir="${dir.temp}"/>
+		<copy todir="${dir.temp}" includeemptydirs="false">
+			<fileset dir="${dir.web}">
+				<exclude name="**/*-test/" />
+				<exclude name="**/guide/" />
+				<exclude name="**/bookstore/" />
+				<exclude name="**/test/" />
+				<exclude name="**/index.html" />
+			</fileset>
+		</copy>
+		
+		<war destfile="${project.war}">
+			<fileset dir="${dir.temp}">
+				<exclude name="**/*.class"/>
+			</fileset>
+		</war>
+				
+		<delete dir="${dir.temp}"/>
+		
+		<delete file="${dir.weblib}/${ant.project.name}.jar" />
+	</target>
+
+</project>

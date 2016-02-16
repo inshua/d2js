@@ -1,0 +1,10 @@
+d2js.test = function(){
+	sql{.
+		select * from a
+		sql{.?(params.name)
+			and name = :name
+		.}
+		order by name
+	.}
+	return this.query(dog);
+}

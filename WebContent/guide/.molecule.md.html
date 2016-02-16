@@ -1,0 +1,1103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>C:\Users\Inshua\workspace\d2js\WebContent\guide\.molecule.md.html</title>
+
+
+<style type="text/css">
+body {
+	color: #333;
+	font: 13px/1.4 "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif;
+	padding: 0;
+	margin: 0;
+}
+
+a {
+	background: transparent;
+	color: #4183c4;
+	text-decoration: none;
+}
+
+a:active,
+a:hover {
+	outline: 0 none;
+	text-decoration: underline;
+}
+
+abbr[title] {
+	border-bottom: 1px dotted;
+}
+
+b,
+strong {
+	font-weight: bold;
+}
+
+dfn {
+	font-style: italic;
+}
+h1 {
+	font-size: 2em;
+	margin: 0.67em 0;
+}
+mark {
+	background: #ff0;
+	color: #000;
+}
+small {
+	font-size: 80%;
+}
+sub, sup {
+	font-size: 75%;
+	line-height: 0;
+	position: relative;
+	vertical-align: baseline;
+}
+sup {
+	top: -0.5em;
+}
+sub {
+	bottom: -0.25em;
+}
+img {
+	border: 0 none;
+}
+svg:not(:root) {
+	overflow: hidden;
+}
+figure {
+	margin: 1em 40px;
+}
+hr {
+	box-sizing: content-box;
+	height: 0;
+}
+
+code,
+kbd,
+pre,
+samp {
+	font-family: monospace,monospace;
+	font-size: 1em;
+}
+
+pre {
+	overflow: auto;
+	font: 12px Consolas,"Liberation Mono",Menlo,Courier,monospace;
+	margin-bottom: 0;
+	margin-top: 0;
+}
+
+.markdown-body {
+	padding: 30px;
+	font-size: 16px;
+	line-height: 1.6;
+	word-wrap: break-word;
+}
+
+.markdown-body>*:first-child {
+	margin-top: 0 !important;
+}
+
+.markdown-body>*:last-child {
+	margin-bottom: 0 !important;
+}
+
+.markdown-body .absent {
+	color: #c00;
+}
+
+.markdown-body .anchor {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	display: block;
+	padding-right: 6px;
+	padding-left: 30px;
+	margin-left: -30px;
+}
+
+.markdown-body .anchor:focus {
+	outline: none;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+	position: relative;
+	margin-top: 1em;
+	margin-bottom: 16px;
+	font-weight: bold;
+	line-height: 1.4;
+}
+
+.markdown-body h1 .octicon-link,
+.markdown-body h2 .octicon-link,
+.markdown-body h3 .octicon-link,
+.markdown-body h4 .octicon-link,
+.markdown-body h5 .octicon-link,
+.markdown-body h6 .octicon-link {
+	display: none;
+	color: #000;
+	vertical-align: middle;
+}
+
+.markdown-body h1:hover .anchor,
+.markdown-body h2:hover .anchor,
+.markdown-body h3:hover .anchor,
+.markdown-body h4:hover .anchor,
+.markdown-body h5:hover .anchor,
+.markdown-body h6:hover .anchor {
+	padding-left: 8px;
+	margin-left: -30px;
+	line-height: 1;
+	text-decoration: none;
+}
+
+.markdown-body h1:hover .anchor .octicon-link,
+.markdown-body h2:hover .anchor .octicon-link,
+.markdown-body h3:hover .anchor .octicon-link,
+.markdown-body h4:hover .anchor .octicon-link,
+.markdown-body h5:hover .anchor .octicon-link,
+.markdown-body h6:hover .anchor .octicon-link {
+	display: inline-block;
+}
+
+.markdown-body h1 tt,
+.markdown-body h1 code,
+.markdown-body h2 tt,
+.markdown-body h2 code,
+.markdown-body h3 tt,
+.markdown-body h3 code,
+.markdown-body h4 tt,
+.markdown-body h4 code,
+.markdown-body h5 tt,
+.markdown-body h5 code,
+.markdown-body h6 tt,
+.markdown-body h6 code {
+	font-size: inherit;
+}
+
+.markdown-body h1 {
+	padding-bottom: 0.3em;
+	font-size: 2.25em;
+	line-height: 1.2;
+	border-bottom: 1px solid #eee;
+}
+
+.markdown-body h2 {
+	padding-bottom: 0.3em;
+	font-size: 1.75em;
+	line-height: 1.225;
+	border-bottom: 1px solid #eee;
+}
+
+.markdown-body h3 {
+	font-size: 1.5em;
+	line-height: 1.43;
+}
+
+.markdown-body h4 {
+	font-size: 1.25em;
+}
+
+.markdown-body h5 {
+	font-size: 1em;
+}
+
+.markdown-body h6 {
+	font-size: 1em;
+	color: #777;
+}
+
+.markdown-body p,.markdown-body blockquote,
+.markdown-body ul,.markdown-body ol,
+.markdown-body dl,.markdown-body table,
+.markdown-body pre {
+	margin-top: 0;
+	margin-bottom: 16px;
+}
+
+.markdown-body hr {
+	height: 4px;
+	padding: 0;
+	margin: 16px 0;
+	background-color: #e7e7e7;
+	border: 0 none;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+	padding-left: 2em;
+}
+
+.markdown-body ul.no-list,
+.markdown-body ol.no-list {
+	padding: 0;
+	list-style-type: none;
+}
+
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ol,
+.markdown-body ol ul {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+.markdown-body li>p {
+	margin-top: 16px;
+}
+
+.markdown-body dl {
+	padding: 0;
+}
+
+.markdown-body dl dt {
+	padding: 0;
+	margin-top: 16px;
+	font-size: 1em;
+	font-style: italic;
+	font-weight: bold;
+}
+
+.markdown-body dl dd {
+	padding: 0 16px;
+	margin-bottom: 16px;
+}
+
+.markdown-body blockquote {
+	padding: 0 15px;
+	color: #777;
+	border-left: 4px solid #ddd;
+}
+
+.markdown-body blockquote>:first-child {
+	margin-top: 0;
+}
+
+.markdown-body blockquote>:last-child {
+	margin-bottom: 0;
+}
+
+.markdown-body table {
+	display: block;
+	width: 100%;
+	overflow: auto;
+	word-break: normal;
+	word-break: keep-all;
+}
+
+.markdown-body table th {
+	font-weight: bold;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+	padding: 6px 13px;
+	border: 1px solid #ddd;
+}
+
+.markdown-body table tr {
+	background-color: #fff;
+	border-top: 1px solid #ccc;
+}
+
+.markdown-body table tr:nth-child(2n) {
+	background-color: #f8f8f8;
+}
+
+.markdown-body img {
+	max-width: 100%;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.markdown-body span.frame {
+	display: block;
+	overflow: hidden;
+}
+
+.markdown-body span.frame>span {
+	display: block;
+	float: left;
+	width: auto;
+	padding: 7px;
+	margin: 13px 0 0;
+	overflow: hidden;
+	border: 1px solid #ddd;
+}
+
+.markdown-body span.frame span img {
+	display: block;
+	float: left;
+}
+
+.markdown-body span.frame span span {
+	display: block;
+	padding: 5px 0 0;
+	clear: both;
+	color: #333;
+}
+
+.markdown-body span.align-center {
+	display: block;
+	overflow: hidden;
+	clear: both;
+}
+
+.markdown-body span.align-center>span {
+	display: block;
+	margin: 13px auto 0;
+	overflow: hidden;
+	text-align: center;
+}
+
+.markdown-body span.align-center span img {
+	margin: 0 auto;
+	text-align: center;
+}
+
+.markdown-body span.align-right {
+	display: block;
+	overflow: hidden;
+	clear: both;
+}
+
+.markdown-body span.align-right>span {
+	display: block;
+	margin: 13px 0 0;
+	overflow: hidden;
+	text-align: right;
+}
+
+.markdown-body span.align-right span img {
+	margin: 0;
+	text-align: right;
+}
+
+.markdown-body span.float-left {
+	display: block;
+	float: left;
+	margin-right: 13px;
+	overflow: hidden;
+}
+
+.markdown-body span.float-left span {
+	margin: 13px 0 0;
+}
+
+.markdown-body span.float-right {
+	display: block;
+	float: right;
+	margin-left: 13px;
+	overflow: hidden;
+}
+
+.markdown-body span.float-right>span {
+	display: block;
+	margin: 13px auto 0;
+	overflow: hidden;
+	text-align: right;
+}
+
+.markdown-body code,.markdown-body tt {
+	padding: 0;
+	padding-top: 0.2em;
+	padding-bottom: 0.2em;
+	margin: 0;
+	font-size: 85%;
+	background-color: rgba(0,0,0,0.04);
+	border-radius: 3px;
+}
+
+.markdown-body code:before,
+.markdown-body code:after,
+.markdown-body tt:before,
+.markdown-body tt:after {
+	letter-spacing: -0.2em;
+	content: "\00a0";
+}
+
+.markdown-body code br,
+.markdown-body tt br {
+	display: none;
+}
+
+.markdown-body del code {
+	text-decoration: inherit;
+}
+
+.markdown-body pre>code {
+	padding: 0;
+	margin: 0;
+	font-size: 100%;
+	word-break: normal;
+	white-space: pre;
+	background: transparent;
+	border: 0;
+}
+
+.markdown-body .highlight {
+	margin-bottom: 16px;
+}
+
+.markdown-body .highlight pre,
+.markdown-body pre {
+	padding: 16px;
+	overflow: auto;
+	font-size: 85%;
+	line-height: 1.45;
+	background-color: #f7f7f7;
+	border-radius: 3px;
+}
+
+.markdown-body .highlight pre {
+	margin-bottom: 0;
+	word-break: normal;
+}
+
+.markdown-body pre {
+	word-wrap: normal;
+}
+
+.markdown-body pre code,
+.markdown-body pre tt {
+	display: inline;
+	max-width: initial;
+	padding: 0;
+	margin: 0;
+	overflow: initial;
+	line-height: inherit;
+	word-wrap: normal;
+	background-color: transparent;
+	border: 0;
+}
+
+.markdown-body pre code:before,
+.markdown-body pre code:after,
+.markdown-body pre tt:before,
+.markdown-body pre tt:after {
+	content: normal;
+}
+
+.highlight .pl-coc,
+.highlight .pl-entl,
+.highlight .pl-entm,
+.highlight .pl-eoa,
+.highlight .pl-mai .pl-sf,
+.highlight .pl-mm,
+.highlight .pl-pdv,
+.highlight .pl-sc,
+.highlight .pl-som,
+.highlight .pl-sr,
+.highlight .pl-v,
+.highlight .pl-vpf {
+	color: #0086b3;
+}
+.highlight .pl-eoac,
+.highlight .pl-mdht,
+.highlight .pl-mi1,
+.highlight .pl-mri,
+.highlight .pl-va,
+.highlight .pl-vpu {
+	color: #008080;
+}
+.highlight .pl-c,
+.highlight .pl-pdc {
+	color: #b4b7b4;
+	font-style: italic;
+}
+.highlight .pl-k,
+.highlight .pl-ko,
+.highlight .pl-kolp,
+.highlight .pl-mc,
+.highlight .pl-mr,
+.highlight .pl-ms,
+.highlight .pl-s,
+.highlight .pl-sok,
+.highlight .pl-st {
+	color: #6e5494;
+}
+.highlight .pl-ef,
+.highlight .pl-enf,
+.highlight .pl-enm,
+.highlight .pl-entc,
+.highlight .pl-eoi,
+.highlight .pl-sf,
+.highlight .pl-smc {
+	color: #d12089;
+}
+.highlight .pl-ens,
+.highlight .pl-eoai,
+.highlight .pl-kos,
+.highlight .pl-mh .pl-pdh,
+.highlight .pl-mp,
+.highlight .pl-pde,
+.highlight .pl-stp {
+	color: #458;
+}
+.highlight .pl-enti {
+	color: #d12089;
+	font-weight: bold;
+}
+.highlight .pl-cce,
+.highlight .pl-enc,
+.highlight .pl-kou,
+.highlight .pl-mq {
+	color: #f93;
+}
+.highlight .pl-mp1 .pl-sf {
+	color: #458;
+	font-weight: bold;
+}
+.highlight .pl-cos,
+.highlight .pl-ent,
+.highlight .pl-md,
+.highlight .pl-mdhf,
+.highlight .pl-ml,
+.highlight .pl-pdc1,
+.highlight .pl-pds,
+.highlight .pl-s1,
+.highlight .pl-scp,
+.highlight .pl-sol {
+	color: #df5000;
+}
+.highlight .pl-c1,
+.highlight .pl-cn,
+.highlight .pl-pse,
+.highlight .pl-pse .pl-s2,
+.highlight .pl-vi {
+	color: #a31515;
+}
+.highlight .pl-mb,
+.highlight .pl-pdb {
+	color: #df5000;
+	font-weight: bold;
+}
+.highlight .pl-mi,
+.highlight .pl-pdi {
+	color: #6e5494;
+	font-style: italic;
+}
+.highlight .pl-ms1 {
+	background-color: #f5f5f5;
+}
+.highlight .pl-mdh,
+.highlight .pl-mdi {
+	font-weight: bold;
+}
+.highlight .pl-mdr {
+	color: #0086b3;
+	font-weight: bold;
+}
+.highlight .pl-s2 {
+	color: #333;
+}
+.highlight .pl-ii {
+	background-color: #df5000;
+	color: #fff;
+}
+.highlight .pl-ib {
+	background-color: #f93;
+}
+.highlight .pl-id {
+	background-color: #a31515;
+	color: #fff;
+}
+.highlight .pl-iu {
+	background-color: #b4b7b4;
+}
+.highlight .pl-mo {
+	color: #969896;
+}
+
+</style>
+
+
+<script type="text/javascript">
+
+function getDocumentScrollTop() 
+{
+   var res = document.body.scrollTop || document.documentElement.scrollTop || window.pageYOffset || 0;
+   // alert(res);
+   return res;
+}
+
+function setDocumentScrollTop(ypos) 
+{
+	window.scrollTo(0, ypos);
+}
+
+</script>
+
+
+</head>
+<body class="markdown-body">
+<h1> <a id="user-content-molecule-html组件化技术" class="anchor" href="#molecule-html%E7%BB%84%E4%BB%B6%E5%8C%96%E6%8A%80%E6%9C%AF" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>molecule html组件化技术</h1> 
+<p>在 a.html 上有这样一个小部件，点击按钮，其旁边文本框的内容就变成大写</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+&lt;<span class="pl-ent">title</span>&gt;Molecule&lt;/<span class="pl-ent">title</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnUpperCase<span class="pl-pds">&quot;</span></span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+    &lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">body</span>&gt;
+<span class="pl-s1">&lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">    <span class="pl-en">$</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnUpperCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">        <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">        <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">    })</span>
+<span class="pl-s1">&lt;/<span class="pl-ent">script</span>&gt;</span>
+
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p><a href="images/molecule-1.png?raw=true" target="_blank"><img src="images/molecule-1.png?raw=true" alt="molecule 1" style="max-width:100%;" /></a></p> 
+<p>看上去很强大。</p> 
+<p>下面使用 molecule 技术将该小模块组件化。</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+&lt;<span class="pl-ent">title</span>&gt;Molecule&lt;/<span class="pl-ent">title</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnUpperCase<span class="pl-pds">&quot;</span></span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnUpperCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    <span class="pl-c">&lt;!-- 创建 3 个实例 --&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">body</span>&gt;
+
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p><a href="images/molecule-2.png?raw=true" target="_blank"><img src="images/molecule-2.png?raw=true" alt="molecule 2" style="max-width:100%;" /></a></p> 
+<p>注释行 <code>MOLECULE_DEF</code> 和 <code>MOLECULE_DEF_END</code> 中的函数为 <code>molecule构造函数</code>。</p> 
+<p>molecule是基于 html 的组件技术，当需要定义 molecule 时，先选择模板元素，在该元素上加上 <code>molecule-def</code>,之后将原来分散在页面各处的支配该组件的脚本纳入到元素内，封装为 <code>molecule 构造函数</code>，末尾加上 <code>Molecule.create(molecule构造函数)</code>，一个 molecule 就定义完成了。</p> 
+<p><code>molecule 对象</code>的基类为 <code>Molecule</code>，定义于 <code>jslib/molecule.js</code>。molecule 构造函数中， 可以通过 <code>this.container</code> 访问本对象所依附的 html 元素，为了编写组件方便，<code>this.container</code> 已经是一个 jQuery 对象，也可以通过更简短的 <code>this.$el</code> 形式访问。</p> 
+<p>上面这个例子虽小，所揭示的是 molecule 一般的开发过程。通常制作一个 molecule 组件，都是从编写实际能运行的 html 开始，页面原型可以运行了，简单的做一下包装形成组件即可。其过程可以类比 d2js 后端开发，后端开发从数据库 sql 开始，sql能用后，简单的复制粘贴即得到 d2js 服务。这种从原型到组件的开发方式大大优于设计先行的事前诸葛亮的方式。</p> 
+<h2> <a id="user-content-molecule-实例可以附加自己-html-属性" class="anchor" href="#molecule-%E5%AE%9E%E4%BE%8B%E5%8F%AF%E4%BB%A5%E9%99%84%E5%8A%A0%E8%87%AA%E5%B7%B1-html-%E5%B1%9E%E6%80%A7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>molecule 实例可以附加自己 html 属性</h2> 
+<p>每个 molecule 实例，可以加上自己的样式，或者在内部加入其它HTML元素，就像一个真正的 html 元素一样。</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+&lt;<span class="pl-ent">title</span>&gt;Molecule&lt;/<span class="pl-ent">title</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">style</span>&gt;</span>
+<span class="pl-s1">        <span class="pl-e">.red</span>, <span class="pl-e">.red</span>&gt;<span class="pl-ent">input</span>, <span class="pl-e">.red</span>&gt;<span class="pl-ent">button</span>{</span>
+<span class="pl-s1">            <span class="pl-c1"><span class="pl-c1">color</span></span>: <span class="pl-c1">red</span>;</span>
+<span class="pl-s1">        }</span>
+<span class="pl-s1">        <span class="pl-e">.blue</span>, <span class="pl-e">.blue</span>&gt;<span class="pl-ent">input</span>, <span class="pl-e">.blue</span>&gt;<span class="pl-ent">button</span>{</span>
+<span class="pl-s1">            <span class="pl-c1"><span class="pl-c1">color</span></span>: <span class="pl-c1">blue</span>;</span>
+<span class="pl-s1">        }</span>
+<span class="pl-s1">        <span class="pl-e">.green-bg</span> &gt; <span class="pl-ent">input</span>{</span>
+<span class="pl-s1">            <span class="pl-c1"><span class="pl-c1">background</span></span>: <span class="pl-c1">lime</span>;</span>
+<span class="pl-s1">        }</span>
+<span class="pl-s1">    &lt;/<span class="pl-ent">style</span>&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>red<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnUpperCase<span class="pl-pds">&quot;</span></span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnUpperCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    <span class="pl-c">&lt;!-- 创建 3 个实例 --&gt;</span>
+
+    <span class="pl-c">&lt;!-- 自动获得 class=&quot;red&quot; --&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    <span class="pl-c">&lt;!-- class=&quot;blue&quot;覆盖原有的class=&quot;red&quot;, 拥有自己的 style=&quot;float:right&quot;  --&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>blue<span class="pl-pds">&quot;</span></span> <span class="pl-e">style</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>float:right<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt; 
+    <span class="pl-c">&lt;!-- 在自动获得的 class=&quot;red&quot;上附加 green-bg --&gt;</span> 
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>+ green-bg<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt; 
+&lt;/<span class="pl-ent">body</span>&gt;
+
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p><a href="images/molecule-css.png?raw=true" target="_blank"><img src="images/molecule-css.png?raw=true" alt="molecule css" style="max-width:100%;" /></a></p> 
+<p>molecule-def 可以有自己的默认属性，实例可以自动继承定义时的属性，但也可以拥有自己的属性，可以用自己的属性覆盖原来的属性。</p> 
+<p>对于 <code>class</code> 属性, 可以使用 <code>+</code> 表示延续 molecule-def 的样式，再附加上自己的类。</p> 
+<h2> <a id="user-content-molecule-的参数化" class="anchor" href="#molecule-%E7%9A%84%E5%8F%82%E6%95%B0%E5%8C%96" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>molecule 的参数化</h2> 
+<p>现在我们希望这个神奇的小组件除了支持转为大写，也要能支持转为小写，要支持属性中提供配置参数。</p> 
+<h3> <a id="user-content-通过扩充-html-标记实现参数化" class="anchor" href="#%E9%80%9A%E8%BF%87%E6%89%A9%E5%85%85-html-%E6%A0%87%E8%AE%B0%E5%AE%9E%E7%8E%B0%E5%8F%82%E6%95%B0%E5%8C%96" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>通过扩充 html 标记实现参数化</h3> 
+<div class="highlight highlight-text-html-basic">
+ <pre>    <span class="pl-c">&lt;!-- body 部分 --&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span> <span class="pl-e">data-action</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>upper<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-k">var</span> bn <span class="pl-k">=</span> <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>button<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                <span class="pl-k">if</span>(<span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">data</span>(<span class="pl-s"><span class="pl-pds">'</span>action<span class="pl-pds">'</span></span>) <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>upper<span class="pl-pds">'</span></span>){</span>
+<span class="pl-s1">                    <span class="pl-smi">bn</span>.<span class="pl-en">html</span>(<span class="pl-s"><span class="pl-pds">'</span>Upper Case<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">                } <span class="pl-k">else</span> {</span>
+<span class="pl-s1">                    <span class="pl-smi">bn</span>.<span class="pl-en">html</span>(<span class="pl-s"><span class="pl-pds">'</span>Lower Case<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">                }</span>
+<span class="pl-s1">                <span class="pl-k">var</span> me <span class="pl-k">=</span> <span class="pl-v">this</span>;</span>
+<span class="pl-s1">                <span class="pl-smi">bn</span>.<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-k">if</span>(<span class="pl-smi">me</span>.<span class="pl-smi">container</span>.<span class="pl-c1">data</span>(<span class="pl-s"><span class="pl-pds">'</span>action<span class="pl-pds">'</span></span>) <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>upper<span class="pl-pds">'</span></span>){</span>
+<span class="pl-s1">                        <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                    } <span class="pl-k">else</span> {</span>
+<span class="pl-s1">                        <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toLowerCase</span>());</span>
+<span class="pl-s1">                    }</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    <span class="pl-c">&lt;!-- 创建 2 个实例 --&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span> <span class="pl-e">data-action</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>lower<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre>
+</div> 
+<p><a href="images/molecule-params.png?raw=true" target="_blank"><img src="images/molecule-params.png?raw=true" alt="molecule init params" style="max-width:100%;" /></a></p> 
+<h3> <a id="user-content-提供molecule对象的方法在运行时调整行为" class="anchor" href="#%E6%8F%90%E4%BE%9Bmolecule%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%96%B9%E6%B3%95%E5%9C%A8%E8%BF%90%E8%A1%8C%E6%97%B6%E8%B0%83%E6%95%B4%E8%A1%8C%E4%B8%BA" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>提供molecule对象的方法在运行时调整行为</h3> 
+<div class="highlight highlight-text-html-basic">
+ <pre>        &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-c1">action</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>upper<span class="pl-pds">'</span></span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">                <span class="pl-k">var</span> bn <span class="pl-k">=</span> <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>button<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">setAction</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(<span class="pl-smi">action</span>){</span>
+<span class="pl-s1">                    <span class="pl-v">this</span>.<span class="pl-c1">action</span> <span class="pl-k">=</span> action;</span>
+<span class="pl-s1">                    <span class="pl-k">if</span>(action <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>upper<span class="pl-pds">'</span></span>){</span>
+<span class="pl-s1">                        <span class="pl-smi">bn</span>.<span class="pl-en">html</span>(<span class="pl-s"><span class="pl-pds">'</span>Upper Case<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">                    } <span class="pl-k">else</span> {</span>
+<span class="pl-s1">                        <span class="pl-smi">bn</span>.<span class="pl-en">html</span>(<span class="pl-s"><span class="pl-pds">'</span>Lower Case<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">                    }</span>
+<span class="pl-s1">                }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">                <span class="pl-k">var</span> me <span class="pl-k">=</span> <span class="pl-v">this</span>;</span>
+<span class="pl-s1">                <span class="pl-smi">bn</span>.<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-k">if</span>(<span class="pl-smi">me</span>.<span class="pl-c1">action</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>upper<span class="pl-pds">'</span></span>){</span>
+<span class="pl-s1">                        <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                    } <span class="pl-k">else</span> {</span>
+<span class="pl-s1">                        <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toLowerCase</span>());</span>
+<span class="pl-s1">                    }</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>sample<span class="pl-pds">&quot;</span></span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">        <span class="pl-en">$</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">            <span class="pl-c1">setTimeout</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                <span class="pl-en">$</span>(<span class="pl-s"><span class="pl-pds">'</span>#sample<span class="pl-pds">'</span></span>).<span class="pl-en">molecule</span>().<span class="pl-en">setAction</span>(<span class="pl-s"><span class="pl-pds">'</span>lower<span class="pl-pds">'</span></span>);     <span class="pl-c">// 通过 $('#sample').molecule() 获取 molecule 对象</span></span>
+<span class="pl-s1">            }, <span class="pl-c1">2000</span>);</span>
+<span class="pl-s1">        });</span>
+<span class="pl-s1">    &lt;/<span class="pl-ent">script</span>&gt;</span></pre>
+</div> 
+<p>可以看到，在页面刚加载时，按钮显示为 <code>Upper Case</code>, 点击按钮文字变为大写，页面加载2秒后，按钮就变为 <code>Lower Case</code>，点击按钮文字变为小写。</p> 
+<p>这里，molecule 实例可以通过 <code>$(元素).molecule()</code> 获取它的程序对象，也就是构造函数所创建的 js 对象，即所谓 <code>molecule 对象</code>。通过这个对象，可以控制 molecule 的行为。</p> 
+<h2> <a id="user-content-molecule-的组合" class="anchor" href="#molecule-%E7%9A%84%E7%BB%84%E5%90%88" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>molecule 的组合</h2> 
+<p>molecule 可以继续参与组合更复杂的 molecule， 例如第一版的转大写组件，现欲在其旁边加一个按钮，实现转小写功能，通过组合实现。</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnUpperCase<span class="pl-pds">&quot;</span></span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnUpperCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMoleculeEx<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnLowerCase<span class="pl-pds">&quot;</span></span>&gt;Lower Case&lt;/<span class="pl-ent">button</span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMoleculeEx</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnLowerCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toLowerCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMoleculeEx);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMoleculeEx<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre>
+</div> 
+<p>在创建外层的 molecule时，内层的 molecule 的构造函数已先调用，所以外层的molecule的构造函数可以访问内层的molecule对象。</p> 
+<p><a href="images/molecule-combine.png?raw=true" target="_blank"><img src="images/molecule-combine.png?raw=true" alt="molecule combine" style="max-width:100%;" /></a></p> 
+<h2> <a id="user-content-molecule-的继承" class="anchor" href="#molecule-%E7%9A%84%E7%BB%A7%E6%89%BF" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>molecule 的继承</h2> 
+<p>molecule 实例还可以继续扮演 molecule-def，这就是 molecule 的继承。</p> 
+<p>例如第一版的转大写组件，可通过继承实现在其旁边加一个按钮，实现转小写功能，：</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnUpperCase<span class="pl-pds">&quot;</span></span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnUpperCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMoleculeEx<span class="pl-pds">&quot;</span></span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnLowerCase<span class="pl-pds">&quot;</span></span>&gt;Lower Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMoleculeEx</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnLowerCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toLowerCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">extend</span>(AmazingMoleculeEx);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMoleculeEx<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;</pre>
+</div> 
+<p>molecule 的继承思路与 js 的 prototype 原型链相似。实际创建时，先实例化父类，然后再叠加上子类自身的特征并执行子类的 molecule 构造函数。</p> 
+<p>在子类molecule构造函数中可以使用 <code>this</code> 访问原型 molecule。</p> 
+<h2> <a id="user-content-molecule-与-d2js-的渲染收集" class="anchor" href="#molecule-%E4%B8%8E-d2js-%E7%9A%84%E6%B8%B2%E6%9F%93%E6%94%B6%E9%9B%86" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>molecule 与 d2js 的渲染收集</h2> 
+<p>对molecule渲染和收集，需要 molecule 构造函数中提供名称为 <code>getValue</code> 和 <code>setValue</code>的两个函数，指定渲染器为 <code>renderer=&quot;molecule&quot;</code>，收集器的第一个管道函数为 <code>m</code>，如 <code>m|s</code> 或 <code>m|oc</code>。</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+&lt;<span class="pl-ent">title</span>&gt;Molecule&lt;/<span class="pl-ent">title</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/d2js/dataset.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/d2js/render.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/d2js/collector.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/d2js/renderers.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/d2js/pipelines.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+
+
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnUpperCase<span class="pl-pds">&quot;</span></span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnUpperCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">getValue</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(){<span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-smi">$el</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>).<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>();}</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">setValue</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(<span class="pl-smi">value</span>){<span class="pl-v">this</span>.<span class="pl-smi">$el</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>).<span class="pl-en">val</span>(value);}</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>sample<span class="pl-pds">&quot;</span></span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span> <span class="pl-e">renderer</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>molecule<span class="pl-pds">&quot;</span></span> <span class="pl-e">collector</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>m|s<span class="pl-pds">&quot;</span></span> <span class="pl-e">data</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>text<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">        <span class="pl-en">$</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">            <span class="pl-k">var</span> obj <span class="pl-k">=</span> {text <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Planet<span class="pl-pds">'</span></span>};</span>
+<span class="pl-s1">            <span class="pl-en">$</span>(<span class="pl-s"><span class="pl-pds">'</span>#sample<span class="pl-pds">'</span></span>).<span class="pl-en">render</span>(obj, <span class="pl-c1">true</span>);</span>
+<span class="pl-s1">            <span class="pl-en">$</span>(<span class="pl-s"><span class="pl-pds">'</span>#sample<span class="pl-pds">'</span></span>).<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                <span class="pl-en">$</span>(<span class="pl-s"><span class="pl-pds">'</span>#sample<span class="pl-pds">'</span></span>).<span class="pl-en">collect</span>(obj, <span class="pl-c1">true</span>);</span>
+<span class="pl-s1">                <span class="pl-en">console</span>.<span class="pl-c1">log</span>(obj);</span>
+<span class="pl-s1">            });</span>
+<span class="pl-s1">        })</span>
+<span class="pl-s1">    &lt;/<span class="pl-ent">script</span>&gt;</span>
+&lt;/<span class="pl-ent">body</span>&gt;
+
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p><a href="images/molecule-d2js.png?raw=true" target="_blank"><img src="images/molecule-d2js.png?raw=true" alt="molecule d2js" style="max-width:100%;" /></a></p> 
+<h2> <a id="user-content-调试-molecule" class="anchor" href="#%E8%B0%83%E8%AF%95-molecule" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>调试 molecule</h2> 
+<p>molecule-def 的元素在运行时会被移除，创建组件时再次加入，因此其中的js代码已经失去了所属文件信息。这样一来， molecule无法便利的设置断点，只能利用 <code>debugger</code> 语句。而在 safari 浏览器中，这种无归属文件的程序进入断点后也无法显示源码，所以，目前无法用 safari 调试 molecule 脚本。</p> 
+<p>如 molecule 不符合预期，可以在实例元素旁加上 <code>molecule-trace</code> 跟踪其实例化过程。</p> 
+<pre><code>&lt;div id=&quot;sample&quot; molecule=&quot;AmazingMolecule&quot; molecule-trace&gt;&lt;/div&gt;
+</code></pre> 
+<h2> <a id="user-content-在其它页面使用-molecule" class="anchor" href="#%E5%9C%A8%E5%85%B6%E5%AE%83%E9%A1%B5%E9%9D%A2%E4%BD%BF%E7%94%A8-molecule" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>在其它页面使用 molecule</h2> 
+<p>molecule 不但可以用于定义它的网页，也可以作为组件导入到其它页面中使用。</p> 
+<p>上面的示例中，使用的页面名称为 a.html，放于网站 d2js，即，路径为 http://host:port/d2js/a.html。在同级目录创建 b.html。</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+&lt;<span class="pl-ent">title</span>&gt;Molecule&lt;/<span class="pl-ent">title</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+<span class="pl-s1">&lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">    <span class="pl-smi">Molecule</span>.<span class="pl-en">loadHtml</span>(<span class="pl-s"><span class="pl-pds">'</span>/d2js/a.html<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">&lt;/<span class="pl-ent">script</span>&gt;</span>
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+&lt;/<span class="pl-ent">body</span>&gt;
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p>可以看到，a.html 中定义的molecule <em>AmazingMolecule</em> 已经在 b.html 实例化了。</p> 
+<p>除了该方式，还可以将 a.html 放在 <code>molecules 文件夹</code>，放在文件后，在浏览器地址栏输入 <code>molecules/extract.jssp</code>, 该 <code>extract.jssp</code> 运行后，a.html 中的 molecule 即进入组件库，直接就可以使用：</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+&lt;<span class="pl-ent">title</span>&gt;Molecule&lt;/<span class="pl-ent">title</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+&lt;/<span class="pl-ent">body</span>&gt;
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p>那种做法更好呢？</p> 
+<p>原理上，每次 <code>loadHtml</code>都要执行 <code>extract.jssp</code>，详见<code>extract.jssp</code> 源码，因此 loadHtml 效率较低，只适合组件还在开发测试修改期，当组件稳定后，应采用后面的做法。当然，世界还在进步，也许哪天通过改进 <code>loadHtml</code> 方式的效率也可以提升起来。</p> 
+<h2> <a id="user-content-molecule的命名空间" class="anchor" href="#molecule%E7%9A%84%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>molecule的命名空间</h2> 
+<p>molecule 可以按命名空间组织，只要在组件前加上命名空间即可。如：</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+&lt;<span class="pl-ent">title</span>&gt;Molecule&lt;/<span class="pl-ent">title</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>my.molecule.AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">value</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Hello World<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">button</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>bnUpperCase<span class="pl-pds">&quot;</span></span>&gt;Upper Case&lt;/<span class="pl-ent">button</span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">AmazingMolecule</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>#bnUpperCase<span class="pl-pds">'</span></span>).<span class="pl-c1">click</span>(<span class="pl-k">function</span>(){</span>
+<span class="pl-s1">                    <span class="pl-k">var</span> $tx <span class="pl-k">=</span> <span class="pl-en">$</span>(<span class="pl-v">this</span>).<span class="pl-c1">parent</span>().<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">                    <span class="pl-smi">$tx</span>.<span class="pl-en">val</span>(<span class="pl-smi">$tx</span>.<span class="pl-en">val</span>().<span class="pl-c1">toUpperCase</span>());</span>
+<span class="pl-s1">                })</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(AmazingMolecule);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    <span class="pl-c">&lt;!-- 创建 3 个实例 --&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>my.molecule.AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>my.molecule.AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>my.molecule.AmazingMolecule<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">body</span>&gt;
+
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<h2> <a id="user-content-常用的-molecule" class="anchor" href="#%E5%B8%B8%E7%94%A8%E7%9A%84-molecule" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>常用的 molecule</h2> 
+<p>在 molecules 文件夹中， <code>basic.html</code>, <code>trigger.html</code>, <code>tree.html</code> 提供了很多常用的组件，包括<code>树</code>、<code>下拉树</code>等等，相信可以给开发带来较大帮助。 </p> 
+<p>很明显，很多 jquery 组件都可以较轻松的包装为 molecule 组件。</p> 
+<p>例如，使用 jquery 方式的 semantic-ui 的 toggle 组件如下：</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+    &lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+    &lt;<span class="pl-ent">title</span>&gt;molecule&lt;/<span class="pl-ent">title</span>&gt;
+    &lt;<span class="pl-ent">meta</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>viewport<span class="pl-pds">&quot;</span></span> <span class="pl-e">content</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>width=device-width, initial-scale=1.0<span class="pl-pds">&quot;</span></span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;<span class="pl-ent">link</span> <span class="pl-e">href</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/semantic-ui/semantic.css<span class="pl-pds">&quot;</span></span> <span class="pl-e">rel</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>stylesheet<span class="pl-pds">&quot;</span></span> <span class="pl-e">media</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>screen<span class="pl-pds">&quot;</span></span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/semantic-ui/semantic.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</span>
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>switch<span class="pl-pds">&quot;</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>ui toggle checkbox<span class="pl-pds">&quot;</span></span>&gt;&lt;<span class="pl-ent">label</span>&gt;Agree&lt;/<span class="pl-ent">label</span>&gt;&lt;<span class="pl-ent">input</span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>checkbox<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">        <span class="pl-en">$</span>(<span class="pl-k">function</span>(){<span class="pl-en">$</span>(<span class="pl-s"><span class="pl-pds">'</span>#switch<span class="pl-pds">'</span></span>).<span class="pl-en">checkbox</span>();});</span>
+<span class="pl-s1">    &lt;/<span class="pl-ent">script</span>&gt;</span>
+&lt;/<span class="pl-ent">body</span>&gt;
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p>将它转为 molecule 组件：</p> 
+<div class="highlight highlight-text-html-basic">
+ <pre>&lt;!DOCTYPE html&gt;
+&lt;<span class="pl-ent">html</span>&gt;
+&lt;<span class="pl-ent">head</span>&gt;
+    &lt;<span class="pl-ent">meta</span> <span class="pl-e">charset</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>UTF-8<span class="pl-pds">&quot;</span></span>&gt;
+    &lt;<span class="pl-ent">title</span>&gt;molecule&lt;/<span class="pl-ent">title</span>&gt;
+    &lt;<span class="pl-ent">meta</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>viewport<span class="pl-pds">&quot;</span></span> <span class="pl-e">content</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>width=device-width, initial-scale=1.0<span class="pl-pds">&quot;</span></span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/jquery-1.10.2.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;<span class="pl-ent">link</span> <span class="pl-e">href</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/semantic-ui/semantic.css<span class="pl-pds">&quot;</span></span> <span class="pl-e">rel</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>stylesheet<span class="pl-pds">&quot;</span></span> <span class="pl-e">media</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>screen<span class="pl-pds">&quot;</span></span>&gt;
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/semantic-ui/semantic.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">    &lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>../jslib/molecule.js<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</span>
+&lt;/<span class="pl-ent">head</span>&gt;
+&lt;<span class="pl-ent">body</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule-def</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Toggle<span class="pl-pds">&quot;</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>ui toggle checkbox<span class="pl-pds">&quot;</span></span>&gt;
+        &lt;<span class="pl-ent">label</span>&gt;&lt;/<span class="pl-ent">label</span>&gt;
+        &lt;<span class="pl-ent">input</span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>checkbox<span class="pl-pds">&quot;</span></span>&gt;
+<span class="pl-s1">        &lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF</span></span>
+<span class="pl-s1">            <span class="pl-k">function</span> <span class="pl-en">Toggle</span>(){</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>label<span class="pl-pds">'</span></span>).<span class="pl-en">html</span>(<span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-en">attr</span>(<span class="pl-s"><span class="pl-pds">'</span>label<span class="pl-pds">'</span></span>));</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-en">checkbox</span>();  <span class="pl-c">// 初始化jQuery组件</span></span>
+<span class="pl-s1">                <span class="pl-c">// 为 d2js 提供 getValue 和 setValue，也可以单独调用如 $ele.molecule().getValue()</span></span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">getValue</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(){<span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>).<span class="pl-en">prop</span>(<span class="pl-s"><span class="pl-pds">'</span>checked<span class="pl-pds">'</span></span>);}</span>
+<span class="pl-s1">                <span class="pl-v">this</span>.<span class="pl-smi">setValue</span> <span class="pl-k">=</span> <span class="pl-k">function</span>(<span class="pl-smi">value</span>){<span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-smi">container</span>.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>input<span class="pl-pds">'</span></span>).<span class="pl-en">prop</span>(<span class="pl-s"><span class="pl-pds">'</span>checked<span class="pl-pds">'</span></span>, value);}</span>
+<span class="pl-s1">            }</span>
+<span class="pl-s1">            <span class="pl-c">// MOLECULE_DEF_END</span></span>
+<span class="pl-s1">            <span class="pl-smi">Molecule</span>.<span class="pl-en">create</span>(Toggle);</span>
+<span class="pl-s1">        &lt;/<span class="pl-ent">script</span>&gt;</span>
+    &lt;/<span class="pl-ent">div</span>&gt;
+    <span class="pl-c">&lt;!-- sample --&gt;</span>
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">molecule</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Toggle<span class="pl-pds">&quot;</span></span> <span class="pl-e">label</span>=<span class="pl-s"><span class="pl-pds">&quot;</span>Do You Agree?<span class="pl-pds">&quot;</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">body</span>&gt;
+&lt;/<span class="pl-ent">html</span>&gt;</pre>
+</div> 
+<p><a href="images/molecule-toggle.png?raw=true" target="_blank"><img src="images/molecule-toggle.png?raw=true" alt="molecule toggle" style="max-width:100%;" /></a></p> 
+<h2> <a id="user-content-其它问题" class="anchor" href="#%E5%85%B6%E5%AE%83%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>其它问题</h2> 
+<h3> <a id="user-content-无法嵌套-script-的元素如何嵌套-molecule-构造函数" class="anchor" href="#%E6%97%A0%E6%B3%95%E5%B5%8C%E5%A5%97-script-%E7%9A%84%E5%85%83%E7%B4%A0%E5%A6%82%E4%BD%95%E5%B5%8C%E5%A5%97-molecule-%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>无法嵌套 script 的元素如何嵌套 molecule 构造函数</h3> 
+<p>像 <code>input</code>,<code>img</code> 这样的元素，里面不能写 </p>
+</body>
+</html>

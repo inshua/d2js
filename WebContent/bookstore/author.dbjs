@@ -1,0 +1,7 @@
+d2js.listAll = function(params){
+	sql{.
+		select id, name from author order by name
+	.}
+	return this.query(sql);
+}
+

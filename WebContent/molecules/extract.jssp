@@ -1,0 +1,88 @@
+
+[%
+	 /*
+	  * 创建 molecule 定义  
+	  */
+
+ 	var defines = {};
+ 	if(request.html){
+ 		response.contentType = 'application/json';
+ 		var path = request.getRealPath(request.html);
+ 		processFile(new java.io.File(path));
+ 		out.print(JSON.stringify(defines));
+ 	} else {
+		var path = request.getRealPath("/molecules");
+	
+		logger.info('path = ' + path);
+	
+		var files = new java.io.File(path).listFiles();
+		for(var i=0; i< files.length; i++){
+			var file = files[i];
+			out.print(processFile(file));
+		}
+		
+		for(var module in defines){ if(defines.hasOwnProperty(module)){
+			var path = request.getRealPath("/molecules/" + module +  ".json");
+			logger.debug('write molecule module : ' +  path);
+			org.apache.commons.io.FileUtils.write(new java.io.File(path), JSON.stringify(defines[module]), "utf-8");
+		}}
+ 	}
+	
+	function processFile(file){
+		var sout = '';
+		if(file.name.endsWith(".html") || file.name.endsWith(".htm") || file.name.endsWith(".jssp")){
+			sout +=  ("<h2>parse " + file.name + "</h2>");
+			var document = org.jsoup.Jsoup.parse(file, "utf-8");
+			var defs = document.select("[molecule-def]");
+			sout +=  ("<p>" + defs.size() + " molecule defs found</p>");
+			if(defs.size() > 0){
+				for(var j=0; j<defs.size(); j++){
+					var element = defs.get(j);
+					var fullname = element.attr("molecule-def");
+					var module = 'noname', name = fullname;
+					if(fullname.lastIndexOf('.') != -1){
+						var p = name.lastIndexOf('.');
+						module = name.substring(0, p);
+						name = name.substr(p + 1);
+					}
+					var depends = element.attr("molecule-depends") || '';
+					
+					sout +=  ("<h3>find " + fullname + "</h3>");
+					element.removeAttr('molecule-def');
+					element.removeAttr('molecule-depends');
+					var escapeTag = element.attr('escape-tag');
+					if(escapeTag) element.removeAttr('escape-tag');
+					
+					var html = element.html();
+					var attributes = {};
+					var lsAttrs = element.attributes().asList();
+					for(var i=0; i< lsAttrs.size(); i++){
+						var attr = lsAttrs.get(i);
+						attributes[attr.key] = attr.value; 
+					}
+					if(defines[module] == null) defines[module] = {};
+					if(defines[module][name] != null){
+						printError(fullname + ' defined more than one time');
+					}
+					var def = {name : name, module : module, depends : depends && depends.split(','), escapeTag : escapeTag, 
+		                         tagName : element.tagName(), html : html, attributes : attributes};
+					var n = element.nextElementSibling();
+					if(n && n.tagName() == 'script' && (n.attr('molecule-for') == fullname || n.attr('molecule-for') == name)){
+						def.script = n.html();
+					}
+					defines[module][name] = def;
+				}
+			} else {
+				sout +=  ("<h3>(empty)</h3>");
+			}
+		}
+		return sout;
+		
+		function printError(error){
+			sout +=  ('<p class="error">' + error + '</p>');
+		}
+	}
+	
+	
+	
+%]

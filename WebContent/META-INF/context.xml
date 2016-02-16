@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context path="db2js" docBase="db2js"
+	debug="5" crossContext="true" reloadable="true"
+	cachingAllowed="true" cacheMaxSize="20480"
+	cacheTTL="10000">
+	<WatchedResource>WEB-INF/web.xml</WatchedResource>
+	<Resource 
+		name="jdbc/d2js" 
+		auth="Container" 
+		type= "javax.sql.DataSource" 
+		factory="org.apache.commons.dbcp.BasicDataSourceFactory"
+		driverClassName="org.postgresql.Driver" 
+		url="jdbc:postgresql://localhost:5432/bookstore"
+		username="postgres" 
+		password="pass4postgres"
+		initConnectionSqls="set time zone 'UTC';"
+		maxActive="100" 
+		maxIdle="30"
+		maxWait="10000">
+	</Resource>	
+</Context>

@@ -1,0 +1,8 @@
+[%
+ 	response.contentType = 'binary/raw';		// setContentType 可以使用 contentType = xxx
+
+	response.setHeader("Content-Disposition", "attachment; filename=data.dat");
+
+	// test binary output.
+	out.write([65, 0x09, 66, 0x0A]);
+%]

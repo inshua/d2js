@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1>渲染任意对象<small>选择器为 #person </small></h1>
+		
+		<p> Name : <input type="text" data="#person,name" collector="c|s" renderer="std"> </p>
+		<p> Email : <input type="email" data="#person,email" collector="c|s" renderer="std" placeholder="Input Email"></p>
+		<p> Tel : <input type="tel" data="#person,tel" collector="c|s" renderer="std" placeholder="Input Telphone"></p>
+		<p><button class="btn btn-primary" onclick="test1()">Submit</button> </p>
+		
+		<h1>直接渲染<small>不使用选择器</small></h1>
+		
+		<div id="divForPerson2"> 
+			<p> Name : <input type="text" data="name" collector="c|s" renderer="std"> </p>
+			<p> Email : <input type="email" data="email" collector="c|s" renderer="std" placeholder="Input Email"></p>
+			<p> Tel : <input type="tel" data="tel" collector="c|s" renderer="std" placeholder="Input Telphone"></p>
+			<p><button class="btn btn-primary" onclick="test2()">Submit</button> </p>
+		</div>
+		
+		<h1>渲染数据表<small>DataTable、 d2js.dataset 均可</small></h1>
+		<div id="divPrompt"></div>
+		<table>
+			<tr>
+				<th>name</th>
+			</tr>
+			<tr>
+				<td><input type="text" data="#test,rows,0,name" collector="c|s" renderer="std"></td>
+			</tr>
+			<tr>
+				<td><input type="text" data="#test,rows,2,name" collector="c|s" renderer="std"></td>
+			</tr>
+		</table>
+		<p><button class="btn btn-primary" onclick="test3()">Submit</button> </p>
+	</div>
+</body>
+<script>
+
+	// 渲染任意对象
+	var person = {d2js:'person', name : 'Jack'};		// 该 d2js 属性系为与选择器配对
+	d2js.render(null, person);
+	function test1(){
+		d2js.collect(null, person);
+		alert(JSON.stringify(person));
+	}
+	
+	
+	//  定向渲染
+	var person2 = { name : 'Tom'};
+	d2js.render($('#divForPerson2')[0], person2, true);		// 指定目标元素，不使用选择器, 适合快速渲染
+	function test2(){
+		d2js.collect($('#divForPerson2')[0], person2, true);
+		alert(JSON.stringify(person2));
+	}
+
+	// 渲染表
+	var table = new d2js.DataTable('test', 'author.d2js');
+	table.load({ _m : 'fetch'}, function(error) {
+			if(error){
+				divPrompt.innerText = error.message;
+				return;
+			}
+			divPrompt.innerText = 'success';
+			d2js.render(null, table);
+		});
+
+	function test3(){
+		d2js.collect(null, table);
+		table.monitor();
+	}
+
+
+	
+</script>
+</html>

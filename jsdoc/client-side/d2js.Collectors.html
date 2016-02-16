@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Namespace: Collectors</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Namespace: Collectors</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="d2js.html">d2js</a>.</span>Collectors</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>所有收集器</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line25">line 25</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+        <h3 class="subsection-title">Namespaces</h3>
+
+        <dl>
+            <dt><a href="d2js.Collectors.Pipelines.html">Pipelines</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id=".oc"><span class="type-signature">(static) </span>oc<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>Object Column 值设置器<br>当 DataRow['field'] 为对象时，如果 element 绑定的是对象的属性，应当使用该收集器。<br>例如</p>
+<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;#table,rows,0,contact,email&quot;></code></pre><p>该表的 contact 字段为一JSON字段，表现在前端为一个对象，其中 email 是一个属性，此时应使用如下收集方式 </p>
+<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;#table,rows,0,contact,email&quot; collector=&quot;c|oc&quot;></code></pre><p>如使用</p>
+<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;#table,rows,0,contact,email&quot; collector=&quot;c|s&quot;></code></pre><p>则编辑时虽然值变化了，但行状态不会变化，将导致数据不提交。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line271">line 271</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".repeater"><span class="type-signature">(static) </span>repeater<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>repeater 收集器。对 repeater 渲染器产生的元素进行收集。<br>usage:</p>
+<pre class="prettyprint source lang-html"><code>&lt;div data=&quot;#authors,rows&quot; renderer=&quot;repeater&quot; collector=&quot;repeater&quot;>
+        &lt;h2 repeater=&quot;true&quot;>&lt;span data=&quot;name&quot; renderer=&quot;std&quot;>&lt;/span>&lt;/h2>
+        &lt;h2 repeater-empty=&quot;true&quot;>no data found&lt;/h2>
+    &lt;/div></code></pre>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line237">line 237</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".s"><span class="type-signature">(static) </span>s<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>设置对象属性收集器。<br>s 是 set 或 std 的首字母。<br>该函数设置新值到数据对象。用法 collector=&quot;c|s&quot;。遇到普通对象，则使用 obj[attr] = value, 遇到 d2js.DataRow，则调用 row._set('attr', value)。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line165">line 165</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 16 2016 23:09:40 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

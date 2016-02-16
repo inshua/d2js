@@ -1,0 +1,15 @@
+d2js.fetch = function(params){
+	sql{.
+		select * from author
+		code{.
+			if(params.name){
+				sql{.
+					where strpos(name, :name) > 0
+				.}
+			}
+		.}
+	.}
+	
+	return this.query(sql, params, params._page);
+}
+

@@ -1,0 +1,14 @@
+d2js.fetch = function(params){
+	var sql = 'select * from authors';
+	if(params.last_name){
+		sql += ' where instr(last_name, :last_name) > 0';
+	}
+	return this.query(sql, params);
+}
+
+d2js.testTransaction = function(record){
+	record.last_name = record.last_name + ' changed';
+	this.updateRow('authors', record, ['id', 'last_name']);
+	
+	//throw new Error('rollback please');
+}

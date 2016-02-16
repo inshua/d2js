@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: d2js/bootstrap-renderers.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: d2js/bootstrap-renderers.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * bootstrap 渲染器
+ * @namespace
+ */
+d2js.Renderers.bootstrap = {}
+
+/**
+ * label 渲染器
+ * 一个demo性的渲染器，没有实际效果。
+ * 用法：
+ * renderer="bootstrap.label('default')", renderer="bootstrap.label('primary')" etc 
+ */
+d2js.Renderers.bootstrap.label = function(level){
+	level = level || 'default';
+	return function(element, value, table, _1, rows, index, row, columnName){
+		element.innerHTML = value + '';
+		element.className = 'label label-' + level;
+	}
+}
+
+/**
+ * 分页组件
+ * 用法：
+ * ```html
+ * &lt;nav>
+	  &lt;ul class="pagination" data="#table" renderer="pagination">
+	  &lt;/ul>
+   &lt;/nav>
+   ```
+ */
+d2js.Renderers.pagination = d2js.KNOWN_RENDERERS['pagination'] = function(element,  value, table){
+	[{$:'.pagination > .active > a, .pagination > .active > span, .pagination > .active > a:hover, .pagination > .active > span:hover, .pagination > .active > a:focus, .pagination > .active > span:focus, .pagination > li > a:hover, .pagination > li > span:hover, .pagination > li > a:focus, .pagination > li > span:focus'
+		,cursor : 'pointer'
+	}].defCss();
+	
+	var ul = $(element);
+	ul.html('');
+	
+	var isFirstPage = (table.page == 0);
+	var isLastPage = (table.page >= table.pageCount -1);
+	
+	var li = $(document.createElement('li')).appendTo(ul);
+	if(isFirstPage) li.addClass('disabled');
+	
+	var a = $(document.createElement('a')).appendTo(li);
+	a.attr('aria-label', 'Previous');
+	a.href = '###';
+	if(!isFirstPage){
+		a.on('click', function(){
+			table.navigatePage(table.page - 1);
+		});
+	}
+	a.html('&lt;span aria-hidden="true">&amp;laquo;&lt;/span>');
+	
+	for(var i=0; i &lt; table.pageCount; i++){
+		var li = $(document.createElement('li')).appendTo(ul);
+		var a = $(document.createElement('a')).appendTo(li);
+		a.href = '###';
+		if(i == table.page){
+			li.addClass('active');
+			a.html((i+1) + '&lt;span class="sr-only">(current)&lt;/span>');
+		} else {
+			a.attr('page', i);
+			a.on('click', function(){
+				table.navigatePage(this.getAttribute('page'));
+			});
+			a.html((i + 1));
+		}
+	}
+	
+	var li = $(document.createElement('li')).appendTo(ul);
+	if(isLastPage) li.addClass('disabled');
+	
+	var a = $(document.createElement('a')).appendTo(li);
+	a.attr('aria-label', 'Next');
+	a.href = '###';
+	if(!isLastPage){
+		a.on('click', function(){
+			table.navigatePage(table.page + 1);
+		});
+	}
+	a.html('&lt;span aria-hidden="true">&amp;raquo;&lt;/span>');
+	
+}
+
+
+/**
+ * 标准错误渲染器
+ * 渲染错误，当没有错误时隐藏元素。
+ */
+d2js.Renderers.stderr = d2js.KNOWN_RENDERERS['stderr'] = function(element,  value, table, _1, rows, index, row, columnName){
+	var e = $(element), v = value;
+	if(value == null){
+		e.addClass('hide');
+	} else {
+		e.attr('class', '');
+		switch(v.level){
+		case 'warning' :
+			e.addClass('label label-warning');
+			break;
+		default :
+			e.addClass('label label-danger');
+		}
+		e.html(value.message);
+	}
+}
+
+/**
+ * 字段错误渲染器。结合表单使用。
+ */
+d2js.Renderers.flderr = d2js.KNOWN_RENDERERS['flderr'] = function(element,  value, table, _1, rows, index, row, columnName){
+	var e = $(element), v = value;
+	var helpDiv = null;
+	if(e.is('.help-block.with-errors')){
+		helpDiv = e;
+		e = helpDiv.parent();
+	} else {
+		helpDiv = e.find('.help-block.with-errors');
+		if(helpDiv.length == 0){
+			helpDiv = $(document.createElement('div')).appendTo(e);
+			helpDiv.addClass('help-block with-errors');
+		}
+	}	
+	if(value == null){
+		e.removeClass('has-error');
+		helpDiv.html('');
+	} else {
+		e.addClass('has-error');
+		helpDiv.html(value.message || value + '');
+	}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 16 2016 23:09:40 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

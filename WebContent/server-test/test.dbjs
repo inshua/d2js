@@ -1,0 +1,14 @@
+d2js.fetch = function(params){
+	return this.callD2js('./another.d2js', 'fetch', params);
+}
+
+d2js.testUpdate = function(record){
+	record.id = record.id * 1;
+	this.doTransaction(function(){
+		this.updateRow('authors', record, ['id', 'last_name']);
+		this.callD2js('./another.d2js', 'testTransaction', record);
+	});
+}
+
+
+

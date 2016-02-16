@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>提交图片</title>
+</head>
+
+<body>
+	提交照片(JPG 格式)
+
+	<form action="upload-image.jssp?up=1" method="post" enctype="multipart/form-data">
+		<p> Comment : <input type="text" name="comment" /> </p> 
+		<p> <input type="file" name="file1" /> </p> 
+		<p> <input type="file" name="file2" /> </p>
+		<p> <input type="submit" /> </p>
+	</form>
+
+	[% if(request.comment){ %]
+	Comment : [%- request.comment %]<br>
+	[% } %]
+	
+	[%
+		if(request.up){
+			var parts = request.getParts();
+			for(var i=0; i < parts.size(); i++){
+				var part = parts.get(i);
+				
+				var arr;
+		 		try{ 
+		 			var strm = part.getInputStream();
+		 			arr = org.apache.commons.io.IOUtils.toByteArray(strm);
+		 		} finally{
+		 			strm.close();
+		 		}
+		 		if(part.name != 'comment'){
+		 			var dataUrl = 'data:image/jpeg;base64,' + org.apache.tomcat.util.codec.binary.Base64.encodeBase64String(arr);
+					out.print('photo ' + part.name + ' : <img src="' + dataUrl + '"><p>');
+				} else {
+				}
+			}			
+		}
+		
+	%]
+	
+</body>
+
+</html>

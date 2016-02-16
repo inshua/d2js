@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/molecule.js"></script>
+</head>
+<body>
+	<div molecule="GreenBlock">
+	</div>
+	
+	<div molecule="GreenBlock">
+		simple text
+	</div>
+	
+	<div molecule="GreenBlock">
+		<script>
+			if(Molecule.processing){
+				var obj = Molecule.of(Molecule.currentContainer);			
+				console.log('after init instance complete, set bk color to yellow');
+				obj.setBackColor('yellow');
+			}
+		</script>
+	</div>
+	
+	
+	<div molecule="GreenBlock" molecule-def="YellowBlock">
+		<script>
+			if(Molecule.processing){
+				var obj = Molecule.of(Molecule.currentContainer);
+				obj.setBackColor('yellow');
+			}
+		</script>
+	</div>
+	
+	<div molecule="YellowBlock" id="aa">
+		yellow intance
+	</div>
+	
+	<!-- TODO -->
+<!-- 	<div molecule="GreenBlock"> -->
+<!-- 		<script> -->
+<!-- // 			Molecule.ready(document.currentScript.parentElement, function(molecule){ -->
+<!-- // 				molecule.setBackColor('yello'); -->
+<!-- // 			}); -->
+<!-- 		</script> -->
+<!-- 	</div> -->
+	
+</body>
+</html>

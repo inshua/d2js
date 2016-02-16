@@ -1,0 +1,24 @@
+d2js.fetch = function(params){
+	sql{.
+		select * from author where 1 = 1
+		code{.
+			if(params.name){
+				sql{. and strpos(name, :name) > 0 .}
+			}
+			if(params.gender){
+				sql{. and gender = :gender .}
+			}
+		.}
+	.}
+	
+	return this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
+}
+
+d2js.modify = function(row, columns){
+	$V(row, {
+		email : V.email
+	});
+	
+	return this.updateRow('author', row, columns);
+}
+

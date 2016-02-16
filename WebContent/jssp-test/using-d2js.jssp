@@ -1,0 +1,36 @@
+<html>
+
+<head><title>classic db operation</title></head>
+<body>
+
+<form action="using-d2js.jssp" method="get">
+	Last Name : <input name="name">
+	<input type="submit">
+</form>
+
+[% 
+	var r = this.callD2js('authors.d2js', 'fetch', {name : request.name, _sort : [{property : 'id', direction : 'asc'}]}, null, null);
+	logger.info(JSON.stringify(r));
+%]
+	
+<table border="1">
+<caption>authors</caption>
+<thead>
+[%	r.columns.forEach(function(col){ %]
+	<td>[%= col.name %]</td>	
+[%	}); %]
+</thead>
+
+[%	r.rows.forEach(function(row){ %]
+<tr>
+	[%	r.columns.forEach(function(col){ %]
+		<td>[%= row[col.name] %]</td>
+	[%	}); %]
+</tr>				
+	
+[%	}); %]
+
+</table>
+</body>
+
+</html>

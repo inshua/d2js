@@ -1,0 +1,3328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: D2JS</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: D2JS</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>D2JS</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+
+    <h4 class="name" id="D2JS"><span class="type-signature"></span>new D2JS<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>该类会自动调用 init 函数初始化。<br>对于 *.d2js 脚本，只要扩充 d2js给它插入新的方法即可。<br>增删改查几个常用方法规格如下：</p>
+<pre class="prettyprint source lang-js"><code>d2js.fetch = function(params){
+        ...
+        return this.query(sql, params, params._page);
+};
+d2js.create = function(params, rcd){
+        rcd.id = this.nextId('SEQ_ENTITY');
+        this.insertRow('表名', rcd);
+    };
+
+d2js.modify = function(params, rcd){
+        this.updateRow('表名', rcd);
+};
+d2js.destroy = function(params, rcd){    
+        this.deleteRow('表名', rcd);
+};</code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line67">line 67</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="orderBy"><span class="type-signature"></span>orderBy<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>给 sql 查询追加 order by 语句。<br>usage :</p>
+<pre class="prettyprint source lang-js"><code> sql = this.orderBy(params._sorts);</code></pre>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line221">line 221</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="call"><span class="type-signature"></span>call<span class="signature">(callProcStmt, args)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>调用存储过程。<br> 如存储过程用到输出游标，对应参数可填入 <code>{OUTCUSOR : out}</code>, out 定义为 <code>var out = {}</code>，存储过程执行后， out 即已填充为查询结果集。<br> 如参数需要输出值, 可以使用 <code>$OUTP()</code> 将参数引起来, 详见 <code>$OUTP</code> 的说明.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callProcStmt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>包名.存储过程(?, ?, ...) 或 存储过程(?, ?, ...)。同样支持命名方式和嵌入表达式方式。</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><strong>null|array|eval function|named args</strong> 像 query 一样，可以使用命名参数和内嵌表达式。</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line300">line 300</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="callD2js"><span class="type-signature"></span>callD2js<span class="signature">(src, method, params)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>调用另一个 d2js 文件的函数</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>src</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>文件名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>method</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>函数名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>params</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+|
+
+<span class="param-type">array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>数组 - 参数列表，单值 - 单个参数</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line934">line 934</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="deleteRow"><span class="type-signature"></span>deleteRow<span class="signature">(table, row, pkColumn<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>删除单行。</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>table</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>表名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>row</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p><code>{columnName : value, ...}</code> 只要包含 pkColumn 列即可, 有其它的列也不会造成干扰。</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pkColumn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'id'
+                
+                </td>
+            
+
+            <td class="description last"><p>主键字段, 默认为 id</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line678">line 678</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="deleteRows"><span class="type-signature"></span>deleteRows<span class="signature">(table, cond)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>删除符合给定条件的记录</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>table</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>表名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cond</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>描述 <code>filed = value</code> 的对象, 如 <code>{id : 1, name : 'John'}</code>, 目前仅支持这种机械匹配, 如不提供 cond 则全部删除</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line695">line 695</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="doTransaction"><span class="type-signature"></span>doTransaction<span class="signature">(action)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>执行事务。用法：</p>
+<pre class="prettyprint source lang-js"><code>this.doTransaction(function(){
+        this.execute('insert ...');
+        this.execute('update ');
+        ...
+        return this.query(...)
+});</code></pre><p>action 中的操作将在一个事务中执行，全部成功后自动提交，中间出错则整体回滚。</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>action</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><strong>function(){ ... }</strong>  事务执行内容</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line874">line 874</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="execute"><span class="type-signature"></span>execute<span class="signature">(sql, args)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>执行SQL语句。</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>sql</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>sql语句，不要 ;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><strong>null|array|eval function|named args</strong> 像 query 一样，可以使用命名参数和内嵌表达式。</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line270">line 270</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getConnection"><span class="type-signature"></span>getConnection<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>获取连接</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line908">line 908</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>java.sql.Connection</p>
+</div>
+
+
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="insertRow"><span class="type-signature"></span>insertRow<span class="signature">(table, row, columns<span class="signature-attributes">opt</span>, pkColumn<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>插入单行, 已规避主键字段值已经存在的行<br>    如果能提供字段列表，尽量提供。字段列表的格式使用查询结果返回的格式，即 <code>[{name : '字段名', type : '类型'}, ...]</code>，或使用 <code>['字段名1','字段名2',...]</code>。<br>    如果不能提供字段列表，需要保证 row 中的各个自定义属性都是数据库字段<br>    调用函数前使用 <code>row.id = this.nextId()</code> 得到下一个主键id</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>table</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>表名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>row</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>{columnName : value, ...}</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>columns</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p><code>[{name : 字段名, type : 类型}, ...]</code> 或 <code>['字段名1','字段名2',...]</code> 字段列表, 不提供时取所有 row 的属性</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pkColumn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'id'
+                
+                </td>
+            
+
+            <td class="description last"><p>主键字段,默认为 id</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line346">line 346</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="mergeRow"><span class="type-signature"></span>mergeRow<span class="signature">(table, row, uniqueFields, columns, pkColumns)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>合并单行. 系 upsert 操作. 使用 merge into 语句.<br>    如果能提供字段列表，尽量提供。字段列表的格式使用查询结果返回的格式，即 [{name : '字段名', type : '类型'}, ...]，或使用 ['字段名1','字段名2',...]。<br>    如果不能提供字段列表，需要保证 row 中的各个自定义属性都是数据库字段</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>table</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>表名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>row</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>{columnName : value, ...} <strong>特别说明</strong> 对于由 sequence 产生值的 id 字段, 应使用 <code>$SQL('SEQ.nextval')</code>, 而不要使用 <code>{id : this.nextId('SEQ')}</code>, 避免浪费 SEQ 以及两次访问数据库的开销.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>uniqueFields</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type"><a href="Array.html">Array</a>.&lt;string></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>合并依据字段名数组, 通常带有唯一约束, 如只有一个, 可以提供单值而不提供数组.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>columns</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><code>[{name : 字段名, type : 类型}, ...]</code> 或 <code>['字段名1','字段名2',...]</code> 字段列表, 不提供时取所有 row 的属性</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pkColumns</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type"><a href="Array.html">Array</a>.&lt;string></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>主键字段(不应更新字段). 避免混入更新语句部分, 导致主键字段被更新.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line470">line 470</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="nextId"><span class="type-signature"></span>nextId<span class="signature">(seq)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>取序列的下一个序号</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>seq</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>序列名</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line327">line 327</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="query"><span class="type-signature"></span>query<span class="signature">(sql, args, pageDef)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>执行SQL查询语句，返回查询结果集。<br>对于不带参数的 sql 语句，args 可以不填， 如</p>
+<pre class="prettyprint source lang-js"><code>     this.query('select * from test where id > 2');</code></pre><p>对于含参数的 sql 语句，有三种书写方法：</p>
+<ol>
+<li><p>使用 ? 给参数占位，此时应提供参数数组。如</p>
+<pre class="prettyprint source lang-js"><code>  this.query('select * from test where id > ?', [2]);
+  this.query('select * from test where id > ? and instr(name, ?) > 0', [{INT : 2}, 'Jo']);</code></pre></li>
+<li><p>使用命名参数，使用 :argname 为参数占位。此时应提供命名元组作为参数集合。如</p>
+<pre class="prettyprint source lang-js"><code>  this.query('select * from test where id > :id', {id : 2});
+  this.query('select * from test where id > :id and instr(name, :name) > 0', {id : {INT : 2}, name : 'Jo'});</code></pre></li>
+<li><p>使用内嵌表达式。在 SQL 中，使用 {} 将 js 代码直接嵌入。此时参数提供一个带有上下文环境的求值函数。如</p>
+<pre class="prettyprint source lang-js"><code>  var a = 2, name = 'Jo';
+  var evaler = function(s){return eval(s);};
+  this.query('select * from test where id > {a}', evaler);
+  this.query('select * from test where id > {a} and instr(name, {name}) > 0', evaler);</code></pre></li>
+</ol>
+<p>由上，参数可以是一个简单值，由程序自动推导类型，也可以使用 {类型 : 值} 的方式明确指定类型，可以使用的类型有: </p>
+<blockquote>
+<p>INT LONG DOUBLE FLOAT DECIMAL BOOLEAN BINARY STRING DATE TIME OUTCURSOR ARRAY JSON JSONB</p>
+</blockquote>
+<p>其中，</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BINARY</td>
+<td>参数的值可以使用 BYTE 数组或 BASE64 字符串</td>
+</tr>
+<tr>
+<td>DATE</td>
+<td>参数的值可以 js 日期时间、 ISO 毫秒数、及格式为 yyyy-MM-dd HH:mm:ss 的日期字符串</td>
+</tr>
+<tr>
+<td>TIME</td>
+<td>参数的值可以 js 日期时间、 ISO 毫秒数、及格式为 HH:mm:ss 的日期字符串</td>
+</tr>
+<tr>
+<td>OUTCURSOR</td>
+<td>用于接收存储过程的输出游标，详见存储过程。</td>
+</tr>
+<tr>
+<td>ARRAY</td>
+<td>可以传递数组，视数据库的实现，应该使用数据库类型指定的类型作为第一个元素，如需要传递 [1,2,3]，对 pg 应传递 {ARRAY: ['int4', 1, 2, 3]}，或使用 $ARRAY('int4', [1,2,3])</td>
+</tr>
+</tbody>
+</table>
+<p>除了 {类型 : 值}，d2js 也提供了一组函数生成这样的参数，函数调用如 $INT(value)，得到 {INT : value}，与类型对应有如下函数</p>
+<blockquote>
+<p>$INT $LONG $DOUBLE $FLOAT $DECIMAL $BOOLEAN $BINARY $STRING $DATE $TIME $OUTCURSOR $ARRAY $JSON $JSONB。</p>
+</blockquote>
+<p>查询结果集定义如下：</p>
+<pre class="prettyprint source lang-js"><code>     {columns : [列, ..], rows : [行, ...]}
+         *列* : {name : 列名, type : 数据类型}        数据类型取值范围与参数的数据类型一致
+         *行* : {列名 : 值, ...}</code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>sql</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>sql语句，不要 ;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><strong>null|array|eval function|named args</strong> 可以使用命名参数和内嵌表达式。</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pageDef</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>{start : &lt;&lt;起点,第几条,从0开始&gt;&gt;, limit : 条数}</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line151">line 151</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="queryRow"><span class="type-signature"></span>queryRow<span class="signature">(sql, args)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>查询单行.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>sql</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>同 query</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>同 query</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line242">line 242</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="queryScalar"><span class="type-signature"></span>queryScalar<span class="signature">(sql, args)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>查询单值</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>sql</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line252">line 252</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="release"><span class="type-signature"></span>release<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>关闭连接池所有连接结束工作, 适用于只用一次的场景，一般不会用到。</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line900">line 900</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="travel"><span class="type-signature"></span>travel<span class="signature">(sql, args, traveler)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>与 query 类似, 但使用的是游标方式, 可以提供遍历函数, 逐行提取单行结果, 该方式不支持分页.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>sql</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>sql语句，不要 ;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><strong>null|array|eval function|named args</strong> 可以使用命名参数和内嵌表达式。</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>traveler</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><strong>function(row, columns) : true|false</strong> 返回 true 停止遍历</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line188">line 188</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="update"><span class="type-signature"></span>update<span class="signature">(params)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>更新数据总入口</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>params</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>{table : <em>待更新数据</em>} <em>待更新数据</em>定义为： </p>
+<pre class="prettyprint source lang-js"><code>{name : 'xxx', src : &quot;xxx.d2js&quot;, 
+ columns : [...], 
+ rows : [{fld: v, fld: v,..., _origin : {}, _state : 'none|edit|remove|new', 
+ _children : [嵌套子表,同本结构]
+ }]
+ }</code></pre></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line971">line 971</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="updateChildren"><span class="type-signature"></span>updateChildren<span class="signature">(childrenName, masterRcd, masterId)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>更新子行</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>childrenName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>字段名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>masterRcd</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>父行。应该包含 <code>{&lt;&lt;childrenName&gt;&gt; : [{子行}, ...]}</code> 。 子行应有状态位标记 <code>_state = 'new'|'edit'|'remove'</code>，对应调用函数 <code>create_&lt;&lt;childrenName&gt;&gt;</code>, <code>modify_&lt;&lt;childrenName&gt;&gt;</code>, <code>destroy_&lt;&lt;childrenName&gt;&gt;</code></p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>masterId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>外键ID的值，也就是 <em>父行.id</em></p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line722">line 722</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="updateRow"><span class="type-signature"></span>updateRow<span class="signature">(table, row, columns<span class="signature-attributes">opt</span>, pkColumn<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>更新单行<br>    如果能提供字段列表，尽量提供。字段列表的格式使用查询结果返回的格式，即 [{name : '字段名', type : '类型'}, ...]，或使用 ['字段名1','字段名2',...]。<br>    如果不能提供字段列表，需要保证 row 中的各个自定义属性都是数据库字段</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>table</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>表名</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>row</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>{columnName : value, ...}</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>columns</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p><code>[{name : 字段名, type : 类型}, ...]</code> 或 <code>['字段名1','字段名2',...]</code> 字段列表, 不提供时取所有 row 的属性</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pkColumn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'id'
+                
+                </td>
+            
+
+            <td class="description last"><p>主键字段,默认为 id</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line415">line 415</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="console.html">console</a></li><li><a href="D2JS.html">D2JS</a></li><li><a href="T.html">T</a></li><li><a href="V.html">V</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$OUTP">$OUTP</a></li><li><a href="global.html#$SQL">$SQL</a></li><li><a href="global.html#$V">$V</a></li><li><a href="global.html#cond">cond</a></li><li><a href="global.html#FailedError">FailedError</a></li><li><a href="global.html#FatalError">FatalError</a></li><li><a href="global.html#includeJssp">includeJssp</a></li><li><a href="global.html#translateObject">translateObject</a></li><li><a href="global.html#ValidationError">ValidationError</a></li><li><a href="global.html#wrapJsError">wrapJsError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 16 2016 03:19:12 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

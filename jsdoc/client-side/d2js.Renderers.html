@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Namespace: Renderers</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Namespace: Renderers</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="d2js.html">d2js</a>.</span>Renderers</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>所有渲染器</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_render.js.html">d2js/render.js</a>, <a href="d2js_render.js.html#line25">line 25</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+        <h3 class="subsection-title">Namespaces</h3>
+
+        <dl>
+            <dt><a href="d2js.Renderers.bootstrap.html">bootstrap</a></dt>
+            <dd></dd>
+        
+            <dt><a href="d2js.Renderers.Pipelines.html">Pipelines</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id=".expr"><span class="type-signature">(static) </span>expr<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>表达式渲染器。适用于 innerHTML 中含有 {{... }} 表达式的渲染器<br>用法：</p>
+<pre class="prettyprint source lang-html"><code>    &lt;div data=&quot;#table,rows,0&quot; renderer=&quot;expr&quot;>
+        &lt;h1>{{title.toUpperCase()}}&lt;small>{{author}}&lt;/small>&lt;/h1>
+        &lt;p>{{content}}&lt;/p>
+    &lt;/div></code></pre>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line86">line 86</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".flderr"><span class="type-signature">(static) </span>flderr<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>字段错误渲染器</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line85">line 85</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".flderr"><span class="type-signature">(static) </span>flderr<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>字段错误渲染器。结合表单使用。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_bootstrap-renderers.js.html">d2js/bootstrap-renderers.js</a>, <a href="d2js_bootstrap-renderers.js.html#line111">line 111</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".molecule"><span class="type-signature">(static) </span>molecule<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>molecule 渲染器。对支持 setValue/getValue 的 molecule 渲染。<br>usage:</p>
+<pre class="prettyprint source lang-html"><code>&lt;div data=&quot;...&quot; molecule=&quot;Select&quot; renderer=&quot;molecule&quot;>&lt;/div></code></pre>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line345">line 345</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".pagination"><span class="type-signature">(static) </span>pagination<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>分页组件。渲染 DataTable。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line5">line 5</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".pagination"><span class="type-signature">(static) </span>pagination<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>分页组件<br>用法：</p>
+<pre class="prettyprint source lang-html"><code>&lt;nav>
+      &lt;ul class=&quot;pagination&quot; data=&quot;#table&quot; renderer=&quot;pagination&quot;>
+      &lt;/ul>
+   &lt;/nav></code></pre>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_bootstrap-renderers.js.html">d2js/bootstrap-renderers.js</a>, <a href="d2js_bootstrap-renderers.js.html#line31">line 31</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".std"><span class="type-signature">(static) </span>std<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>标准渲染器。支持常用元素 html, input, select 的渲染。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line26">line 26</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".stderr"><span class="type-signature">(static) </span>stderr<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>标准错误渲染器<br>渲染错误，当没有错误时隐藏元素。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_bootstrap-renderers.js.html">d2js/bootstrap-renderers.js</a>, <a href="d2js_bootstrap-renderers.js.html#line91">line 91</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".stderr"><span class="type-signature">(static) </span>stderr<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>标准错误渲染器</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line64">line 64</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".table"><span class="type-signature">(static) </span>table<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>表格渲染器。<br>用法：</p>
+<pre class="prettyprint source lang-html"><code>&lt;table data=&quot;#table&quot; renderer=&quot;table&quot;>
+        &lt;thead>
+            &lt;tr>
+                &lt;td data-t=&quot;rows,N,name&quot; renderer=&quot;std&quot;>&lt;/td>  &lt;!-- 注意  data-t 和  N，是固定用法 -->
+                &lt;td data-t=&quot;rows,N,remarks&quot; renderer=&quot;input('text')&quot;>&lt;/td>
+            &lt;/tr>
+        &lt;/thead>
+&lt;/table></code></pre><p>这里 N 是固定写法，会被替换为行ID。<br>渲染表格也可以使用 repeater 渲染器。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line194">line 194</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".$choose"><span class="type-signature">(static) </span>$choose<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>choose 渲染器</p>
+<pre class="prettyprint source lang-html"><code>    &lt;div class=&quot;ui buttons&quot; renderer=&quot;$choose&quot; collector=&quot;$choose|n|s&quot;>
+        &lt;button class=&quot;ui basic button&quot; value=&quot;0&quot;>0&lt;/button>
+        &lt;button class=&quot;ui basic button&quot; value=&quot;1&quot;>1&lt;/button>
+    &lt;/div></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line130">line 130</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".$dropdown"><span class="type-signature">(static) </span>$dropdown<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>dropdown 渲染器</p>
+<pre class="prettyprint source lang-html"><code>&lt;select renderer=&quot;$dropdown&quot; collector=&quot;c|s&quot;>&lt;/select></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line112">line 112</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".input"><span class="type-signature">(static) </span>input<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>显示为一个输入控件<br>如：</p>
+<pre class="prettyprint source lang-html"><code>    &lt;div data=&quot;...&quot; renderer=&quot;input('text')&quot; renderer-t=&quot;std&quot; collector-t=&quot;c|s&quot;></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line252">line 252</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".options"><span class="type-signature">(static) </span>options<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>下拉列表框下拉项目渲染器。<br>用法：</p>
+<pre class="prettyprint source lang-html"><code>    &lt;div data=&quot;#listTable,rows&quot; renderer=&quot;options('name','id',true)&quot;>
+        &lt;select data=&quot;#bindTable,rows,N,type&quot;>&lt;/select>
+ &lt;/div></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line134">line 134</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".repeater"><span class="type-signature">(static) </span>repeater<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>repeater 渲染器<br>usage:</p>
+<pre class="prettyprint source lang-html"><code>&lt;div data=&quot;#authors,rows&quot; renderer=&quot;repeater&quot;>
+        &lt;h2 repeater=&quot;true&quot;>&lt;span data=&quot;name&quot; renderer=&quot;std&quot;>&lt;/span>&lt;/h2>
+        &lt;h2 repeater-empty=&quot;true&quot;>no data found&lt;/h2>
+  &lt;/div></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line292">line 292</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 16 2016 23:09:41 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

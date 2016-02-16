@@ -1,0 +1,40 @@
+<html>
+<head>
+	<title>测试 REQUEST SESSION</title>
+	<meta charset="utf-8">
+</head>
+
+
+<body>
+[%
+ 	logger.debug('session.name = ' + session.name);
+	if(request.name){
+		session.name = request.name;
+		session.email = request.email;
+		response.sendRedirect('request-session-test.jssp');
+	}
+%]
+
+<p>
+
+[% if(session.name){ %]
+	你好，[%= session.name %], 我将写信给你 [%= session.email %] 	
+[% } else { %]
+ 	请输入您的个人信息
+[% }%]
+
+</p>
+
+<form action="request-session-test.jssp" method="post">
+
+姓名: <input name="name">
+Email: <input name="email">
+
+<button type="submit">提交</button>
+</form>
+
+</body>
+
+</html>
+
+
