@@ -17,7 +17,7 @@
 ### 在自己的 web 项目中使用 d2js 技术
 
 0. 确保上述 jdk, 数据库, web 服务器环境正常
-0. 导入 [d2js.war](../build/org.siphon.d2js.war?raw=true)
+0. 导入 [d2js.war](./org.siphon.d2js.war?raw=true)
 0. 在 `WebContent/META-INF/context.xml`中修改数据库连接。
 0. 修改 `jslib/molecule.js`，将 `Molecule.ModulesPath` 中的网站名称修改为你的项目名称
 
