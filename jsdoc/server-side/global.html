@@ -140,7 +140,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_validation.js.html">d2js/validation.js</a>, <a href="d2js_validation.js.html#line61">line 61</a>
+        <a href="WebContent_WEB-INF_jslib_d2js_validation.js.html">WebContent/WEB-INF/jslib/d2js/validation.js</a>, <a href="WebContent_WEB-INF_jslib_d2js_validation.js.html#line61">line 61</a>
     </li></ul></dd>
     
 
@@ -315,7 +315,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line49">line 49</a>
+        <a href="WebContent_WEB-INF_jslib_d2js_base.js.html">WebContent/WEB-INF/jslib/d2js/base.js</a>, <a href="WebContent_WEB-INF_jslib_d2js_base.js.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -452,7 +452,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_base.js.html">d2js/base.js</a>, <a href="d2js_base.js.html#line64">line 64</a>
+        <a href="WebContent_WEB-INF_jslib_d2js_base.js.html">WebContent/WEB-INF/jslib/d2js/base.js</a>, <a href="WebContent_WEB-INF_jslib_d2js_base.js.html#line64">line 64</a>
     </li></ul></dd>
     
 
@@ -537,7 +537,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="jssp.js.html">jssp.js</a>, <a href="jssp.js.html#line79">line 79</a>
+        <a href="WebContent_WEB-INF_jslib_jssp.js.html">WebContent/WEB-INF/jslib/jssp.js</a>, <a href="WebContent_WEB-INF_jslib_jssp.js.html#line79">line 79</a>
     </li></ul></dd>
     
 
@@ -619,7 +619,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lang.js.html">lang.js</a>, <a href="lang.js.html#line189">line 189</a>
+        <a href="WebContent_WEB-INF_jslib_lang.js.html">WebContent/WEB-INF/jslib/lang.js</a>, <a href="WebContent_WEB-INF_jslib_lang.js.html#line189">line 189</a>
     </li></ul></dd>
     
 
@@ -701,7 +701,386 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lang.js.html">lang.js</a>, <a href="lang.js.html#line197">line 197</a>
+        <a href="WebContent_WEB-INF_jslib_lang.js.html">WebContent/WEB-INF/jslib/lang.js</a>, <a href="WebContent_WEB-INF_jslib_lang.js.html#line197">line 197</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="findResource"><span class="type-signature"></span>findResource<span class="signature">(filename)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>找出文件路径。前面两个函数不用这个函数，是因为前面两个函数可能在eval的代码中调用 include 或 imports。</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>filename</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_engine.js.html">src/engine.js</a>, <a href="src_engine.js.html#line139">line 139</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="imports"><span class="type-signature"></span>imports<span class="signature">(scriptFile)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>引用另一个脚本，如果已经引用过，不再重复引用<br>js不能确知该段代码文件自身的路径，现在这个功能是通过压栈来确保可以得到当前文件，动作过程如下<br>在java端 eval 脚本时，在 engine['IMPORTS_PATH_STACK'] 追加当前文件，通过获取 IMPORTS_PATH_STACK.last() 可以得到当前文件的路径<br>例如，当java eval &quot;a.js&quot; 时，栈状态为 ['a.js']<br>        当 a.js 的代码引用 b/b1.js 时，引用路径为 './b/b1.js'，栈状态为 ['a.js', 'b/b1.js']<br>            此时 b1.js 如欲引用 b/b2.js，可以使用 imports('b2.js')。因为栈顶可以取得 b/b1.js，所以可以使用关联路径。<br>            调用 import(b/b2.js) ，则栈状态变为 ['a.js', 'b/b1.js', 'b/b2.js']<br>            当 b2.js eval 完，栈状态恢复到['a.js', 'b/b1.js']<br>        当 b1.js eval 完，栈状态恢复到 ['a.js']<br>        此时，a.js 又可以按它的相对路径引用其它脚本</p>
+<p>显然这个方式并不支持回调，如果在回调中要引用脚本，只能使用对默认路径的相对路径，通过 DEFAULT_IMPORTS_PATHS 获得。<br>一般网站设成 ['WEB-INF/jslib/']<br>同步程序设置成 ['js/', 'jslib/']</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>scriptFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_engine.js.html">src/engine.js</a>, <a href="src_engine.js.html#line39">line 39</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="include"><span class="type-signature"></span>include<span class="signature">(scriptFile)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>和 imports 类似，但是可以发生重复引用</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>scriptFile</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_engine.js.html">src/engine.js</a>, <a href="src_engine.js.html#line91">line 91</a>
     </li></ul></dd>
     
 
@@ -855,7 +1234,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="jssp.js.html">jssp.js</a>, <a href="jssp.js.html#line39">line 39</a>
+        <a href="WebContent_WEB-INF_jslib_jssp.js.html">WebContent/WEB-INF/jslib/jssp.js</a>, <a href="WebContent_WEB-INF_jslib_jssp.js.html#line39">line 39</a>
     </li></ul></dd>
     
 
@@ -878,6 +1257,156 @@
 
 
 
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="parseDate"><span class="type-signature"></span>parseDate<span class="signature">(key, value)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>为JSON解析时提供日期解析。<br>usage: JSON.parse(string, parseDate)</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_engine.js.html">src/engine.js</a>, <a href="src_engine.js.html#line169">line 169</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+    
 
 
 
@@ -1033,7 +1562,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lang.js.html">lang.js</a>, <a href="lang.js.html#line235">line 235</a>
+        <a href="WebContent_WEB-INF_jslib_lang.js.html">WebContent/WEB-INF/jslib/lang.js</a>, <a href="WebContent_WEB-INF_jslib_lang.js.html#line235">line 235</a>
     </li></ul></dd>
     
 
@@ -1115,7 +1644,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lang.js.html">lang.js</a>, <a href="lang.js.html#line205">line 205</a>
+        <a href="WebContent_WEB-INF_jslib_lang.js.html">WebContent/WEB-INF/jslib/lang.js</a>, <a href="WebContent_WEB-INF_jslib_lang.js.html#line205">line 205</a>
     </li></ul></dd>
     
 
@@ -1246,7 +1775,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lang.js.html">lang.js</a>, <a href="lang.js.html#line220">line 220</a>
+        <a href="WebContent_WEB-INF_jslib_lang.js.html">WebContent/WEB-INF/jslib/lang.js</a>, <a href="WebContent_WEB-INF_jslib_lang.js.html#line220">line 220</a>
     </li></ul></dd>
     
 
@@ -1294,13 +1823,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="console.html">console</a></li><li><a href="D2JS.html">D2JS</a></li><li><a href="T.html">T</a></li><li><a href="V.html">V</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$OUTP">$OUTP</a></li><li><a href="global.html#$SQL">$SQL</a></li><li><a href="global.html#$V">$V</a></li><li><a href="global.html#cond">cond</a></li><li><a href="global.html#FailedError">FailedError</a></li><li><a href="global.html#FatalError">FatalError</a></li><li><a href="global.html#includeJssp">includeJssp</a></li><li><a href="global.html#translateObject">translateObject</a></li><li><a href="global.html#ValidationError">ValidationError</a></li><li><a href="global.html#wrapJsError">wrapJsError</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="console.html">console</a></li><li><a href="D2JS.html">D2JS</a></li><li><a href="T.html">T</a></li><li><a href="V.html">V</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$OUTP">$OUTP</a></li><li><a href="global.html#$SQL">$SQL</a></li><li><a href="global.html#$V">$V</a></li><li><a href="global.html#cond">cond</a></li><li><a href="global.html#FailedError">FailedError</a></li><li><a href="global.html#FatalError">FatalError</a></li><li><a href="global.html#findResource">findResource</a></li><li><a href="global.html#imports">imports</a></li><li><a href="global.html#include">include</a></li><li><a href="global.html#includeJssp">includeJssp</a></li><li><a href="global.html#parseDate">parseDate</a></li><li><a href="global.html#translateObject">translateObject</a></li><li><a href="global.html#ValidationError">ValidationError</a></li><li><a href="global.html#wrapJsError">wrapJsError</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 16 2016 03:19:12 GMT+0800 (中国标准时间)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Feb 17 2016 02:50:59 GMT+0800 (中国标准时间)
 </footer>
 
 <script> prettyPrint(); </script>

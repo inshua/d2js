@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: src/engine.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: src/engine.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*******************************************************************************
+ * The MIT License (MIT)
+ * Copyright © 2015 Inshua,inshua@gmail.com, All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the “Software”), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial
+ * portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *******************************************************************************/
+if(typeof println == 'undefined') engine.put('println', print);
+
+/**
+ * 引用另一个脚本，如果已经引用过，不再重复引用
+ * js不能确知该段代码文件自身的路径，现在这个功能是通过压栈来确保可以得到当前文件，动作过程如下
+ * 在java端 eval 脚本时，在 engine['IMPORTS_PATH_STACK'] 追加当前文件，通过获取 IMPORTS_PATH_STACK.last() 可以得到当前文件的路径
+ * 例如，当java eval "a.js" 时，栈状态为 ['a.js']
+ * 		当 a.js 的代码引用 b/b1.js 时，引用路径为 './b/b1.js'，栈状态为 ['a.js', 'b/b1.js']
+ * 			此时 b1.js 如欲引用 b/b2.js，可以使用 imports('b2.js')。因为栈顶可以取得 b/b1.js，所以可以使用关联路径。
+ * 			调用 import(b/b2.js) ，则栈状态变为 ['a.js', 'b/b1.js', 'b/b2.js']
+ * 			当 b2.js eval 完，栈状态恢复到['a.js', 'b/b1.js']
+ * 		当 b1.js eval 完，栈状态恢复到 ['a.js']
+ * 		此时，a.js 又可以按它的相对路径引用其它脚本
+ * 
+ * 显然这个方式并不支持回调，如果在回调中要引用脚本，只能使用对默认路径的相对路径，通过 DEFAULT_IMPORTS_PATHS 获得。 
+ * 一般网站设成 ['WEB-INF/jslib/']
+ * 同步程序设置成 ['js/', 'jslib/']
+ * @param scriptFile
+ */
+function imports(scriptFile){
+	var stk = IMPORTS_PATH_STACK;
+	var last = stk[stk.length-1];
+	var currFile = new java.io.File(last);
+	var abspath = new java.io.File(currFile, '../' + scriptFile).getCanonicalPath();
+	var result;
+	if(new java.io.File(abspath).exists()){
+		stk.push(abspath);
+		try{
+			if(!IMPORTED_FILES[abspath]){
+				//println('include ' + abspath + ' found at stack');
+				IMPORTED_FILES[abspath] = true;
+				engine.put("javax.script.filename", abspath);
+				result = engine.eval(new java.io.InputStreamReader(new java.io.FileInputStream(abspath), "utf-8"));
+			}
+		} catch(e){
+			throw e;
+		} finally {
+			stk.pop();
+		}
+		return result;
+	} else {
+		var defaults = DEFAULT_IMPORTS_PATHS;
+		for(var i=0; i&lt;defaults.length; i++){
+			var file = new java.io.File(defaults[i]);
+			abspath = new java.io.File(file, scriptFile).getCanonicalPath();
+			if(new java.io.File(abspath).exists()){
+				stk.push(abspath);
+				try{
+					if(!IMPORTED_FILES[abspath]){
+						//println('include ' + abspath + ' found at default path');
+						IMPORTED_FILES[abspath] = true;
+						engine.put("javax.script.filename", scriptFile);
+						result = engine.eval(new java.io.InputStreamReader(new java.io.FileInputStream(abspath), "utf-8"));
+					}
+				} catch(e){
+					throw e;
+				} finally {
+					stk.pop();
+				}
+				return result;
+			}
+		}
+		println(scriptFile + ' not found, imports failed, default paths: ' + DEFAULT_IMPORTS_PATHS + ' from: ' + last);
+		return result;
+	}
+}	
+
+/**
+ * 和 imports 类似，但是可以发生重复引用
+ * @param scriptFile
+ */
+function include(scriptFile){
+	var stk = IMPORTS_PATH_STACK;
+	var last = stk[stk.length-1];
+	var currFile = new java.io.File(last);
+	var abspath = new java.io.File(currFile, '../' + scriptFile).getCanonicalPath();
+	var result;
+	if(new java.io.File(abspath).exists()){
+		stk.push(abspath);
+		try{
+			//println('include ' + abspath + ' found at stack');
+			IMPORTED_FILES[abspath] = true;
+			engine.put("javax.script.filename", scriptFile);
+			result = engine.eval(new java.io.InputStreamReader(new java.io.FileInputStream(abspath), "utf-8"));
+		} catch(e){
+			throw e;
+		} finally {
+			stk.pop();
+		}
+		return result;
+	} else {
+		var defaults = DEFAULT_IMPORTS_PATHS;
+		for(var i=0; i&lt;defaults.length; i++){
+			var file = new java.io.File(defaults[i]);
+			abspath = new java.io.File(file, scriptFile).getCanonicalPath();
+			if(new java.io.File(abspath).exists()){
+				stk.push(abspath);
+				//println('include ' + abspath + ' found at default path');
+				try{
+					IMPORTED_FILES[abspath] = true;
+					engine.put("javax.script.filename", abspath);
+					result = engine.eval(new java.io.InputStreamReader(new java.io.FileInputStream(abspath), "utf-8"));
+				} catch(e){
+					throw e;
+				} finally {
+					stk.pop();
+				}
+				return result;
+			}
+		}
+		println(scriptFile + ' not found, include failed, default paths: ' + DEFAULT_IMPORTS_PATHS + ' from: ' + last);
+		return result;
+	}
+}
+
+/**
+ * 找出文件路径。前面两个函数不用这个函数，是因为前面两个函数可能在eval的代码中调用 include 或 imports。
+ * @param filename
+ */
+function findResource(filename){
+	var stk = IMPORTS_PATH_STACK;
+	var last = stk[stk.length-1];
+	var currFile = new java.io.File(last);
+	if(new java.io.File(filename).exists()){
+		return filename;
+	}
+	var abspath = new java.io.File(currFile, '../' + filename).getCanonicalPath();
+	var result;
+	if(new java.io.File(abspath).exists()){
+		return abspath;
+	} else {
+		var defaults = DEFAULT_IMPORTS_PATHS;
+		for(var i=0; i&lt;defaults.length; i++){
+			var file = new java.io.File(defaults[i]);
+			abspath = new java.io.File(file, filename).getCanonicalPath();
+			if(new java.io.File(abspath).exists()){
+				return abspath;
+			}
+		}
+	}
+}
+
+/**
+ * 为JSON解析时提供日期解析。
+ * usage: JSON.parse(string, parseDate)
+ * @param key
+ * @param value
+ * @returns
+ */
+function parseDate(key, value) {
+    switch(typeof value){
+    case 'string':
+        var a = parseDate.reg.exec(value);
+        if (a) {
+            return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[5] || 0, a[6] || 0, +a[7] || 0));
+        }
+        break;
+    }
+    return value;
+}
+parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z?)?$/;
+engine.put('parseDate', parseDate);
+
+// nashorn 无用
+///**
+// * 明确用 engine 调用某函数。
+// * 使用场合：当使用 try catch(e){throw e} 时，会丢失堆栈信息，此时应使用
+// * try{
+// * 	  (function(){}).invoke()
+// * } catch(e){throw e}
+// */
+//Function.prototype.invoke = function(scope){
+//	engine.invokeMethod(this, "call", scope);
+//}
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="console.html">console</a></li><li><a href="D2JS.html">D2JS</a></li><li><a href="T.html">T</a></li><li><a href="V.html">V</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$OUTP">$OUTP</a></li><li><a href="global.html#$SQL">$SQL</a></li><li><a href="global.html#$V">$V</a></li><li><a href="global.html#cond">cond</a></li><li><a href="global.html#FailedError">FailedError</a></li><li><a href="global.html#FatalError">FatalError</a></li><li><a href="global.html#findResource">findResource</a></li><li><a href="global.html#imports">imports</a></li><li><a href="global.html#include">include</a></li><li><a href="global.html#includeJssp">includeJssp</a></li><li><a href="global.html#parseDate">parseDate</a></li><li><a href="global.html#translateObject">translateObject</a></li><li><a href="global.html#ValidationError">ValidationError</a></li><li><a href="global.html#wrapJsError">wrapJsError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Feb 17 2016 02:50:59 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

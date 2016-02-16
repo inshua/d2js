@@ -23,12 +23,13 @@
 
 ## 指南
 
-* [d2js](guide/d2js.md)
-* [jssp](guide/jssp.md)
-* [molecule](guide/molecule.md)
+* [d2js](WebConttent/guide/d2js.md)
+* [jssp](WebConttent/guide/jssp.md)
+* [molecule](WebConttent/guide/molecule.md)
 
 指南中的例子需按上述开发与研究 d2js 项目的过程初始化环境后使用。
 
 ## 参考手册
 
-在
+按上述开发与研究 d2js 项目的过程初始化环境后，在项目 `jsdoc` 中有使用 jsdoc 生成的手册。
+
