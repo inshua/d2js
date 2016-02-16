@@ -23,9 +23,9 @@
 
 ## 指南
 
-* [d2js](WebConttent/guide/d2js.md)
-* [jssp](WebConttent/guide/jssp.md)
-* [molecule](WebConttent/guide/molecule.md)
+* [d2js](WebContent/guide/d2js.md)
+* [jssp](WebContent/guide/jssp.md)
+* [molecule](WebContent/guide/molecule.md)
 
 指南中的例子需按上述开发与研究 d2js 项目的过程初始化环境后使用。
 
