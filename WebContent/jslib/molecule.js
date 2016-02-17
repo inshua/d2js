@@ -257,7 +257,7 @@ Molecule.loadModule = function(module){
 
 /**
  * 加载指定 html 文件中的所有 molecule，将使用 extract.jssp。
- * @param html {string} 包含有 molecule 的 html 文件的文件路径
+ * @param html {string} 包含有 molecule 的 html 文件的文件路径，从项目中 WebContent/ 出发的路径。
  * @returns {Boolean} 是否加载成功
  */
 Molecule.loadHtml = function(html){

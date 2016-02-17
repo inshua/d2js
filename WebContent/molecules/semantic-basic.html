@@ -17,7 +17,7 @@
     <script src="../jslib/d2js/collector.js"></script>
     <script src="../jslib/d2js/pipelines.js"></script>
     
-    <script src="../jslib/d2js/semantic-renders.js"></script>
+    <script src="../jslib/d2js/semantic-renderers.js"></script>
     
 
     <script src="../jslib/molecule.js"></script>
@@ -353,7 +353,8 @@
 	                	ck.trigger('valuechange', [ck.molecule().checked()])
                 	}
                 	this.getValue = function(){
-                		return me.$el.find('thead>tr>th[molecule-obj=CheckHeader]').molecule().checked();
+                		var m = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]').molecule();
+                		return m && m.checked();
                 	}
 	                
 	            	break;

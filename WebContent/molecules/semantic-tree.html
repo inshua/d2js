@@ -1,0 +1,412 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>d2js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="../jslib/jquery-1.10.2.js"></script>
+	<link href="../jslib/semantic-ui/semantic.css" rel="stylesheet" media="screen">
+	<script src="../jslib/semantic-ui/semantic.js"></script>
+
+    <script src="../jslib/date.js/Date.js"></script>
+
+    <script src="../jslib/d2js/dataset.js"></script>
+    <script src="../jslib/d2js/render.js"></script>
+    <script src="../jslib/d2js/renderers.js"></script>
+    <script src="../jslib/d2js/collector.js"></script>
+    <script src="../jslib/d2js/pipelines.js"></script>
+    
+    <script src="../jslib/d2js/semantic-renderers.js"></script>
+    
+    <script src="../jslib/molecule.js"></script>
+	
+	<script>
+		Molecule.ModulesPath = '/d2js/molecules/';
+	    Molecule.loadHtml('/molecules/semantic-basic.html');
+	</script>
+
+</head>
+<body>
+    <table>
+        <tr>
+            <!-- 树的缩进节点，<th col=xxx text=xxx></th> -->
+            <th molecule-def="TreeNode" renderer="treeNode">
+              	<script>
+                    // MOLECULE_DEF
+                    var TreeNode = function () {
+                        var table = this.$el.closest('[table]').attr('table');
+                        var col = this.$el.attr('col');
+                        var text = this.$el.attr('text');
+                        this.$el.attr('data-n', 'row,' + col);
+                        this.$el.html(text);
+                    }
+                    
+                	d2js.Renderers.treeNode = function (element, v, node, _1, row) {
+                		var path = row.path;
+                		var depth = node.depth
+                		var s = '';
+                		for(var i=0; i<depth; i++) s+= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                		var checkHtml = typeof node.checked != 'undefined' ? '<input type="checkbox">&nbsp;&nbsp;' : '';
+
+                		if(node.children.length == 0){
+                			$(element).html(s + checkHtml + v);
+                		} else {
+                			if(node.expanded){
+                				$(element).html(s + '<a class=""><i class="angle down icon"></i></a>&nbsp;&nbsp;' + checkHtml + v);
+                				$(element).find('a').on('click', function(event){
+                					node.expanded = false;
+                					d2js.render(element.closest('table')[0]);                					
+                					event.stopPropagation();
+                				})
+                			} else {
+                				$(element).html(s + '<a class=""><i class="angle right icon"></i></a>' + checkHtml + v);
+                				$(element).find('a').on('click', function(){
+                					node.expanded = true;
+                					d2js.render(element.closest('table')[0]);
+                					event.stopPropagation();
+                				})
+                			}
+                		}
+                		if(typeof node.checked != 'undefined')
+                			$(element).find('input[type=checkbox]').prop('checked', node.checked);
+                		
+                		$(element).find('input[type=checkbox]').on('change', function(){
+                			var checked = this.checked;
+                			var update = false;
+                			(function down(node){
+                				node.checked = checked; 
+                				if(node.children.length) {
+                					update = true;
+                					node.children.forEach(down);
+                				}
+                			})(node);
+                			(function up(pnode){
+                				if(pnode == null) return;
+                				if(checked && pnode.children.every(function(c){return c.checked == true})) {
+                					update = true;
+                					pnode.checked = true;
+                					up(pnode.parent)
+                				} else if(!checked && pnode.children.some(function(c){return c.checked === false})) {
+                					pnode.checked = false;
+                					update = true;
+                					up(pnode.parent)
+                				}
+                			})(node.parent);
+                			
+                			var t = $(element).closest('table');
+                			if(update){
+                				d2js.render(element.closest('table')[0]);
+                			}
+                			t.trigger('checkchange');
+                		})
+                	};
+                    // MOLECULE_DEF_END
+                    Molecule.create(TreeNode);
+                </script>
+           	</th>
+            
+        </tr>
+    </table>
+    
+    <!-- 树，
+    	<table table=xxx [paging="true"] [checkable="false"] [id-col="id"] [parent-col="parent_id"] [value-col="id"] [select="none|single|multi"] [show-header="true|false"]></table>
+    	checkable 是否支持复选
+    	id-col id 字段名
+    	parent-col parent_id 字段名，反身关联 
+    	select 选择模式
+    	show-header 是否显示表头
+    -->
+    <table molecule-def="Tree" class="ui celled striped table" renderer="tree" checkable="false">
+        <!-- {INNER_HTML} -->
+        <tfoot>
+            <tr>
+                <th width="100%" colspan="1000" class="center aligned">
+                	<div style="display: flex;flex-flow: row nowrap;justify-content: space-between;align-items: center;">
+                		<div id="leftFoot"></div>
+	                    <div class="ui pagination menu" renderer="pagination">
+				        </div>
+	                    <div id="rightFoot"></div>
+                    </div>
+                </th>
+            </tr>
+        </tfoot>
+        <script>
+            // MOLECULE_DEF
+            [
+    		 {$ : 'table.selectable > tbody > tr > td', 'border-top': '0px'}, 
+    		 {$ : 'table.selectable > tbody > tr', cursor : 'pointer'}
+    		].defCss();
+            function Tree() {
+            	var selectedTrClass = 'active';
+            	
+                var table = this.$el.closest('[table]').attr('table');
+                this.$el.attr('data', '#' + table);
+                var paging = this.$el.closest('[paging]').attr('paging');
+                if (paging == 'false') {
+                    this.$el.find('.pagination').closest('tfoot').remove();
+                } else {
+                	this.$el.find('.pagination').attr('data', '#' + table);
+                }
+                this.$el.find('thead>tr').attr('data', "rows,N");
+                
+                var idColumn = this.$el.closest('[id-col]').attr('id-col') || 'id';
+        		var valueColumn = this.$el.closest('[value-col]').attr('value-col') || idColumn;
+        		
+                if(this.$el.closest('[show-header]').attr('show-header') == 'false'){
+                	this.$el.find('thead').hide();
+                }
+
+                var me = this;
+                var select = this.$el.closest('[select]').attr('select') || 'none';
+                switch(select){
+                case 'none' : ;
+                	break;
+                case 'single' : 
+                case 'multi' :
+	                // this.$el[0].className = 'table table-hover table-condensed table-selectable';
+	                this.$el[0].className = 'ui selectable table';	                
+	                this.$el.attr('checkable', (select == 'multi') + '');
+	                if(select == 'multi'){
+		                this.$el.on('checkchange', function(){
+		                	var table = d2js.locateData($(this))[0];
+		                	var checked = getCheckedItems(table.tree, valueColumn);
+		                	me.$el.data('value', checked);
+		                	
+		                	me.$el.find('tbody>tr').each(function(idx, tr){
+		                		var row = d2js.locateData(tr)[0];
+	                            if(checked.indexOf(row[valueColumn]) != -1) $(tr).addClass(selectedTrClass); else $(tr).removeClass(selectedTrClass);                            
+		                	});
+	
+		                	me.$el.trigger('valuechange', [checked]);
+		                });
+	                }
+	                
+	                this.$el.on('d2js.rendered', function f(event) {
+                        if (event.target == me.$el[0]) {
+                        	var value = me.$el.data('value');
+    	                	me.$el.find('tbody>tr').each(function(idx, tr){
+    	                		var row = d2js.locateData(tr)[0];
+    	                		if(value && value.indexOf(row[valueColumn]) != -1) $(tr).addClass(selectedTrClass); else $(tr).removeClass(selectedTrClass);                            
+    	                	});
+                            me.$el.find('tbody>tr').each(function(idx, tr){
+                            	$(tr).on('click', function(event){
+                            		if(select == 'multi'){
+	                            		if($(event.target).is('td[molecule-obj=TreeNode]>input')){
+	                            			return;
+	                            		}                            		
+		        	                	var ck = $(tr).find('td[molecule-obj=TreeNode]>input');
+		        	                	ck.prop('checked', !ck.prop('checked'));
+		        	                	ck.change();
+                            		} else {
+                            			var row = d2js.locateData(tr)[0];
+                            			var v = row[valueColumn];
+                            			me.setMultiValue([v]);
+                            			me.$el.trigger('valuechange', [[v]]);
+                            		}
+	        	                });
+                            });
+                        }
+	                });
+	                
+	                this.setValue = this.setMultiValue = function(value){
+	                	var table = d2js.locateData(this.$el)[0];
+	                	table.tree = null;
+	                	this.$el.data('value', value && value.slice());
+	                	d2js.render(this.$el);
+	                }
+	                this.getValue = this.getMultiValue = function(){
+	                	return this.$el.data('value');
+	                }
+	                
+	                if(select == 'single'){
+	                	this.setValue = function(value){this.setMultiValue([value]);}
+	                	this.getValue = function(){return this.getMultiValue() && this.getMultiValue()[0];}
+	                }
+	                
+	            	break;
+                }                
+                              
+            }
+            function getCheckedItems(roots, valueColumn){
+            	var items = [];
+            	for(var stk = roots.slice(); stk.length;){
+            		var item = stk.pop();
+            		if(item.checked){	// 忽略选中的子节点
+            			items.push(item)
+            		} else {
+            			for(var i=0;i<item.children.length; i++){
+            				stk.push(item.children[i]);
+            			}
+            		}
+            	}
+            	return items.map(function(nd){ return nd.row[valueColumn]});
+            }
+            
+            d2js.Renderers.tree = function(hTable, table){
+            	var checked = $(hTable).data('value');
+        		var checkable = hTable.getAttribute('checkable');
+        		checkable = (checkable && checkable != 'false');	
+        		var idColumn = $(hTable).closest('[id-col]').attr('id-col') || 'id';
+        		var valueColumn = $(hTable).closest('[value-col]').attr('value-col') || idColumn;
+        		var parentColumn = $(hTable).closest('[parent-col]').attr('parent-col') || 'parent_id';
+        		var rebuildTree = false;
+        		if(!table.tree){ 
+        			rebuildTree = true;
+        		} else if((table.rows.length == 0) != (table.tree.length == 0)){
+        			rebuildTree = true;
+        		} else if(table.rows.indexOf(table.tree[0] && table.tree[0].row) == -1){
+        			rebuildTree = true;
+        		}
+        		var tree = rebuildTree ? buildTree(table, idColumn, parentColumn) : table.tree ;
+        		
+        		function buildTree(table, idColumn, parentColumn){
+        			var roots = table.rows.filter(function(row){
+        				return table.find('id', row[parentColumn]) == null;		// 没有父节点的即是根节点
+        			}).map(function (row){return toNode(row, 0)});				
+        			
+        			function toNode(row, depth, parentNode){
+        				var node = {row: row, expanded: true, depth : depth, parent : parentNode};
+        				if(checkable){
+        					node.checked = false;		// false | true | undefined
+        					if((parentNode && parentNode.checked) || (checked && checked.indexOf(row[valueColumn]) != -1)){
+        						node.checked = true;
+        					}
+        				}
+        				node.children = table.rows
+        							.filter(function(crow){return crow[parentColumn] == row[idColumn]})
+        							.map(function(crow){return toNode(crow, depth + 1, node)});
+        				return node;
+        			}
+        			
+        			return table.tree = roots;
+        		}
+        		
+        		
+        		var columnRenders = [];
+        		var headRow = hTable.tHead.rows[0];
+        		for(var i=0; i<headRow.cells.length; i++){
+        			var cell = headRow.cells[i];
+        			var attrs = {};
+        			for(var j=0; j<cell.attributes.length; j++){
+        				var attr = cell.attributes[j].name;
+        				var v = $(cell).attr(attr);
+        				switch(attr){
+        				case 'data-t' : attrs['data'] = v; break;
+        				default : attrs[attr] = v;
+        				} 
+        			}
+        			columnRenders.push(attrs);
+        		}
+        		
+        		if(hTable.tBodies.length == 0){
+        			var tBody = hTable.createTBody();
+        		} else {
+        			var tBody = hTable.tBodies[0];
+        			while(tBody.rows.length){
+        				tBody.rows[0].remove();
+        			}
+        		}
+        		
+        		var stk = tree.slice(); stk.reverse();
+        		while(stk.length){
+        			var nd = stk.pop();
+        			var idx = nd.row._table.rows.indexOf(nd.row);
+        			
+        			var tr = tBody.insertRow();
+        			tr.setAttribute('data', hTable.getAttribute('data') + ',' + headRow.getAttribute('data').replace(/,\s*N/, ',' + idx));
+        			columnRenders.forEach(function(column){
+        				var cell = document.createElement('td');
+        				var isTreeNode = false;
+        				for(var attr in column){if(column.hasOwnProperty(attr)){
+        					if(attr == 'data'){
+        						$(cell).attr('data', hTable.getAttribute('data') + ',' + column.data.replace(/,\s*N\s*,/, ',' + (idx) + ','));
+        					} else if(attr == 'data-n'){
+        						$(cell).attr('data', column[attr]);
+        						isTreeNode = true;
+        					} else {
+        						$(cell).attr(attr, column[attr]);
+        					}
+        				}}
+        				tr.appendChild(cell);
+        				if(isTreeNode) d2js.render(cell, nd, true);
+        			});
+        			
+        			if(nd.expanded){
+        				for(var i = nd.children.length-1; i >= 0; i--){
+        					stk.push(nd.children[i]);
+        				}
+        			}
+        		}
+        	}
+            // MOLECULE_DEF_END
+            Molecule.create(Tree);
+        </script>
+    </table>
+
+    <div molecule="TableList" table="company" edit-dialog="dialog1">
+        <h1>表格编辑</h1>
+        <div>
+            <form molecule="SearchForm">
+                <div molecule="SearchFormItem" col="name" text="Name">
+                    <input type="text" molecule="SearchInput">
+                </div>
+                <button molecule="SearchButton">Search</button>
+                <button molecule="AddButton">Add</button>                
+            </form>
+        </div>
+        <div molecule="TableError"></div>
+
+        <table molecule="Tree" checkable="true" select="multi">
+            <thead>
+                <tr>
+                    <th molecule="TreeNode" col="name" text="Name"></th>
+                    <th molecule="Header" sortable=true col="email" text="Email"></th>
+                    <th data-t="rows,N,id" renderer="editLink"></th>
+                </tr>
+            </thead>
+        </table>
+
+    </div>
+
+    <div molecule="Dialog" title="Company" id="dialog1" table="company">
+        <form>
+            <div molecule="FormItem" col="name" text="Name">
+                <input type="text" molecule="Input">
+            </div>
+            <div molecule="FormItem" col="email" text="Email">
+                <input type="email" molecule="Input">
+            </div>
+        </form>
+    </div>
+
+</body>
+<script>
+
+    var table = new d2js.DataTable('company', 'test.d2js', { pageSize: 5 });
+    table.on('load', function (error) {
+        d2js.render(null, this);
+    });
+    
+    var table2 = new d2js.DataTable('company2', 'test.d2js', { pageSize: 5 });
+    table2.on('load', function (error) {
+        d2js.render(null, this);
+    });
+
+
+    $(function(){
+    	var data = [
+    		        {id : 1, name : '东方航空', email : 'dh@xxx.com', parent_id : null},
+    		        {id : 2, name : '东方航空华东公司', email : 'dh@xxx.com', parent_id : 1},
+    		        {id : 8, name : '空管部', email : 'dh@xxx.com', parent_id : 2},
+    		        {id : 3, name : '信息部', email : 'dh@xxx.com', parent_id : 2},
+    		        {id : 4, name : '东方航空华北公司', email : 'dh@xxx.com', parent_id : 1},
+    		        {id : 5, name : '厦门航空', email : 'dh@xxx.com', },
+    		        {id : 6, name : '厦门航空华南公司', email : 'dh@xxx.com', parent_id : 5},
+    		        {id : 7, name : '吉祥航空', email : 'dh@xxx.com'},
+    		    ];
+	    table.fill(data, true);
+	    table2.fill(data, true);
+    });
+</script>
+</html>

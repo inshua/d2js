@@ -95,8 +95,12 @@ d2js.collect = function(htmlElement, baseData, direct, customCollectors){
 					collector = parr[parr.length -1];
 				} 
 				var fun = extractCollector(collector.trim());
-				fun.apply(null, data);
-				$(e).trigger('d2js.collected', data);
+				if(fun){
+					fun.apply(null, data);
+					$(e).trigger('d2js.collected', data);
+				} else {
+					console.error(collector + ' not found');
+				}
 			}
 		}
 		

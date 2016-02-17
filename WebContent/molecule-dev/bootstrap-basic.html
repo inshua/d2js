@@ -1,0 +1,1062 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>d2js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+    <script src="../jslib/jquery-1.10.2.js"></script>
+    <script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+    <script src="../jslib/date.js/Date.js"></script>
+
+    <script src="../jslib/d2js/dataset.js"></script>
+    <script src="../jslib/d2js/render.js"></script>
+    <script src="../jslib/d2js/renderers.js"></script>
+    <script src="../jslib/d2js/collector.js"></script>
+    <script src="../jslib/d2js/pipelines.js"></script>
+    
+    <script src="../jslib/d2js/bootstrap-renderers.js"></script>
+    
+    <script src="../jslib/molecule.js"></script>
+
+
+</head>
+<body>
+    <table>
+        <tr>
+    		<!-- 可排序的列头，<th col=xxx text=xxx [renderer=xxx,默认为 std] sortable="true|false"></th> -->
+            <th molecule-def="Header" renderer="std">
+                <a></a>
+                <script>
+                    // MOLECULE_DEF
+                    function Header() {
+                        var table = this.$el.closest('[table]').attr('table');
+                        var col = this.$el.attr('col');
+                        var text = this.$el.attr('text');
+                        this.$el.attr('data-t', 'rows,N,' + col);
+
+                        var sortable = this.$el.attr('sortable');
+                        sortable = (sortable && sortable != 'false')
+                        
+	                    var a = this.$el.find('a');
+                        if(sortable){
+	                        a.attr('data', '#' + table);
+	                        a.attr('renderer', "sortLink('" + col + "','" + text + "')");
+                        } else {
+                        	a[0].outerHTML = text;
+                        }
+                    }
+                    d2js.Renderers.sortLink = function (colName, text) {
+                        return function (element, table) {
+                            var e = $(element);
+                            e.attr('href', '###');
+                            element.onclick = function () {
+                                var sort = {};
+                                var old = table.search._sorts && table.search._sorts[colName];
+                                if (old == 'asc') {
+                                    sort[colName] = 'desc';
+                                } else {
+                                    sort[colName] = 'asc';
+                                }
+                                table.search._sorts = sort;
+                                table.load();
+                            };
+                            var icon = null;
+                            var sorts = table.search._sorts || {};
+                            switch (sorts[colName]) {
+                                case 'asc': icon = 'glyphicon glyphicon-arrow-up'; break;
+                                case 'desc': icon = 'glyphicon glyphicon-arrow-down'; break;
+                            }
+                            e.html(text + (icon ? '<span class="' + icon + '">' : ''));
+                        }
+                    }
+                    // MOLECULE_DEF_END
+                    Molecule.create(Header);
+                </script>
+            </th>
+            <!-- 
+            	多选列头  <th col="id"> 
+            -->
+            <th molecule-def="CheckHeader" renderer="check">
+                <input type="checkbox" id="ckAll">
+                <script>
+                    // MOLECULE_DEF
+                    function CheckHeader() {
+                        var checked = [];
+                        var checkboxes = [];
+                        var col = this.$el.attr('col');
+                        this.$el.attr('data-t', 'rows,N,' + col);
+
+                        this.$el.attr('check-all-id', this.id);
+                        
+                        var me = this;
+                        this.$el.find('#ckAll').on('change', function (e) {
+                        	var arr = [];
+                            checkboxes.forEach(function (ck) {
+                                ck.checked = this.checked;
+                                if(ck.checked) arr.push($(ck).parent().data('value'))
+                            }, this);
+                            checked = arr;
+                            me.$el.trigger('valuechange', [checked]);
+                        });
+
+                        this.checkboxes = checkboxes;
+
+                        this.checked = function (v) {
+                            if (v == null) {
+                                return checked;
+                            } else {
+                            	checked = v;
+                                checkboxes.forEach(function(ck){
+                                	ck.checked = (checked.indexOf($(ck).parent().data('value')) != -1);
+                                })
+                                if (checkboxes.every(function (ck) { return ck.checked })) {
+                                    me.$el.find('#ckAll').prop('checked', true);
+                                } else {
+                                	me.$el.find('#ckAll').prop('checked', false);
+                                }
+                            }
+                        }
+                        
+                        var table = d2js.dataset[this.$el.closest('[table]').attr('table')];
+                        table.on(['load', 'submit'], function(){
+                        	me.checked([]);
+                        });
+                    }
+
+                    d2js.Renderers.check = function (element, v, table) {
+                        var checkAllId = $(element).attr('check-all-id');
+                        var checkAll = $(element).closest('table').find('thead').find('th[check-all-id=' + checkAllId + ']').molecule();
+
+                        var checked = checkAll.checked();
+                        var checkboxes = checkAll.checkboxes;
+
+                        var e = $(element).html('');
+                        var ck = $(document.createElement('input')).attr('type', 'checkbox')
+                                .prop('checked', checked.indexOf(v) != -1)
+                                .appendTo(e);
+                        checkboxes.push(ck[0]);
+                        
+                        $(element).data('value', v);
+
+                        ck.on('change', function (event) {
+                            var checked = checkAll.checked();
+                            if (this.checked) {
+                                if (checked.indexOf(v) == -1) {
+                                    checked.push(v);
+                                }
+                                if (checkboxes.every(function (ck) { return ck.checked })) {
+                                	checkAll.$el.find('#ckAll').prop('checked', true);
+                                }
+                                checkAll.$el.trigger('valuechange', [checked]);
+                            } else {
+                            	if (checked.indexOf(v) != -1) {
+	                                checked.splice(checked.indexOf(v), 1);
+                            	}
+                                if (!checkboxes.every(function (ck) { return ck.checked })) {
+                                	checkAll.$el.find('#ckAll').prop('checked', false);
+                                }
+                                checkAll.$el.trigger('valuechange', [checked]);
+                            }
+                        });
+                    }
+                    // MOLECULE_DEF_END
+                    Molecule.create(CheckHeader);
+                </script>
+            </th>
+            
+            <!--
+            	可点击列头
+            	<th molecule="ActionHeader" col="xxx" text="xxx" [onclick=""] [action=""]>
+            	直接设置 onclick，或通过  actionheader.click(action, colname) 处理点击事件
+            -->
+            <th molecule-def="ActionHeader" href="###">
+		    </th>
+		    <script molecule-for="ActionHeader">
+	            // MOLECULE_DEF
+	            function ActionHeader() {
+	                var table = this.$el.closest('[table]').attr('table');
+	                var col = this.$el.attr('col');
+	                var text = this.$el.attr('text');
+	                this.$el.attr('data-t', 'rows,N,' + col);
+	
+	                var a = this.$el.find('a');
+                    a.attr('data', '#' + table);
+                    var onclick = (this.$el.attr('onclick') || '').replace(/\'/g, "\"");                    
+                    this.$el.attr('renderer', "actionLink('" + col + "','" + text + "','" + onclick +"')");
+                    this.$el.removeAttr('onclick');
+	            }
+	            d2js.Renderers.actionLink = function (colName, text, click) {
+	                return function (element, table) {
+	                    var e = $(document.createElement('a')).appendTo(element);
+	                    e.attr('href', '###');
+	                    if(click) e.attr('onclick', click);
+	                    var action = e.parent().attr('action');
+	                    e.bind('click', function(){
+	                    	var td = $(this).parent();
+	                    	td.trigger('actionheader.click', [action].concat(d2js.locateData(td)));
+	                    });	                    
+	                    e[0].innerHTML = text; 
+	                }
+	            }
+	            // MOLECULE_DEF_END
+	            Molecule.create(ActionHeader);
+		    </script>
+        </tr>
+    </table>
+
+    <!-- 列表
+    		<table table=xxx [paging="true"] select="none|single|multi" show-header="true|false"></table>
+    	当启用 select应设置 value-col="id"，之后可使用 $(table).data('value') 设置和获取选中的值，当为 multi 模式时，值为数组    	 
+    -->
+    <table molecule-def="List" class="table table-striped list" renderer="table" escape-tag="th">
+        <!-- {INNER_HTML} -->
+        <tbody class="empty">
+        	<tr><td colspan="100%"></td></tr>
+        	<tr><td colspan="100%">没有符合条件的数据</td></tr>
+        </tbody>     
+        <tfoot>
+            <tr>
+                <td width="100%" colspan="1000">
+                	<div style="display: flex;flex-flow: row nowrap;justify-content: space-between;align-items: center;">
+                		<div id="leftFoot"></div>
+	                    <nav>
+	                        <ul class="pagination" renderer="pagination" />
+	                    </nav>
+	                    <div id="rightFoot"></div>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+        <script>
+            // MOLECULE_DEF
+    		[
+    		 {$ : 'table.table-selectable > tbody > tr > td', 'border-top': '0px'}, 
+    		 {$ : 'table.table-selectable > tbody > tr', cursor : 'pointer'},
+    		 {$ : 'tbody.empty > tr:nth-child(even)', height : '300px'},
+    		 {$ : 'tbody.empty > tr:nth-child(odd)', display: 'none'},
+    		 {$ : 'tbody.empty > tr > td', 'vertical-align' : 'middle', 'text-align' : 'center'},
+    		 {$ : 'table.list > thead > tr > th', 'white-space': 'nowrap'},
+    		 {$ : '.list > tbody + tbody', 'border-top': '0px'}
+    		].defCss();
+            function List() {
+                var table = this.$el.closest('[table]').attr('table');
+                var valueColumn = this.$el.closest('[value-col]').attr('value-col') || 'id'
+                this.$el.attr('data', '#' + table);
+                var paging = this.$el.closest('[paging]').attr('paging');
+                if (paging == 'false') {
+                    this.$el.find('.pagination').closest('tfoot').remove();
+                } else {
+                	this.$el.find('.pagination').attr('data', '#' + table);
+                }
+                if(this.$el.closest('[show-header]').attr('show-header') == 'false'){
+                	this.$el.find('thead').hide();
+                }
+                this.$el.find('thead>tr').attr('data', "rows,N");
+                
+				var me = this;
+                var select = this.$el.closest('[select]').attr('select') || 'none';
+                switch(select){
+                case 'none' : ;
+                	break;
+                case 'single' : 
+                	this.$el[0].className = 'table table-hover table-condensed table-selectable list';
+                	this.$el.on('d2js.rendered', function f(event) {
+                        if (event.target == me.$el[0]) {
+                            var storeValue = me.$el.data('value'); 
+                            $(event.target).find('tbody.data>tr').each(function (idx, tr) {
+                                var row = d2js.locateData(tr)[0];
+                                var value = row[valueColumn];
+                                if(storeValue && storeValue == value){
+                                	$(tr).addClass('info');
+                                	me.$el.data('prev_selected_tr', tr);
+                                }
+                                $(tr).bind('click', function () { 
+                                    if(me.$el.data('value') != value){
+                                    	var prevtr = me.$el.data('prev_selected_tr');
+                                    	prevtr && $(prevtr).removeClass('info');
+                                    	
+	                                    me.$el.data('value', value);
+	                                    $(tr).addClass('info');
+	                                    me.$el.data('prev_selected_tr', tr);
+	                                    me.$el.trigger('valuechange', [value, row]);
+                                    }
+                                });
+                            });
+                        }
+                    });
+                	this.setValue = function(value){
+                		if(value != this.getValue()){
+	                		me.$el.data('value', value);
+	                		d2js.render(me.$el);
+	                		this.$el.trigger('valuechange', [value]);
+                		}
+                	}
+                	this.getValue = function(){
+                		return me.$el.data('value');
+                	}
+                	break;
+                case 'multi' :
+	                this.$el[0].className = 'table table-hover table-condensed table-selectable list';
+	                var checkAll = $(document.createElement('th')).attr('molecule', 'CheckHeader');
+	                checkAll.attr('col', valueColumn);
+	                var tr = this.$el.find('thead>tr');
+	                checkAll.insertBefore(tr.children()[0]);
+	                
+	                $(this.$el).on('valuechange', function(evt, checked){
+	                	if(evt.target != me.$el[0]){
+		                	me.$el.find('tbody.data>tr').each(function(idx, tr){
+		                		var d = d2js.locateData(tr);
+		                		if(!d) return;
+		                		var row = d && d[0];
+	                            var value = row[valueColumn];
+	                            if(checked.indexOf(value) != -1){
+	                            	$(tr).addClass('info')
+	                            } else {
+	                            	$(tr).removeClass('info')
+	                            }
+		                	});
+		                	console.log(me.$el[0] + ' trigger valuechange');
+		                	me.$el.trigger('valuechange', [checked]);
+	                	}
+	                });
+	                
+	                this.$el.on('d2js.rendered', function f(event) {
+                        if (event.target == me.$el[0]) {
+                            var storeValue = me.$el.data('value'); 
+                            $(event.target).find('tbody.data>tr').each(function(idx, tr){
+                            	$(tr).on('click', function(event){
+                            		if($(event.target).is('td[molecule-obj=CheckHeader]>input')){
+                            			return;
+                            		}
+	        	                	var ck = $(tr).find('td[molecule-obj=CheckHeader]>input');
+	        	                	ck.prop('checked', !ck.prop('checked'));
+	        	                	ck.change();
+	        	                });
+                            });
+                        }
+	                });
+	                
+	                this.setValue = function(value){
+	                	var ck = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
+	                	ck.molecule().checked(value && value.slice());
+	                	ck.trigger('valuechange', [ck.molecule().checked()])
+                	}
+                	this.getValue = function(){
+                		return me.$el.find('thead>tr>th[molecule-obj=CheckHeader]').molecule().checked();
+                	}
+	                
+	            	break;
+                } 
+                
+                var allowRemove = this.$el.closest('[allow-remove]').attr('allow-remove') == 'true';
+                var willDeleteRows = null;                
+            	if(allowRemove){            		
+            		var leftFoot = this.$el.find('#leftFoot');
+            		leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
+            		leftFoot.on('click', function(evt){
+            			if($(evt.target).is('.btn-remove')){
+	            			var th = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
+	            			var col = th.attr('col');
+	            			var checked = th.molecule().checked();
+	            			var t = d2js.dataset[table];
+	            			willDeleteRows = checked.map(function(c){return t.find(col,c)}).filter(function(r){return r});
+	            			if(willDeleteRows.length == 0){
+	            				var a = $('<div class="alert alert-warning" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
+	            				setTimeout(function(){a.remove()}, 500);
+	            			} else {
+	            				leftFoot.html('<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>');
+	            			}
+            			}
+            		}).on('confirm.ok', function(){
+            			var t = d2js.dataset[table];
+            			willDeleteRows.forEach(function(row){ row._remove(); });
+            			t.submit(function(error){	    	            				
+       	                    if (!error) {
+       	                    	this.reload();
+       	                    } else {
+       	                    	d2js.render();
+       	                    }
+            			})
+            			leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
+    				}).on('confirm.cancel', function(){
+    					leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
+    				});
+            	}
+            }
+            // MOLECULE_DEF_END
+            Molecule.create(List);
+        </script>
+    </table>
+
+    <!-- 表单项，<form col="" text=""></form>， 必须放在 form 里，且 form 已指定 table=xxx -->
+    <div molecule-def="FormItem" class="form-group form-inline">
+        <label></label>
+        <!-- {INNER_HTML} -->
+        <div class="help-block with-errors" renderer="flderr"></div>
+        <script>
+            // MOLECULE_DEF
+            [{$ : 'form.table-form', display: 'table'},
+        	 {$ : '.table-form > .form-group', display: 'table-row'},
+        	 {$ : '.table-form > .form-group > label, .form-group > .form-control' , display: 'table-cell'},        	
+        	 {$ : '.table-form > .form-group > label', 'padding-right': '8px', 'text-align': 'right', 'font-weight': 'normal'},
+        	 // {$ : 'form.table-form', 'min-height': '480px',	'max-height': '800px'; overflow: 'scroll'}
+        	].defCss();
+        	
+            function FormItem() {
+                var table = this.$el.closest('[table]').attr('table');
+                var col = this.$el.attr('col');
+                var text = this.$el.attr('text');
+
+                this.$el.find('.help-block').attr('data', '#' + table + ',curr,_error_at,' + col);
+                this.$el.find('label').html(text);
+                
+                if(this.$el.is('[dict]') && this.$el.find('select').length){
+                	this.$el.attr('data', '#' + table);
+                	this.$el.attr('renderer', "dictToList|options('name','id',false)");
+                }
+            }
+            // MOLECULE_DEF_END
+            Molecule.create(FormItem);
+        </script>
+    </div>
+    
+    <div molecule-def="FormImageItem" class="+ form-image-item" molecule="FormItem" renderer="molecule" collector="m|s">
+        <img id="imgPreview" class="form-control">
+        <input type="file" accept="images/*" capture="camera" class="form-control" class="hide">
+        <script>
+	        // MOLECULE_DEF
+	        [{$ : '.form-image-item > label', 'vertical-align' : 'top'}].defCss();
+	        function FormImageItem() {
+	            var table = this.$el.closest('[table]').attr('table');
+	            var col = this.$el.closest('.form-group').attr('col');
+	            this.$el.attr('data', '#' + table + ',curr,' + col);
+
+	            var imgPreview = this.$el.find('#imgPreview')[0];
+	            var imageData = '';
+	            this.$el.find('input').on('change', function previewImage(){
+	            	var file = this;
+	        		var reader =  new FileReader();
+	        		reader.onloadend = function () {
+	        			imageData = imgPreview.src = reader.result;
+	        			console.log(reader.result);
+	        		}
+	        		if (file) {
+	        			reader.readAsDataURL(file.files[0]);
+	        		} else {
+	        			imageData = imgPreview.src = "";
+	        		}
+	        	});
+	            var me = this;
+	            $(imgPreview).on('click', function(){me.$el.find('input').click();});
+	            this.getValue = function(){return imageData};
+	            this.setValue = function(value){
+	            	imageData = imgPreview.src = value || "";	            	
+	            }
+	            if(this.$el.attr('src')){
+	            	imgPreview.src = this.$el.attr('src');
+	            	this.$el.removeAttr('src');
+	            }
+	            if(this.$el.attr('img-style')){
+	            	imgPreview.style.cssText = this.$el.attr('img-style')
+	            }
+	        }
+	        // MOLECULE_DEF_END
+	        Molecule.extend(FormImageItem);
+        </script>
+    </div>
+    
+    
+    <!-- 搜索表单项，<form col="" text=""></form>， 必须放在 form 里，且 form 已指定 table=xxx -->
+    <div molecule-def="SearchFormItem" class="form-group">
+        <label></label>
+        <!-- {INNER_HTML} -->
+        <script>
+            // MOLECULE_DEF
+            function SearchFormItem() {
+                var table = this.$el.closest('[table]').attr('table');
+                var col = this.$el.attr('col');
+                var text = this.$el.attr('text');
+
+                this.$el.find('label').html(text);
+            }
+            // MOLECULE_DEF_END
+            Molecule.create(SearchFormItem);
+        </script>
+    </div>
+
+    <!-- 输入控件, <input type=xxx> 必须放在 FormItem 内-->
+    <input molecule-def="Input" type="text" class="form-control" renderer="std" collector="c|s">
+    <script molecule-for="Input">
+        // MOLECULE_DEF
+        function Input() {
+            var table = this.$el.closest('[table]').attr('table');
+            var col = this.$el.closest('.form-group').attr('col');
+
+            this.$el.attr('data', '#' + table + ',curr,' + col);
+        }
+        // MOLECULE_DEF_END
+        Molecule.create(Input);
+    </script>
+    
+    <!-- 
+    	TextArea, <textarea cols="" rows=""> 必须放在 FormItem 内
+    -->
+    <textarea molecule-def="TextArea" class="form-control" renderer="std" collector="c|s"></textarea>
+    <script molecule-for="TextArea">
+        // MOLECULE_DEF
+        [{$ : '.form-textarea-item > label', 'vertical-align' : 'top'}].defCss();
+        function TextArea() {
+            var table = this.$el.closest('[table]').attr('table');
+            var col = this.$el.closest('.form-group').attr('col');
+
+            this.$el.attr('data', '#' + table + ',curr,' + col);
+            
+            this.$el.closest('.form-group').addClass('form-textarea-item');
+        }
+        // MOLECULE_DEF_END
+        Molecule.create(TextArea);
+    </script>
+    
+    
+	<!-- 输入的 input, 放在 SearchFormItem 内
+		用法：
+			<div molecule="SearchFormItem" col="name" text="Name">
+            	<select molecule="SearchSelect">
+            </div>
+	-->
+    <input molecule-def="SearchInput" type="text" class="form-control" renderer="std" collector="c|s">
+    <script molecule-for="SearchInput">
+        // MOLECULE_DEF
+        function SearchInput() {
+            var table = this.$el.closest('[table]').attr('table');
+            var col = this.$el.closest('.form-group').attr('col');
+
+            this.$el.attr('data', '#' + table + ',search,params,' + col);
+        }
+        // MOLECULE_DEF_END
+        Molecule.create(SearchInput);
+    </script>
+
+	<!-- 输入的 select, 放在 SearchFormItem 内
+		用法：
+			<div molecule="SearchFormItem" col="gender" text="Gendor">
+            	<select molecule="SearchSelect">
+            </div>
+	-->
+    <select molecule-def="SearchSelect" class="form-control" renderer="std" collector="c|s"></select>
+    <script molecule-for="SearchSelect">
+        // MOLECULE_DEF
+        function SearchSelect() {
+            var table = this.$el.closest('[table]').attr('table');
+            var col = this.$el.closest('.form-group').attr('col');
+
+            this.$el.attr('data', '#' + table + ',search,params,' + col);
+            d2js.render(this.$el.parent());
+        }
+        // MOLECULE_DEF_END
+        Molecule.create(SearchSelect);
+    </script>
+    
+    
+    <!-- 
+    	输入的 select form item, 放在 search form 中，已嵌套一个 select 元素
+    	用法：
+    	<div molecule="SearchFormSelectItem" col="gender" text="Gendor" [dict="gender"] [allow-empty="true|false"]></div>
+    -->
+    <div molecule-def="SearchFormSelectItem" molecule="SearchFormItem" col="gender" text="Gendor" dict="gender" data="#dicts" allow-empty="true">
+		<select class="form-control" renderer="std" collector="c|s"></select>
+		<script>
+			// MOLECULE_DEF
+	        function SearchFormSelectItem() {
+	            var table = this.$el.closest('[table]').attr('table');
+	            var col = this.$el.closest('.form-group').attr('col');
+	            var allowEmpty = (this.$el.closest('[allow-empty]').attr('allow-empty') != 'false');
+	
+	            this.$el.attr('data', '#dicts');
+	            this.$el.find('select').attr('data', '#' + table + ',search,params,' + col);
+				this.$el.attr('renderer', 'dictToList|options(\'name\',\'id\', ' + allowEmpty + ')');
+	            d2js.render(this.$el);
+	        }
+	        // MOLECULE_DEF_END
+	        Molecule.create(SearchFormSelectItem);
+		</script>
+	</div>
+	
+	<!-- 编辑对话框用的 select, <select> 必须放在 FormItem 内-->
+    <select molecule-def="Select" class="form-control" renderer="std" collector="c|s"></select>
+    <script molecule-for="Select">
+        // MOLECULE_DEF
+        function Select() {
+            var table = this.$el.closest('[table]').attr('table');
+            var col = this.$el.closest('.form-group').attr('col');
+
+            this.$el.attr('data', '#' + table + ',curr,' + col);
+        }
+        // MOLECULE_DEF_END
+        Molecule.create(Select);
+    </script>    
+
+
+    <!-- 对话框  <div title="title"> -->
+    <div molecule-def="Dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" title="Title">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                    <div id="divRowError" renderer="stderr"></div>
+                </div>
+                <div class="modal-body">
+                    <!-- {INNER_HTML} -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="bnSave">Save changes</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            // MOLECULE_DEF
+            [{$:'.modal-body',
+        		'min-height': '320px',
+        		'max-height': '640px',
+        		'overflow-y': 'scroll'},
+        	 {$:'modal', 'overflow': 'visible'},
+        	].defCss();
+            
+            function Dialog() {
+                var title = this.$el.attr('title');
+                this.$el.find('.modal-title').html(title);
+
+                EventDispatcher.call(this);
+                this.regEvent(['close', 'submit']);
+
+                var me = this;
+                this.$el.on('click', '#bnSave', function () {
+                    me.fireEvent('submit');
+                });
+
+                this.$el.on('hide.bs.modal', function () {
+                    me.fireEvent('close');
+                });
+            }
+            // MOLECULE_DEF_END
+            Molecule.create(Dialog);
+        </script>
+    </div>
+    
+    <!-- 搜索按钮, 放在 form 里 -->
+    <button molecule-def="SearchButton" type="button" class="btn btn-default"></button>
+    <script molecule-for="SearchButton" type="text/javascript">
+	    // MOLECULE_DEF
+	    function SearchButton() {
+	        var table = this.$el.closest('[table]').attr('table');
+	        var btn = this.$el;
+	        btn.on('click', function(){
+	        	d2js.collect(btn.parent('form')[0]);
+	            d2js.dataset[table].navigatePage(0);
+	        });	        
+	    }
+	    // MOLECULE_DEF_END
+	    Molecule.create(SearchButton);
+    </script>
+    
+    <!-- 增加按钮, 放在 form 里 -->
+    <button molecule-def="AddButton" type="button" class="btn btn-default"></button>
+    <script molecule-for="AddButton" type="text/javascript">
+	    // MOLECULE_DEF
+	    function AddButton() {
+	        var table = this.$el.closest('[table]').attr('table');
+	        var btn = this.$el;
+	        btn.on('click', function(){
+	        	var tl = $(this).closest('[molecule-obj=TableList]');
+	        	var row = d2js.dataset[table].addRow(d2js.dataset[table].newRow());
+ 	        	Molecule.of(tl).editRow(row);
+	        });	        
+	    }
+	    // MOLECULE_DEF_END
+	    Molecule.create(AddButton);
+    </script>
+    
+     <!-- TableList, <table table="" edit-dialog="dialog id" [new-dialog="dialog id"] allow-remove="true|false"> -->
+     <div molecule-def="TableList" class="container">
+        <script>
+            // MOLECULE_DEF
+            d2js.Renderers.editLink = function (element, v, table) {
+         	        var e = $(element);
+         	        e.html('');
+         	        var a = $(document.createElement('a')).appendTo(e);
+         	        a.html('EDIT');
+         	        a.attr('href', '###');
+         	        a.data('id', v);
+         	        a.on('click', function () {
+         	        	var row = table.find('id', $(this).data('id'));
+         	        	var tl = $(this).closest('[molecule-obj=TableList]');
+         	        	Molecule.of(tl).editRow(row);
+         	        });
+         	    };
+         	    
+            function TableList() {
+               	var tname = this.$el.closest('[table]').attr('table');
+               	
+               	var editDialogId = this.$el.attr('edit-dialog');
+               	var newDialogId = this.$el.attr('new-dialog') || editDialogId;
+               	
+           		if(editDialogId == null || newDialogId == null) return;		// 没有提供编辑数据的对话框
+           		
+           		$(document).ready(function(){
+	           		if(editDialogId) {
+	           			initDialog($('#' + editDialogId));
+	           		}
+	           		if(newDialogId && newDialogId != editDialogId){
+	           			initDialog($('#' + newDialogId));
+	           		}
+           		});
+           		
+           		function initDialog(dialogEle){
+           			dialogEle.find('#divRowError').attr('data', "#" + tname + ",curr,_error");
+	      	        var dialog = Molecule.of(dialogEle);
+	      	        if(dialog == null) debugger;
+	      	        dialog.on('close', function () {
+	      	     		var table = d2js.dataset[tname];
+	      	            table.reject();
+	      	            table.clearError();
+	      	            d2js.render();
+	      	        });
+	      	        dialog.on('submit', function () {
+	      	            $(dialogEle).collect();
+	      	         	var table = d2js.dataset[tname];
+	      	            if(dialogEle[0].hasAttribute('trace-submit')){
+	      	            	table.monitor();
+	      	            	debugger;
+	      	            	return;
+	      	            }
+	      	            table.submit({
+	      	                callback: function (error) {           	                    
+	      	                    if (!error) {
+	      	                    	dialogEle.modal('hide');
+	      	                        this.reload();
+	      	                    } else {
+	      	                    	d2js.render();
+	      	                    }
+	      	                }
+	      	            });
+	      	        });
+           		}
+           	    
+           	    this.editRow = function(row){
+           	    	var dialogId = (row._state == 'new') ? newDialogId : editDialogId;
+           	    		
+       		        row._table.curr = row;
+       		        d2js.render($('#' + dialogId), row._table);
+       		        this.$el.trigger('tablelist.edit', [row]);
+       		        $('#' + dialogId).modal('show');
+            	}
+            }
+            // MOLECULE_DEF_END
+            Molecule.create(TableList);
+        </script>
+    </div>																																																																																					
+    
+    
+    <!-- TableError -->
+	<div molecule-def="TableError" renderer="stderr">
+		<script>
+            // MOLECULE_DEF
+            function TableError() {
+            	var tname = this.$el.closest('[table]').attr('table');
+            	this.$el.attr('data', '#' + tname + ',error');
+            }
+            // MOLECULE_DEF_END
+            Molecule.create(TableError);
+        </script>
+	</div>
+	
+	<!-- 确认组件，显示 OK Cancel 两个按钮，点击后产生 confirm.ok, confirm.cancel 事件 -->
+	<div molecule-def="Confirm" class="panel panel-default" style="display:inline-block;">                
+		  <div class="panel-body">
+		  		<!-- {INNER_HTML} -->
+		    	<button class="btn btn-primary">OK</button>
+		    	<button class="btn btn-default">Cancel</button>
+		  </div>
+		  <script>
+            // MOLECULE_DEF
+            function Confirm() {
+            	var me = this;
+            	this.$el.find('.btn-primary').on('click', function(){
+            		$(document).off('mousedown', f);
+            		me.$el.trigger('confirm.ok');
+            	});
+            	this.$el.find('.btn-default').on('click', function(){
+            		$(document).off('mousedown', f);
+            		me.$el.trigger('confirm.cancel');
+            	});
+            	function f(event){
+            		if(!me.$el.has($(event.target)).length){
+            			$(document).off('mousedown', f);
+            			me.$el.trigger('confirm.cancel');
+            		}
+            	}
+            	$(document).on('mousedown', f);
+            }
+            // MOLECULE_DEF_END
+            Molecule.create(Confirm);
+         </script>
+	</div>
+	
+	<!--
+		复选框组
+	 -->
+	<div molecule-def="CheckGroup" renderer="molecule" collector="m|s">
+		<ul class="list-inline checkgroup" renderer="dictToList|checkgroup('name','id')" data="#dicts"></ul>
+        <script>
+            // MOLECULE_DEF
+            function CheckGroup() {
+                var table = this.$el.closest('[table]').attr('table');
+                var col = this.$el.closest('[col]').attr('col');
+                this.$el.attr('data', '#' + table + ',curr,' + col);
+
+                var dict = this.$el.is('[dict]') || this.$el.parent('[dict][molecule-obj=FormItem]').attr('dict');
+                var ckgrp = this.$el.find('.checkgroup');
+                if(dict){                	
+                	ckgrp.attr('dict', dict);
+                }
+                
+                this.value = [];
+                
+                var me = this;
+                this.setValue = function(v){
+                	me.value = v;
+                	me.$el.find('input[type=checkbox]').each(function(idx, ck){
+                		ck.checked = (v && v.indexOf(ck.value) != -1)
+                	});
+                }                
+                
+                this.getValue = function(){ return me.value; }
+                
+                this.updateValue = function(){
+                	var arr = [];
+                	me.$el.find('input[type=checkbox]').each(function(idx, ck){
+                		if(ck.checked){
+                			arr.push(ck.value);
+                		}
+                	});
+                	me.value = arr;
+                }
+                
+                this.$el.on('change', function(event){
+                	if(event.target && $(event.target).is('input[type=checkbox]')){
+                		me.updateValue();
+                		me.$el.trigger('change', [me.value]);
+                	}
+                })
+            }
+            d2js.Renderers.checkgroup = function(dispCol, valueCol){
+            	return function(element, rows, table){
+	           		$(element).find('*').each(function(idx, ele){ele.remove()});
+	           		           	
+	           		if(rows == null) return;
+	           		for(var i=0; i<rows.length; i++){
+	           			var li = $(document.createElement('li'));
+	           			$(document.createElement('input'))
+	           				.attr('type', 'checkbox').val(rows[i][valueCol])
+	           				.appendTo(li);
+	           			$(document.createElement('span')).html(rows[i][dispCol]).appendTo(li);
+	           			li.appendTo(element);
+	           		}
+	           		var m = $(element).parent().molecule();
+	           		if(m) m.setValue(m.getValue());
+	            }
+            }
+            
+            // MOLECULE_DEF_END
+            Molecule.create(CheckGroup);
+        </script>
+    </div>
+    
+    <!-- 
+    	日期时间控件。从 input type=date 和 input type=time 复合得到的一个 molecule。 
+    -->
+    <div molecule-def="DateTime" class="datetime" collector="m|s" renderer="molecule">
+		<input class="form-control" type="date" format="yyyy-MM-dd"><input class="form-control" type="time" format="HH:mm">
+		<script>
+	        // MOLECULE_DEF
+			[
+			 	{$ : '.datetime', display: 'inline-block'},					
+			
+				{$ : '.datetime > input[type=date]',			
+					'border-right' : 'none',
+					'border-top-right-radius' : '0px', 
+					'border-bottom-right-radius' : '0px',
+					'padding-right' : '0px'
+				},
+				
+				{$ : '.datetime > input[type=time]',			
+					'border-left' : 'none',
+					'border-top-left-radius' : '0px', 
+					'border-bottom-left-radius' : '0px',
+					'padding-left' : '0px'
+				}
+			].defCss();
+	        function DateTime() {
+	        	this.getValue = function(){
+	        		var s = this.$el.find('[type=date]').val() + ' ' + this.$el.find('[type=time]').val();
+	        		return Date.parse(s, 'yyyy-MM-dd HH:mm'); 
+	        	}
+	        	this.setValue = function(value){
+	        		if(value){
+	        			this.$el.find('[type=date]').val(value.format('yyyy-MM-dd'));
+	        			this.$el.find('[type=time]').val(value.format('HH:mm'));
+	        		} else {
+	        			this.$el.find('[type=date]').val('');
+	        			this.$el.find('[type=time]').val('');
+	        		}
+	        	}
+	        }	        
+	     	// MOLECULE_DEF_END
+	     	Molecule.create(DateTime);
+		</script> 
+	</div>
+	
+	<!-- 
+		单选按钮组 <div dict="xxx" data-value="V"> 
+	-->
+	<div style="display:inline-block" molecule-def="RadioButtonGroup" renderer="molecule" collector="m|s">
+	  <div class="btn-group" role="group" data="#dicts" renderer="dictToList|buttons('name', 'id')">
+	  </div>
+	  <script>
+	  		// MOLECULE_DEF
+	  		function RadioButtonGroup(){
+	  			this.$el.find('.btn-group').attr('dict', this.$el.attr('dict'));
+	  			var value = this.$el.data('value');
+	  			
+	  			this.setValue = function(val){
+	  				value = val;
+	  				this.$el.find('button').each(function(idx, btn){
+	  					if($(btn).data('value') == value){
+	  						$(btn).addClass('btn-primary');
+	  					} else {
+	  						$(btn).removeClass('btn-primary');
+	  					}
+	  				});
+	  			}
+	  			if(value != null && value.length){
+	  				this.setValue(value);
+	  			}
+	  			this.getValue = function(){
+	  				return value;
+	  			}
+	  			
+	  			var me = this;
+	  			this.$el.on('click', 'button', function(event){
+	  				var v = $(event.currentTarget).data('value');
+	  				me.setValue(v);
+	  			});
+	  		}
+	  		d2js.Renderers.buttons = function(dispCol, valueCol, allowEmpty){
+	  			
+	  			return function(element, rows, table){
+	  				var group = $(element);
+	  				
+	  				element.innerHTML = '';
+	  				
+	  				if(!rows) return;
+	  				for(var i=0; i<rows.length; i++){
+	  					$(document.createElement('button'))
+	  						.addClass('btn btn-default')
+	  						.data('value', rows[i][valueCol])
+	  						.html(rows[i][dispCol])
+	  						.appendTo(group);	  					
+	  				}
+	  				
+	  				var m = group.parent().molecule();
+	  				if(m){
+	  					m.setValue(m.getValue());
+	  				}
+	  			}
+	  		}
+
+	  		
+	  		// MOLECULE_DEF_END
+	  		Molecule.create(RadioButtonGroup)
+	  </script>
+	</div>
+
+    <div molecule="TableList" table="book" edit-dialog="dialog1" allow-remove="true">
+        <h1>Book</h1>
+        <div>
+            <form class="form-inline text-right">
+                <div molecule="SearchFormItem" col="name" text="Name">
+                    <input type="text" molecule="SearchInput">
+                </div>
+                <div molecule="SearchFormSelectItem" col="kind" text="Kind" dict="book_kind">                    
+                </div>
+                <div molecule="SearchFormItem" col="author" text="Author" data="#author,rows" renderer="options('name','id',true)">
+                    <select molecule="SearchSelect"></select>
+                </div>
+                <button molecule="SearchButton">Search</button>
+                <button molecule="AddButton">Add</button>
+            </form>
+        </div>
+        <div molecule="TableError"></div>
+
+        <table molecule="List">
+            <thead>
+                <tr>
+                	<th molecule="CheckHeader" col="id"></th>
+                    <th molecule="Header" col="id" text="ID"></th>
+                    <th molecule="Header" col="title" text="Title" sortable="true"></th>
+                    <th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
+                    <th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
+                    <th data-t="rows,N,id" renderer="editLink"></th>
+                    <th molecule="ActionHeader" col="id" text="点击我" onclick="alert('111')">动作</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <div molecule="Dialog" title="Book" id="dialog1" table="book">
+        <form>
+            <div molecule="FormItem" col="title" text="Title">
+                <input type="text" molecule="Input">
+            </div>
+            <div molecule="FormItem" col="author" text="Author" data="#author,rows" renderer="options('name','id',false)" >
+                <select molecule="Select"></select>
+            </div>
+            <div molecule="FormItem" col="kind" text="Kind" dict="book_kind">
+                <select molecule="Select" collector="c|n|s"></select>
+            </div>
+            <div molecule="FormItem" col="publish_date" text="Publish Date">
+                <input type="date" molecule="Input" format="yyyy-MM-dd" renderer="date|std" collector="c|d|s">
+            </div>
+        </form>
+    </div>
+
+</body>
+<script>
+
+	Dicts.book_kind = {f :'小说', k : '武侠', p : '哲学'} 
+
+    var table = new d2js.DataTable('book', '../bookstore/book.d2js', { pageSize: 5 });
+	table.search.params = {gender : 'M'};
+    table.on('load', function (error) {
+        d2js.render(null, this);
+    });
+
+    table.load('fetch', {gender : 'F'});
+    
+    var author = new d2js.DataTable('author', '../bookstore/author.d2js');
+    author.load('listAll', function(error){
+    		d2js.render(null, this);
+    	});
+    
+    $(document).ready(function(){
+    	$('[molecule-obj=List]').on('actionheader.click', function(evt, action, value, table, _1, rows, idx, row){
+    		console.info(row);
+    	});
+    })
+</script>
+</html>

@@ -34,6 +34,8 @@
 				<exclude name="**/bookstore/" />
 				<exclude name="**/test/" />
 				<exclude name="**/index.html" />
+				<exclude name="**/molecule-dev/" />
+				<exclude name="**/molecules/*block*.html" />
 			</fileset>
 		</copy>
 		

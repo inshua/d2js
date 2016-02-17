@@ -109,9 +109,13 @@ d2js.render = function(htmlElement, baseData, direct, customRenders){
 					renderer = parr[parr.length -1];
 				} 
 				var fun = extractRenderer(renderer.trim());
-				var r = fun.apply(null, data);				
-				$(e).trigger('d2js.rendered', data);
-				if(direct && r == 'break') continue;
+				if(fun){
+					var r = fun.apply(null, data);				
+					$(e).trigger('d2js.rendered', data);
+					if(direct && r == 'break') continue;
+				} else {
+					console.error(renderer + ' not found');
+				}
 			}
 		}
 		

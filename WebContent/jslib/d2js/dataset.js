@@ -813,7 +813,7 @@ d2js.DataTable.prototype.getParentTables = function(){
 }
 
 /**
- * 提取所有下属数据行
+ * 提取所有下属数据行。大部分情况可使用 `row._children('detail table')`。
  * @param row {DataRow} 本表的行
  * @param childTable {string} 子表表名
  * @return {DataRow[]} 所有下属行
@@ -832,7 +832,7 @@ d2js.DataTable.prototype.findChildRows = function(row, childTable){
 }
 
 /**
- * 提取所有上级行
+ * 提取所有上级行。大部分情况可使用 `row._parents('master table')` 或 `row._parent('master table')`。
  * @param row {DataRow} 本表的行
  * @param parentTable {string} 主表表名
  * @return {DataRow[]} 所有父表行，通常只有一行
@@ -1120,12 +1120,12 @@ d2js.DataRow = function(table, rowData){
 	 * 获取子表的行（定义在 d2js.dataset.relations)
 	 * 用法如：
 	 *```js
-	 * 	 order.rows[0]._childRows('order_detail').forEach(...)
+	 * 	 order.rows[0]._children('order_detail').forEach(...)
 	 *```
 	 * @param childTable {string} 子表表名
 	 * @returns {DataRow[]}
 	 */
-	this._childRows = function(childTable){
+	this._children = function(childTable){
 		return table.findChildRows(this, childTable);
 	}
 	
@@ -1133,12 +1133,12 @@ d2js.DataRow = function(table, rowData){
 	 * 获取父表的所有父行（定义在 d2js.dataset.relations)
 	 * 用法如：
 	 * ```js
-	 * 	 orderDetail.rows[0]._parentRows('order')[0]
+	 * 	 orderDetail.rows[0]._parents('order')[0]
 	 * ```
 	 * @param parentTable {string} 父表表名
 	 * @returns {DataRow[]}
 	 */
-	this._parentRows = function(parentTable){
+	this._parents = function(parentTable){
 		return table.findParentRows(this, parentTable);
 	}
 	
@@ -1146,12 +1146,12 @@ d2js.DataRow = function(table, rowData){
 	 * 获取父行（定义在 d2js.dataset.relations)
 	 * 用法如：
 	 * ```js
-	 * 	 orderDetail.rows[0]._parentRow('order')
+	 * 	 orderDetail.rows[0]._parent('order')
 	 * ```
 	 * @param parentTable {string} 父表表名
 	 * @returns {DataRow}
 	 */
-	this._parentRow = function(parentTable){
+	this._parent = function(parentTable){
 		return table.findParentRows(this, parentTable)[0];
 	}
 	

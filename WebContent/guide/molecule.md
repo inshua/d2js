@@ -384,7 +384,7 @@ molecule 不但可以用于定义它的网页，也可以作为组件导入到�
 <script src="../jslib/jquery-1.10.2.js"></script>
 <script src="../jslib/molecule.js"></script>
 <script>
-	Molecule.loadHtml('/d2js/a.html')
+	Molecule.loadHtml('/a.html')
 </script>
 </head>
 <body>
@@ -393,7 +393,7 @@ molecule 不但可以用于定义它的网页，也可以作为组件导入到�
 </html>
 ```
 
-可以看到，a.html 中定义的molecule _AmazingMolecule_ 已经在 b.html 实例化了。
+可以看到，`/a.html` 中定义的molecule _AmazingMolecule_ 已经在 b.html 实例化了。
 
 除了该方式，还可以将 a.html 放在 `molecules 文件夹`，放在文件后，在浏览器地址栏输入 `molecules/extract.jssp`, 该 `extract.jssp` 运行后，a.html 中的 molecule 即进入组件库，直接就可以使用：
 
@@ -414,7 +414,7 @@ molecule 不但可以用于定义它的网页，也可以作为组件导入到�
 
 那种做法更好呢？
 
-原理上，每次 `loadHtml`都要执行 `extract.jssp`，详见`extract.jssp` 源码，因此 loadHtml 效率较低，只适合组件还在开发测试修改期，当组件稳定后，应采用后面的做法。当然，世界还在进步，也许哪天通过改进 `loadHtml` 方式的效率也可以提升起来。
+原理上，每次 `loadHtml`都要执行 `extract.jssp`，详见`extract.jssp` 源码，因此 `loadHtml` 效率较低，只适合组件还在开发测试修改期，当组件稳定后，应采用后面的做法。当然，世界还在进步，也许哪天通过改进 `loadHtml` 方式的效率也可以提升起来。
 
 ## molecule的命名空间
 
@@ -455,9 +455,9 @@ molecule 可以按命名空间组织，只要在组件前加上命名空间即�
 
 ## 常用的 molecule
 
-在 molecules 文件夹中， `basic.html`, `trigger.html`, `tree.html` 提供了很多常用的组件，包括`树`、`下拉树`等等，相信可以给开发带来较大帮助。 
+在 molecules 文件夹中， `basic.html`, `trigger.html`, `tree.html` 提供了很多常用的组件，包括`表格`、`对话框`、`树`、`下拉树`等等，相信可以给开发带来较大帮助。 这些组件分别有 bootstrap 和 semantic-ui 两种版本，可按自己需要选择。和所有 semantic 组件一样，组件页面本身可以独立运行。
 
-很明显，很多 jquery 组件都可以较轻松的包装为 molecule 组件。
+此外，很多 jquery 组件都可以较轻松的包装为 molecule 组件。
 
 例如，使用 jquery 方式的 semantic-ui 的 toggle 组件如下：
 ```html

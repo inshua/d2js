@@ -5,9 +5,9 @@
     <title>d2js</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
     <script src="../jslib/jquery-1.10.2.js"></script>
-    <script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+	<link href="../jslib/semantic-ui/semantic.css" rel="stylesheet" media="screen">
+	<script src="../jslib/semantic-ui/semantic.js"></script>
 
     <script src="../jslib/date.js/Date.js"></script>
 
@@ -16,6 +16,9 @@
     <script src="../jslib/d2js/renderers.js"></script>
     <script src="../jslib/d2js/collector.js"></script>
     <script src="../jslib/d2js/pipelines.js"></script>
+    
+    <script src="../jslib/d2js/semantic-renderers.js"></script>
+    
 
     <script src="../jslib/molecule.js"></script>
 
@@ -46,30 +49,38 @@
                         	a[0].outerHTML = text;
                         }
                     }
-                    d2js.Renderers.sortLink = function (colName, text) {
-                        return function (element, table) {
-                            var e = $(element);
-                            e.attr('href', '###');
-                            element.onclick = function () {
-                                var sort = {};
-                                var old = table.search._sorts && table.search._sorts[colName];
-                                if (old == 'asc') {
-                                    sort[colName] = 'desc';
-                                } else {
-                                    sort[colName] = 'asc';
-                                }
-                                table.search._sorts = sort;
-                                table.load();
-                            };
-                            var icon = null;
-                            var sorts = table.search._sorts || {};
-                            switch (sorts[colName]) {
-                                case 'asc': icon = 'glyphicon glyphicon-arrow-up'; break;
-                                case 'desc': icon = 'glyphicon glyphicon-arrow-down'; break;
-                            }
-                            e.html(text + (icon ? '<span class="' + icon + '">' : ''));
-                        }
-                    }
+                	d2js.Renderers.sortLink = function(colName, text) {
+                		return function(element, table) {
+                			var e = $(element);
+                			e.attr('href', '###');
+                			element.onclick = function() {
+                				var sort = {};
+                				var old = table.search._sorts && table.search._sorts[colName];
+                				if (old == 'asc') {
+                					sort[colName] = 'desc';
+                				} else {
+                					sort[colName] = 'asc';
+                				}
+                				table.search._sorts = sort;
+                				table.load();
+                			};
+                			var icon = null;
+                			var sorts = table.search._sorts || {};
+                			switch (sorts[colName]) {
+                			case 'asc':
+                				icon = 'glyphicon glyphicon-arrow-up';
+                				e.closest('th').removeClass('sorted descending').addClass('sorted ascending');
+                				break;
+                			case 'desc':
+                				icon = 'glyphicon glyphicon-arrow-down';
+                				e.closest('th').removeClass('sorted ascending').addClass('sorted descending');
+                				break;
+                			default:
+                				e.closest('th').removeClass('sorted ascending descending');
+                			}
+                			e.html(text + (icon ? '<span class="'  + icon + '">' : ''));
+                		}
+                	}
                     // MOLECULE_DEF_END
                     Molecule.create(Header);
                 </script>
@@ -209,23 +220,21 @@
     		<table table=xxx [paging="true"] select="none|single|multi" show-header="true|false"></table>
     	当启用 select应设置 value-col="id"，之后可使用 $(table).data('value') 设置和获取选中的值，当为 multi 模式时，值为数组    	 
     -->
-    <table molecule-def="List" class="table table-striped list" renderer="table" escape-tag="th">
+    <table molecule-def="List" class="ui sortable celled striped table" renderer="table" escape-tag="th">
         <!-- {INNER_HTML} -->
         <tbody class="empty">
-        	<tr><td colspan="100%"></td></tr>
-        	<tr><td colspan="100%">没有符合条件的数据</td></tr>
+        	<tr><td colspan="100%" class="center aligned">没有符合条件的数据</td></tr>
         </tbody>     
         <tfoot>
             <tr>
-                <td width="100%" colspan="1000">
+                <th width="100%" colspan="1000" class="center aligned">
                 	<div style="display: flex;flex-flow: row nowrap;justify-content: space-between;align-items: center;">
                 		<div id="leftFoot"></div>
-	                    <nav>
-	                        <ul class="pagination" renderer="pagination" />
-	                    </nav>
+	                    <div class="ui pagination menu" renderer="pagination">
+				        </div>
 	                    <div id="rightFoot"></div>
                     </div>
-                </td>
+                </th>
             </tr>
         </tfoot>
         <script>
@@ -233,13 +242,14 @@
     		[
     		 {$ : 'table.table-selectable > tbody > tr > td', 'border-top': '0px'}, 
     		 {$ : 'table.table-selectable > tbody > tr', cursor : 'pointer'},
-    		 {$ : 'tbody.empty > tr:nth-child(even)', height : '300px'},
-    		 {$ : 'tbody.empty > tr:nth-child(odd)', display: 'none'},
+    		 {$ : 'tbody.empty > tr', height : '300px'},
     		 {$ : 'tbody.empty > tr > td', 'vertical-align' : 'middle', 'text-align' : 'center'},
     		 {$ : 'table.list > thead > tr > th', 'white-space': 'nowrap'},
     		 {$ : '.list > tbody + tbody', 'border-top': '0px'}
     		].defCss();
             function List() {
+            	var activeTrClass = 'active';
+            	
                 var table = this.$el.closest('[table]').attr('table');
                 var valueColumn = this.$el.closest('[value-col]').attr('value-col') || 'id'
                 this.$el.attr('data', '#' + table);
@@ -260,7 +270,7 @@
                 case 'none' : ;
                 	break;
                 case 'single' : 
-                	this.$el[0].className = 'table table-hover table-condensed table-selectable list';
+                	this.$el[0].className = 'ui sortable selectable table';
                 	this.$el.on('d2js.rendered', function f(event) {
                         if (event.target == me.$el[0]) {
                             var storeValue = me.$el.data('value'); 
@@ -268,16 +278,16 @@
                                 var row = d2js.locateData(tr)[0];
                                 var value = row[valueColumn];
                                 if(storeValue && storeValue == value){
-                                	$(tr).addClass('info');
+                                	$(tr).addClass(activeTrClass);
                                 	me.$el.data('prev_selected_tr', tr);
                                 }
                                 $(tr).bind('click', function () { 
                                     if(me.$el.data('value') != value){
                                     	var prevtr = me.$el.data('prev_selected_tr');
-                                    	prevtr && $(prevtr).removeClass('info');
+                                    	prevtr && $(prevtr).removeClass(activeTrClass);
                                     	
 	                                    me.$el.data('value', value);
-	                                    $(tr).addClass('info');
+	                                    $(tr).addClass(activeTrClass);
 	                                    me.$el.data('prev_selected_tr', tr);
 	                                    me.$el.trigger('valuechange', [value, row]);
                                     }
@@ -297,7 +307,7 @@
                 	}
                 	break;
                 case 'multi' :
-	                this.$el[0].className = 'table table-hover table-condensed table-selectable list';
+	                this.$el[0].className = 'ui sortable selectable table';
 	                var checkAll = $(document.createElement('th')).attr('molecule', 'CheckHeader');
 	                checkAll.attr('col', valueColumn);
 	                var tr = this.$el.find('thead>tr');
@@ -311,9 +321,9 @@
 		                		var row = d && d[0];
 	                            var value = row[valueColumn];
 	                            if(checked.indexOf(value) != -1){
-	                            	$(tr).addClass('info')
+	                            	$(tr).addClass(activeTrClass)
 	                            } else {
-	                            	$(tr).removeClass('info')
+	                            	$(tr).removeClass(activeTrClass)
 	                            }
 		                	});
 		                	console.log(me.$el[0] + ' trigger valuechange');
@@ -343,7 +353,8 @@
 	                	ck.trigger('valuechange', [ck.molecule().checked()])
                 	}
                 	this.getValue = function(){
-                		return me.$el.find('thead>tr>th[molecule-obj=CheckHeader]').molecule().checked();
+                		var m = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]').molecule();
+                		return m && m.checked();
                 	}
 	                
 	            	break;
@@ -353,7 +364,8 @@
                 var willDeleteRows = null;                
             	if(allowRemove){            		
             		var leftFoot = this.$el.find('#leftFoot');
-            		leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
+            		var s = '<button type="button" class="ui button btn-remove" disabled><i class="remove icon"></i>Remove</button>';
+            		leftFoot.html(s);
             		leftFoot.on('click', function(evt){
             			if($(evt.target).is('.btn-remove')){
 	            			var th = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
@@ -362,7 +374,7 @@
 	            			var t = d2js.dataset[table];
 	            			willDeleteRows = checked.map(function(c){return t.find(col,c)}).filter(function(r){return r});
 	            			if(willDeleteRows.length == 0){
-	            				var a = $('<div class="alert alert-warning" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
+	            				var a = $('<div class="ui yellow message" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
 	            				setTimeout(function(){a.remove()}, 500);
 	            			} else {
 	            				leftFoot.html('<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>');
@@ -378,10 +390,18 @@
        	                    	d2js.render();
        	                    }
             			})
-            			leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
+            			leftFoot.html(s);
     				}).on('confirm.cancel', function(){
-    					leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
+    					leftFoot.html(s);
     				});
+            		
+            		this.$el.on('valuechange', 'th', function(evt, selected){
+            			if(selected && selected.length){
+            				leftFoot.find('button.btn-remove').prop('disabled', false).addClass('red');
+            			} else {
+            				leftFoot.find('button.btn-remove').prop('disabled', true).removeClass('red');
+            			}
+            		});
             	}
             }
             // MOLECULE_DEF_END
@@ -390,16 +410,17 @@
     </table>
 
     <!-- 表单项，<form col="" text=""></form>， 必须放在 form 里，且 form 已指定 table=xxx -->
-    <div molecule-def="FormItem" class="form-group form-inline">
+    <div molecule-def="FormItem" class="inline field form-group">
         <label></label>
         <!-- {INNER_HTML} -->
-        <div class="help-block with-errors" renderer="flderr"></div>
+        <div class="ui orange label" renderer="flderr"></div>
         <script>
             // MOLECULE_DEF
-            [{$ : 'form.table-form', display: 'table'},
-        	 {$ : '.table-form > .form-group', display: 'table-row'},
-        	 {$ : '.table-form > .form-group > label, .form-group > .form-control' , display: 'table-cell'},        	
-        	 {$ : '.table-form > .form-group > label', 'padding-right': '8px', 'text-align': 'right', 'font-weight': 'normal'},
+            [{$ : '.table-form', display: 'table !important'},
+        	 {$ : '.table-form > .field', display: 'table-row !important'},
+        	 {$ : '.table-form > .field > label' , display: 'table-cell !important'},
+        	 {$ : '.table-form > .field > .form-control' , margin : '.3em 0em !important'},
+        	 {$ : '.table-form > .field > label', 'padding-right': '8px', 'text-align': 'right', 'font-weight': 'normal', 'vertical-align' : 'middle !important'},
         	 // {$ : 'form.table-form', 'min-height': '480px',	'max-height': '800px'; overflow: 'scroll'}
         	].defCss();
         	
@@ -408,7 +429,7 @@
                 var col = this.$el.attr('col');
                 var text = this.$el.attr('text');
 
-                this.$el.find('.help-block').attr('data', '#' + table + ',curr,_error_at,' + col);
+                this.$el.find('[renderer=flderr]').attr('data', '#' + table + ',curr,_error_at,' + col);
                 this.$el.find('label').html(text);
                 
                 if(this.$el.is('[dict]') && this.$el.find('select').length){
@@ -422,14 +443,14 @@
     </div>
     
     <div molecule-def="FormImageItem" class="+ form-image-item" molecule="FormItem" renderer="molecule" collector="m|s">
-        <img id="imgPreview" class="form-control">
-        <input type="file" accept="images/*" capture="camera" class="form-control" class="hide">
+        <img id="imgPreview" class="ui medium bordered image form-control">
+        <input type="file" accept="images/*" capture="camera" style="display: none">
         <script>
 	        // MOLECULE_DEF
 	        [{$ : '.form-image-item > label', 'vertical-align' : 'top'}].defCss();
 	        function FormImageItem() {
 	            var table = this.$el.closest('[table]').attr('table');
-	            var col = this.$el.closest('.form-group').attr('col');
+	            var col = this.$el.closest('.field').attr('col');
 	            this.$el.attr('data', '#' + table + ',curr,' + col);
 
 	            var imgPreview = this.$el.find('#imgPreview')[0];
@@ -468,7 +489,7 @@
     
     
     <!-- 搜索表单项，<form col="" text=""></form>， 必须放在 form 里，且 form 已指定 table=xxx -->
-    <div molecule-def="SearchFormItem" class="form-group">
+    <div molecule-def="SearchFormItem" class="inline field">
         <label></label>
         <!-- {INNER_HTML} -->
         <script>
@@ -491,7 +512,7 @@
         // MOLECULE_DEF
         function Input() {
             var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
+            var col = this.$el.closest('.field').attr('col');
 
             this.$el.attr('data', '#' + table + ',curr,' + col);
         }
@@ -508,11 +529,11 @@
         [{$ : '.form-textarea-item > label', 'vertical-align' : 'top'}].defCss();
         function TextArea() {
             var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
+            var col = this.$el.closest('.field').attr('col');
 
             this.$el.attr('data', '#' + table + ',curr,' + col);
             
-            this.$el.closest('.form-group').addClass('form-textarea-item');
+            this.$el.closest('.field').addClass('form-textarea-item');
         }
         // MOLECULE_DEF_END
         Molecule.create(TextArea);
@@ -522,7 +543,7 @@
 	<!-- 输入的 input, 放在 SearchFormItem 内
 		用法：
 			<div molecule="SearchFormItem" col="name" text="Name">
-            	<select molecule="SearchSelect">
+            	<select molecule="SearchInput">
             </div>
 	-->
     <input molecule-def="SearchInput" type="text" class="form-control" renderer="std" collector="c|s">
@@ -530,9 +551,10 @@
         // MOLECULE_DEF
         function SearchInput() {
             var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
+            var col = this.$el.closest('.field').attr('col');
 
             this.$el.attr('data', '#' + table + ',search,params,' + col);
+            
         }
         // MOLECULE_DEF_END
         Molecule.create(SearchInput);
@@ -544,39 +566,44 @@
             	<select molecule="SearchSelect">
             </div>
 	-->
-    <select molecule-def="SearchSelect" class="form-control" renderer="std" collector="c|s"></select>
+	<select molecule-def="SearchSelect" class="form-control ui dropdown" renderer="std" collector="c|s"></select>
     <script molecule-for="SearchSelect">
         // MOLECULE_DEF
         function SearchSelect() {
             var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
+            var col = this.$el.closest('.field').attr('col');
 
             this.$el.attr('data', '#' + table + ',search,params,' + col);
             d2js.render(this.$el.parent());
+            
+            this.$el.dropdown();
         }
         // MOLECULE_DEF_END
         Molecule.create(SearchSelect);
-    </script>
-    
+    </script> 
     
     <!-- 
     	输入的 select form item, 放在 search form 中，已嵌套一个 select 元素
     	用法：
     	<div molecule="SearchFormSelectItem" col="gender" text="Gendor" [dict="gender"] [allow-empty="true|false"]></div>
     -->
-    <div molecule-def="SearchFormSelectItem" molecule="SearchFormItem" col="gender" text="Gendor" dict="gender" data="#dicts" allow-empty="true">
-		<select class="form-control" renderer="std" collector="c|s"></select>
+    <div molecule-def="SearchFormSelectItem" molecule="SearchFormItem" allow-empty="true">
+		<select class="form-control" class="form-control ui dropdown" renderer="std" collector="c|s"></select>
 		<script>
 			// MOLECULE_DEF
 	        function SearchFormSelectItem() {
 	            var table = this.$el.closest('[table]').attr('table');
-	            var col = this.$el.closest('.form-group').attr('col');
+	            var col = this.$el.closest('.field').attr('col');
 	            var allowEmpty = (this.$el.closest('[allow-empty]').attr('allow-empty') != 'false');
 	
 	            this.$el.attr('data', '#dicts');
 	            this.$el.find('select').attr('data', '#' + table + ',search,params,' + col);
 				this.$el.attr('renderer', 'dictToList|options(\'name\',\'id\', ' + allowEmpty + ')');
 	            d2js.render(this.$el);
+	            
+	            this.$el.find('select').on('d2js.rendered', function(event){
+	            	$(this).dropdown();
+	            });
 	        }
 	        // MOLECULE_DEF_END
 	        Molecule.create(SearchFormSelectItem);
@@ -584,38 +611,54 @@
 	</div>
 	
 	<!-- 编辑对话框用的 select, <select> 必须放在 FormItem 内-->
-    <select molecule-def="Select" class="form-control" renderer="std" collector="c|s"></select>
+    <select molecule-def="Select" class="form-control compact ui dropdown" renderer="std" collector="c|s"></select>
     <script molecule-for="Select">
         // MOLECULE_DEF
         function Select() {
             var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
+            var col = this.$el.closest('.field').attr('col');
+            
+            var inited = false;
 
             this.$el.attr('data', '#' + table + ',curr,' + col);
+            
+            this.$el.on('d2js.rendered', function(event){
+            	if(!inited){
+            		$(this).dropdown().addClass('compact');
+            		inited = true;
+            	}
+            	$(this).dropdown('set selected', $(this).val());
+            });            
         }
         // MOLECULE_DEF_END
         Molecule.create(Select);
     </script>    
 
+	<!--
+		搜索用的表单，靠右对齐 
+	 -->
+	<form molecule-def="SearchForm" class="ui form" onsubmit="return false;">
+    	<div class="fields">
+     		<div style="flex : 1;"></div><!-- 占位，把后面的元素挤到右边 -->
+          	<!-- {INNER_HTML} -->
+        </div>
+    </form>
 
     <!-- 对话框  <div title="title"> -->
-    <div molecule-def="Dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" title="Title">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel"></h4>
-                    <div id="divRowError" renderer="stderr"></div>
-                </div>
-                <div class="modal-body">
-                    <!-- {INNER_HTML} -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="bnSave">Save changes</button>
-                </div>
-            </div>
-        </div>
+    <div molecule-def="Dialog" class="ui modal" id="myModal">
+		<div class="header">
+			<h4 class="modal-title" id="myModalLabel"></h4>
+			<div id="divRowError" renderer="stderr"></div>
+		</div>
+		<div class="content">
+			<!-- {INNER_HTML} -->
+		</div>
+		<div class="actions">
+			<button id="bnSave" class="ui positive right labeled icon button">
+				Save<i class="checkmark icon"></i>
+			</button>
+			<button class="ui negative button" id="bnCancel">Cancel</button>
+		</div>
         <script>
             // MOLECULE_DEF
             [{$:'.modal-body',
@@ -647,7 +690,7 @@
     </div>
     
     <!-- 搜索按钮, 放在 form 里 -->
-    <button molecule-def="SearchButton" type="button" class="btn btn-default"></button>
+    <button molecule-def="SearchButton" type="button" class="ui blue button"><i class="search icon"></i></button>
     <script molecule-for="SearchButton" type="text/javascript">
 	    // MOLECULE_DEF
 	    function SearchButton() {
@@ -663,7 +706,7 @@
     </script>
     
     <!-- 增加按钮, 放在 form 里 -->
-    <button molecule-def="AddButton" type="button" class="btn btn-default"></button>
+    <button molecule-def="AddButton" type="button" class="ui green button"><i class="add icon"></i></button>
     <script molecule-for="AddButton" type="text/javascript">
 	    // MOLECULE_DEF
 	    function AddButton() {
@@ -680,7 +723,7 @@
     </script>
     
      <!-- TableList, <table table="" edit-dialog="dialog id" [new-dialog="dialog id"] allow-remove="true|false"> -->
-     <div molecule-def="TableList" class="container">
+     <div molecule-def="TableList" class="ui container">
         <script>
             // MOLECULE_DEF
             d2js.Renderers.editLink = function (element, v, table) {
@@ -715,8 +758,8 @@
            		});
            		
            		function initDialog(dialogEle){
-           			dialogEle.find('#divRowError').attr('data', "#" + tname + ",curr,_error");
 	      	        var dialog = Molecule.of(dialogEle);
+	      	      	dialogEle.find('#divRowError').attr('data', "#" + tname + ",curr,_error");
 	      	        if(dialog == null) debugger;
 	      	        dialog.on('close', function () {
 	      	     		var table = d2js.dataset[tname];
@@ -751,7 +794,7 @@
        		        row._table.curr = row;
        		        d2js.render($('#' + dialogId), row._table);
        		        this.$el.trigger('tablelist.edit', [row]);
-       		        $('#' + dialogId).modal('show');
+       		        $('#' + dialogId).modal({onApprove : function(){return false;}}).modal('show');
             	}
             }
             // MOLECULE_DEF_END
@@ -774,21 +817,21 @@
 	</div>
 	
 	<!-- 确认组件，显示 OK Cancel 两个按钮，点击后产生 confirm.ok, confirm.cancel 事件 -->
-	<div molecule-def="Confirm" class="panel panel-default" style="display:inline-block;">                
+	<div molecule-def="Confirm" class="ui segment" style="display:inline-block;">                
 		  <div class="panel-body">
 		  		<!-- {INNER_HTML} -->
-		    	<button class="btn btn-primary">OK</button>
-		    	<button class="btn btn-default">Cancel</button>
+		    	<button class="ui positive button">OK</button>
+		    	<button class="ui negative button">Cancel</button>
 		  </div>
 		  <script>
             // MOLECULE_DEF
             function Confirm() {
             	var me = this;
-            	this.$el.find('.btn-primary').on('click', function(){
+            	this.$el.find('.positive').on('click', function(){
             		$(document).off('mousedown', f);
             		me.$el.trigger('confirm.ok');
             	});
-            	this.$el.find('.btn-default').on('click', function(){
+            	this.$el.find('.negative').on('click', function(){
             		$(document).off('mousedown', f);
             		me.$el.trigger('confirm.cancel');
             	});
@@ -809,7 +852,7 @@
 		复选框组
 	 -->
 	<div molecule-def="CheckGroup" renderer="molecule" collector="m|s">
-		<ul class="list-inline checkgroup" renderer="dictToList|checkgroup('name','id')" data="#dicts"></ul>
+		<div class="ui buttons checkgroup" renderer="dictToList|checkgroup('name','id')" data="#dicts"></div>
         <script>
             // MOLECULE_DEF
             function CheckGroup() {
@@ -828,8 +871,13 @@
                 var me = this;
                 this.setValue = function(v){
                 	me.value = v;
-                	me.$el.find('input[type=checkbox]').each(function(idx, ck){
-                		ck.checked = (v && v.indexOf(ck.value) != -1)
+                	me.$el.find('input[type=button]').each(function(idx, ck){
+                		$(ck).prop('checked', (v && v.indexOf(ck.value) != -1));
+                		if($(ck).prop('checked')){
+                			$(ck).addClass('active');
+                		} else {
+                			$(ck).removeClass('active');
+                		}
                 	});
                 }                
                 
@@ -837,16 +885,27 @@
                 
                 this.updateValue = function(){
                 	var arr = [];
-                	me.$el.find('input[type=checkbox]').each(function(idx, ck){
-                		if(ck.checked){
+                	me.$el.find('input[type=button]').each(function(idx, ck){
+                		if($(ck).prop('checked')){
                 			arr.push(ck.value);
                 		}
                 	});
                 	me.value = arr;
                 }
                 
+                this.$el.on('click', 'input[type=button]', function(event){
+                	var ck = $(event.target);
+                	ck.prop('checked', !ck.prop('checked'));
+                	if(ck.prop('checked')){
+            			ck.addClass('active');
+            		} else {
+            			ck.removeClass('active');
+            		}
+                	ck.trigger('change');
+                });
+                
                 this.$el.on('change', function(event){
-                	if(event.target && $(event.target).is('input[type=checkbox]')){
+                	if(event.target && $(event.target).is('input[type=button]')){
                 		me.updateValue();
                 		me.$el.trigger('change', [me.value]);
                 	}
@@ -858,12 +917,12 @@
 	           		           	
 	           		if(rows == null) return;
 	           		for(var i=0; i<rows.length; i++){
-	           			var li = $(document.createElement('li'));
 	           			$(document.createElement('input'))
-	           				.attr('type', 'checkbox').val(rows[i][valueCol])
-	           				.appendTo(li);
-	           			$(document.createElement('span')).html(rows[i][dispCol]).appendTo(li);
-	           			li.appendTo(element);
+	           				.attr('type', 'button').val(rows[i][valueCol]).html(rows[i][dispCol])
+	           				.attr('class', 'ui button')
+	           				.appendTo(element);
+	           			//$(document.createElement('span')).html(rows[i][dispCol]).appendTo(li);
+	           			//li.appendTo(element);
 	           		}
 	           		var m = $(element).parent().molecule();
 	           		if(m) m.setValue(m.getValue());
@@ -982,11 +1041,11 @@
 	  		Molecule.create(RadioButtonGroup)
 	  </script>
 	</div>
-
+	
     <div molecule="TableList" table="book" edit-dialog="dialog1" allow-remove="true">
         <h1>Book</h1>
         <div>
-            <form class="form-inline text-right">
+            <form molecule="SearchForm">
                 <div molecule="SearchFormItem" col="name" text="Name">
                     <input type="text" molecule="SearchInput">
                 </div>
@@ -999,6 +1058,7 @@
                 <button molecule="AddButton">Add</button>
             </form>
         </div>
+        
         <div molecule="TableError"></div>
 
         <table molecule="List">
@@ -1017,18 +1077,18 @@
     </div>
 
     <div molecule="Dialog" title="Book" id="dialog1" table="book">
-        <form>
+        <form class="ui form table-form">
             <div molecule="FormItem" col="title" text="Title">
                 <input type="text" molecule="Input">
-            </div>
-            <div molecule="FormItem" col="author" text="Author" data="#author,rows" renderer="options('name','id',false)" >
-                <select molecule="Select"></select>
             </div>
             <div molecule="FormItem" col="kind" text="Kind" dict="book_kind">
                 <select molecule="Select" collector="c|n|s"></select>
             </div>
             <div molecule="FormItem" col="publish_date" text="Publish Date">
                 <input type="date" molecule="Input" format="yyyy-MM-dd" renderer="date|std" collector="c|d|s">
+            </div>
+            <div molecule="FormItem" col="author" text="Author" data="#author,rows" renderer="options('name','id',false)" >
+                <select molecule="Select"></select>
             </div>
         </form>
     </div>

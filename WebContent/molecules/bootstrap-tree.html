@@ -5,27 +5,24 @@
     <title>d2js</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
     <script src="../jslib/jquery-1.10.2.js"></script>
-	<link href="../jslib/semantic-ui/semantic.css" rel="stylesheet" media="screen">
-	<script src="../jslib/semantic-ui/semantic.js"></script>
-
-    <script src="../jslib/date.js/Date.js"></script>
+    <script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
 
     <script src="../jslib/d2js/dataset.js"></script>
     <script src="../jslib/d2js/render.js"></script>
     <script src="../jslib/d2js/renderers.js"></script>
     <script src="../jslib/d2js/collector.js"></script>
     <script src="../jslib/d2js/pipelines.js"></script>
+    <script src="../jslib/d2js/bootstrap-renderers.js"></script>
     
-    <script src="../jslib/d2js/semantic-renders.js"></script>
-    
-    <script src="../jslib/molecule.js"></script>
-	
-	<script>
-		Molecule.ModulesPath = '/d2js/molecules/';
-	    Molecule.loadHtml('/molecules/basic-semantic.html');
-	</script>
 
+    <script src="../jslib/molecule.js"></script>
+
+	<script>
+        Molecule.ModulesPath = '/d2js/molecules/';
+        Molecule.loadHtml('/molecule-dev/bootstrap-basic.html');
+    </script>
 </head>
 <body>
     <table>
@@ -48,19 +45,18 @@
                 		var s = '';
                 		for(var i=0; i<depth; i++) s+= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
                 		var checkHtml = typeof node.checked != 'undefined' ? '<input type="checkbox">&nbsp;&nbsp;' : '';
-
                 		if(node.children.length == 0){
                 			$(element).html(s + checkHtml + v);
                 		} else {
                 			if(node.expanded){
-                				$(element).html(s + '<a class=""><i class="angle down icon"></i></a>&nbsp;&nbsp;' + checkHtml + v);
+                				$(element).html(s + '<a class=""><span class="glyphicon glyphicon-menu-down"></span></a>&nbsp;&nbsp;' + checkHtml + v);
                 				$(element).find('a').on('click', function(event){
                 					node.expanded = false;
                 					d2js.render(element.closest('table')[0]);                					
                 					event.stopPropagation();
                 				})
                 			} else {
-                				$(element).html(s + '<a class=""><i class="angle right icon"></i></a>' + checkHtml + v);
+                				$(element).html(s + '<a class=""><span class="glyphicon glyphicon-menu-right"></span></a>' + checkHtml + v);
                 				$(element).find('a').on('click', function(){
                 					node.expanded = true;
                 					d2js.render(element.closest('table')[0]);
@@ -117,29 +113,24 @@
     	select 选择模式
     	show-header 是否显示表头
     -->
-    <table molecule-def="Tree" class="ui celled striped table" renderer="tree" checkable="false">
+    <table molecule-def="Tree" class="table table-striped" renderer="tree" checkable="false">
         <!-- {INNER_HTML} -->
         <tfoot>
             <tr>
-                <th width="100%" colspan="1000" class="center aligned">
-                	<div style="display: flex;flex-flow: row nowrap;justify-content: space-between;align-items: center;">
-                		<div id="leftFoot"></div>
-	                    <div class="ui pagination menu" renderer="pagination">
-				        </div>
-	                    <div id="rightFoot"></div>
-                    </div>
-                </th>
+                <td width="100%" colspan="1000">
+                    <nav class="text-center">
+                        <ul class="pagination" renderer="pagination" />
+                    </nav>
+                </td>
             </tr>
         </tfoot>
         <script>
             // MOLECULE_DEF
             [
-    		 {$ : 'table.selectable > tbody > tr > td', 'border-top': '0px'}, 
-    		 {$ : 'table.selectable > tbody > tr', cursor : 'pointer'}
+    		 {$ : 'table.table-selectable > tbody > tr > td', 'border-top': '0px'}, 
+    		 {$ : 'table.table-selectable > tbody > tr', cursor : 'pointer'}
     		].defCss();
             function Tree() {
-            	var selectedTrClass = 'active';
-            	
                 var table = this.$el.closest('[table]').attr('table');
                 this.$el.attr('data', '#' + table);
                 var paging = this.$el.closest('[paging]').attr('paging');
@@ -164,8 +155,7 @@
                 	break;
                 case 'single' : 
                 case 'multi' :
-	                // this.$el[0].className = 'table table-hover table-condensed table-selectable';
-	                this.$el[0].className = 'ui selectable table';	                
+	                this.$el[0].className = 'table table-hover table-condensed table-selectable';
 	                this.$el.attr('checkable', (select == 'multi') + '');
 	                if(select == 'multi'){
 		                this.$el.on('checkchange', function(){
@@ -175,7 +165,7 @@
 		                	
 		                	me.$el.find('tbody>tr').each(function(idx, tr){
 		                		var row = d2js.locateData(tr)[0];
-	                            if(checked.indexOf(row[valueColumn]) != -1) $(tr).addClass(selectedTrClass); else $(tr).removeClass(selectedTrClass);                            
+	                            if(checked.indexOf(row[valueColumn]) != -1) $(tr).addClass('info'); else $(tr).removeClass('info');                            
 		                	});
 	
 		                	me.$el.trigger('valuechange', [checked]);
@@ -187,7 +177,7 @@
                         	var value = me.$el.data('value');
     	                	me.$el.find('tbody>tr').each(function(idx, tr){
     	                		var row = d2js.locateData(tr)[0];
-    	                		if(value && value.indexOf(row[valueColumn]) != -1) $(tr).addClass(selectedTrClass); else $(tr).removeClass(selectedTrClass);                            
+    	                		if(value && value.indexOf(row[valueColumn]) != -1) $(tr).addClass('info'); else $(tr).removeClass('info');                            
     	                	});
                             me.$el.find('tbody>tr').each(function(idx, tr){
                             	$(tr).on('click', function(event){
@@ -347,7 +337,7 @@
     <div molecule="TableList" table="company" edit-dialog="dialog1">
         <h1>表格编辑</h1>
         <div>
-            <form molecule="SearchForm">
+            <form class="form-inline text-right">
                 <div molecule="SearchFormItem" col="name" text="Name">
                     <input type="text" molecule="SearchInput">
                 </div>
@@ -387,26 +377,18 @@
     table.on('load', function (error) {
         d2js.render(null, this);
     });
-    
-    var table2 = new d2js.DataTable('company2', 'test.d2js', { pageSize: 5 });
-    table2.on('load', function (error) {
-        d2js.render(null, this);
-    });
-
 
     $(function(){
-    	var data = [
-    		        {id : 1, name : '东方航空', email : 'dh@xxx.com', parent_id : null},
-    		        {id : 2, name : '东方航空华东公司', email : 'dh@xxx.com', parent_id : 1},
-    		        {id : 8, name : '空管部', email : 'dh@xxx.com', parent_id : 2},
-    		        {id : 3, name : '信息部', email : 'dh@xxx.com', parent_id : 2},
-    		        {id : 4, name : '东方航空华北公司', email : 'dh@xxx.com', parent_id : 1},
-    		        {id : 5, name : '厦门航空', email : 'dh@xxx.com', },
-    		        {id : 6, name : '厦门航空华南公司', email : 'dh@xxx.com', parent_id : 5},
-    		        {id : 7, name : '吉祥航空', email : 'dh@xxx.com'},
-    		    ];
-	    table.fill(data, true);
-	    table2.fill(data, true);
+	    table.fill([
+	        {id : 1, name : '东方航空', email : 'dh@xxx.com', parent_id : null},
+	        {id : 2, name : '东方航空华东公司', email : 'dh@xxx.com', parent_id : 1},
+	        {id : 8, name : '空管部', email : 'dh@xxx.com', parent_id : 2},
+	        {id : 3, name : '信息部', email : 'dh@xxx.com', parent_id : 2},
+	        {id : 4, name : '东方航空华北公司', email : 'dh@xxx.com', parent_id : 1},
+	        {id : 5, name : '厦门航空', email : 'dh@xxx.com', },
+	        {id : 6, name : '厦门航空华南公司', email : 'dh@xxx.com', parent_id : 5},
+	        {id : 7, name : '吉祥航空', email : 'dh@xxx.com'},
+	    ], true);
     });
 </script>
 </html>
