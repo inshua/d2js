@@ -8,6 +8,7 @@ molecule 框架基于 html 技术本身，实现了 html 的组件化。
 * molecule 开发过程先形成可以运行的功能，再将其组件化，符合软件工程思路
 * molecule 无需使用 js 生成 html，html 是 html, js 是 js，混合而不杂乱
 * molecule 组件页面总是能运行的，不需要写单独的 demo 网页
+* molecule 切割巧妙，可以和 jQuery 组件互通
 
 -------------
 
