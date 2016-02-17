@@ -4,6 +4,8 @@
 
 jssp 是 JavaScript Server Page 的简称，是建构于 d2js 后端技术上的一种服务器端页面技术，运行于 jdk1.8以上 + servlet3.0 容器，采用 js 作为服务器端编程语言，并可以使用所有 d2js 后端技术，如 `query, queryRow, travel, doTransaction`等便利快捷的 d2js 函数。
 
+在 http://jssp.sourceforge.net/ 也有一个称为 jssp 的开源项目。最早有 jssp 想法后，发现了该工程，并曾使用过其部分代码，到 jdk8 后，已经和该项目无关。
+
 ## 基本对象
 
 与 jsp 一样，jssp 可以使用 `request`, `response`, `session`, `out`, `application` 等几个常用对象，并且这些对象已经对 js 语言做了适配。
@@ -183,6 +185,28 @@ function includeJssp(jsspFile, params){
 使用 `d2js.callD2js(d2jsFile, method, params)` 可以调用另一 d2js文件中的函数。
 
 这样一来，同一份 d2js 接口，既可以以 ajax 方式为前端服务，也可以以函数调用方式服务于服务器端页面。不论是 ajax 方式，还是服务器端方式，都实现了界面与数据接口的脱耦。
+
+### jssp 输出js对象到前端
+
+在 jssp 中，可以轻松输出 js 对象到浏览器端脚本。如：
+
+```html
+<html>
+<head>
+	<title>sample</title>
+	<meta charset="utf-8">
+</head>
+<body>
+</body>
+[%
+	var personInServer = {name: 'mary', gender: 'girl'}
+%]
+<script>
+	var person = [%~ personInServer%];
+	alert(person.name);
+</script>	
+</html>
+```
 
 ## 其它
 

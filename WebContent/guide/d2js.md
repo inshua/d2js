@@ -81,12 +81,11 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 	d2js.render($('#info'), person, true);
 </script>
 ```
-`<p *data="fav,movies,0"* renderer="std" />` 中，data 部分为多层次的数据路径。
-很显然，每个 `,` 都带来一次层次推进。
+`<p data="fav,movies,0" renderer="std" />` 中，数据路径有3个层次。很显然，每个 `,` 都带来一次层次推进。
 
 ### 渲染器
 
-渲染器是属于 `d2js.Renderers` 的成员函数，用于将锚定的数据值画到相应DOM元素。渲染器函数可以自行扩充。
+渲染器是属于 `d2js.Renderers` 的成员函数，用于将数据路径锚定的数据值画到相应DOM元素。渲染器函数可以自行扩充。
 
 例如 `std` 函数，定义于 `renderers.js` 中： `d2js.Renderers.std = function(){...}`
 
@@ -144,7 +143,7 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 </script>
 ```
 
-或在网页中嵌入一个 d2js 自定义标记 `renderer`：
+或在 html 中嵌入一个 d2js 自定义标记 `renderer`：
 
 ```html
 <section id="info">
