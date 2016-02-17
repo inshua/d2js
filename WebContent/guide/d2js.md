@@ -1,6 +1,17 @@
 # d2js
-==================
+
+![overview](images/overview.png?raw=true)
+
 d2js 是一套js数据前后端框架, 前端和后端可单独使用.
+
+* d2js 框架提出了独有的数据路径、渲染、收集概念，适合各类 js 对象与 html ui 之间交互
+* d2js 框架借鉴 ado.net 的 dataset-DataTable-DataRow 体系，可以轻松完成批量数据更新、主从表连带更新等特性
+* d2js 框架后端使用 js 语言编写，结合 sql 块设计，可以大大提高开发效率
+* d2js 前后端开发实践都是热插拔式开发，不写配置文件，不写 java 代码
+* d2js 框架允许网页设计与开发分离，先设计再开发
+* d2js 切割分明，依托于 html 技术，可以和其它 ui 框架如 bootstrap, semantic-ui 等，及 molecule 一同使用
+
+==================
 
 d2js 前端基于经典的  mvc 理念设计, mvc 的是用于划分界面和数据逻辑的思想。
 
