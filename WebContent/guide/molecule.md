@@ -1,5 +1,15 @@
-molecule html组件化技术
-====
+#molecule html组件化技术
+
+![overview](images/molecule-overview.png?raw=true)
+
+molecule 框架基于 html 技术本身，实现了 html 的组件化。
+
+* molecule 组件将 js 与 html 合为一体，每个 html 块都可以形成组件
+* molecule 开发过程先形成可以运行的功能，再将其组件化，符合软件工程思路
+* molecule 无需使用 js 生成 html，html 是 html, js 是 js，混合而不杂乱
+* molecule 组件页面总是能运行的，不需要写单独的 demo 网页
+
+-------------
 
 在 a.html 上有这样一个小部件，点击按钮，其旁边文本框的内容就变成大写
 ```html
