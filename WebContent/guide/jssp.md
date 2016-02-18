@@ -212,7 +212,7 @@ function includeJssp(jsspFile, params){
 
 * 已知BUG
 
-	jssp 及 d2js 的正则表达式中如果存在 /"/ 这样的正则表达式，即正则表达式字面量(regexp literal)，应使用 new RegExp("") 或写作 /\x22/。这是因为 d2js 词法语法转换程序处理了字符串字面量，但没有处理正则表达式字面量，因此上面的语句会被误认作字符串没有结尾。
+	jssp 及 d2js 的正则表达式中如果存在 /"/ 这样的正则表达式，即正则表达式字面量(regexp literal)中含有引号或单引号，应使用 new RegExp('"') 或写作 /\x22/。这是因为 d2js 词法语法转换程序处理了字符串字面量，但没有处理正则表达式字面量，因此上面的语句会被误认作字符串没有结尾。
 
 * jssp 与 d2js 都默认启用 multipart，可以使用 `request.getPart` 获取 multipart form 的数据。
 
