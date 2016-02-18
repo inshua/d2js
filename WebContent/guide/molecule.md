@@ -5,7 +5,7 @@
 molecule 框架基于 html 技术本身，实现了 html 的组件化。
 
 * molecule 组件将 js 与 html 合为一体，每个 html 块都可以形成组件
-* molecule 开发过程先形成可以运行的功能，再将其组件化，符合软件工程思路
+* molecule 开发过程先形成可以运行的功能，再将其组件化，符合先原型后复用的软件工程思想
 * molecule 无需使用 js 生成 html，html 是 html, js 是 js，混合而不杂乱
 * molecule 组件页面总是能运行的，不需要写单独的 demo 网页
 * molecule 切割巧妙，可以和 jQuery 组件互通
@@ -466,7 +466,7 @@ molecule 可以按命名空间组织，只要在组件前加上命名空间即�
 
 ## 常用的 molecule
 
-在 molecules 文件夹中， `basic.html`, `trigger.html`, `tree.html` 提供了很多常用的组件，包括`表格`、`对话框`、`树`、`下拉树`等等，相信可以给开发带来较大帮助。 这些组件分别有 bootstrap 和 semantic-ui 两种版本，可按自己需要选择。和所有 semantic 组件一样，组件页面本身可以独立运行。
+在 molecules 文件夹中， `basic.html`, `trigger.html`, `tree.html` 提供了很多常用的组件，包括`表格`、`对话框`、`树`、`下拉树`等等，相信可以给开发带来较大帮助。 这些组件分别有 bootstrap 和 semantic-ui 两种版本，可按自己需要选择。和所有 molecule 组件一样，组件页面本身可以独立运行。
 
 此外，很多 jquery 组件都可以较轻松的包装为 molecule 组件。
 

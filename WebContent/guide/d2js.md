@@ -57,7 +57,6 @@ mvc 是一种设计思想，很多人错误的把思想当做了程序架构，�
 <section id="info">
 	<p data="name" renderer="std" />
 	<p data="gender" renderer="std" />
-	<p data="na" renderer="std" />
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl'};
