@@ -571,7 +571,7 @@ MyMolecule实例化后，`bone`默认位于 `dog` 之后。
 ### td 如何直接放在 table molecule 中
 
 像 td 这样的元素，必须放在 tr 标记中。一旦放在不正确的标记包括 table 中，便无法从 innerHTML 获取。如果要达到 
-``html
+```html
 <table molecule><td/></table>
 ``` 这样的效果， 而不是 
 ```html
