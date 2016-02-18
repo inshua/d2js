@@ -573,10 +573,12 @@ MyMolecule实例化后，`bone`默认位于 `dog` 之后。
 像 td 这样的元素，必须放在 tr 标记中。一旦放在不正确的标记包括 table 中，便无法从 innerHTML 获取。如果要达到 
 ```html
 <table molecule><td/></table>
-``` 这样的效果， 而不是 
+``` 
+这样的效果， 而不是 
 ```html
 <table molecule><tr><td/></tr></table>
-```，需要做两步操作。
+```
+需要做两步操作。
 
 0. 在 table molecule-def 处，可加上属性 escape-tag="td"
 0. 在实例 table molecule 中，td前加上 `m:`
