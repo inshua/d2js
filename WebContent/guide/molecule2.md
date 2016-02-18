@@ -4,7 +4,7 @@
 
 ### 无法嵌套 script 的元素如何嵌套 molecule 构造函数
 
-像 `input`,`img` 这样的元素，里面不能写 <script>，无法嵌入 `MOLECULE_DEF` `MOLECULE_DEF_END` 脚本。对于这样的元素，可以在下一个节点放一个 `molecule-for=MOLECULE名`的 script 块，如：
+像 `input`,`img` 这样的元素，里面不能写 \<script\>，无法嵌入 `MOLECULE_DEF` `MOLECULE_DEF_END` 脚本。对于这样的元素，可以在下一个节点放一个 `molecule-for=MOLECULE名`的 script 块，如：
 
 ```html
 <input molecule-def="MyInput>
