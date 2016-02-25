@@ -1,5 +1,19 @@
 # d2js, jssp 及 molecule 框架
 
+## 指南
+
+里面内容很丰富，点进去点进去点进去
+
+* [d2js](WebContent/guide/d2js.md)
+* [jssp](WebContent/guide/jssp.md)
+* [molecule](WebContent/guide/molecule.md)
+
+指南中的例子需按上述研究与参与开发的过程初始化环境后使用。
+
+## 参考手册
+
+按下述研究与参与开发 d2js 项目的过程初始化环境后，在项目 `jsdoc` 中有使用 jsdoc 生成的手册。
+
 ## 初始化环境
 
 ### 研究与参与开发 d2js 项目
@@ -31,17 +45,4 @@
 0. 打开 WEB-INF/web.xml，将 jssp 和 d2js 的 servlet 配置复制到你的 web.xml 中
 0. 仿照 META-INF/context.xml，设置好数据库路径 
 
-## 指南
-
-里面内容很丰富，点进去点进去点进去
-
-* [d2js](WebContent/guide/d2js.md)
-* [jssp](WebContent/guide/jssp.md)
-* [molecule](WebContent/guide/molecule.md)
-
-指南中的例子需按上述研究与参与开发的过程初始化环境后使用。
-
-## 参考手册
-
-按上述研究与参与开发 d2js 项目的过程初始化环境后，在项目 `jsdoc` 中有使用 jsdoc 生成的手册。
 

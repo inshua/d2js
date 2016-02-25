@@ -321,7 +321,8 @@ Molecule.scanMolecules = function(starter, manual){
 		if(ele.hasAttribute('molecule')){
 			if(ele.getAttribute('molecule-init') == 'manual' && !manual) continue;		// 跳过声明为手工创建的元素
 			createMolecule(ele);
-		} else {	// molecule 总会先创建嵌套的 molecule
+		} 
+		if(!ele.hasAttribute('init-children-first')){
 			for(var i=ele.children.length-1; i>=0; i--){
 				stk.push(ele.children[i]);
 			}
@@ -410,7 +411,12 @@ Molecule.scanMolecules = function(starter, manual){
 		markScriptGen(ele, -1);
 		
 		ele.removeAttribute('molecule');
-		Molecule.scanMolecules(ele, manual);	// 如果 molecule 中含有 molecule, 先创建子 molecule
+		
+		// molecule 声明先创建子molecule的先创建子 molecule
+		if(ele.hasAttribute('init-children-first')){
+			ele.removeAttribute('init-children-first');
+			Molecule.scanMolecules(ele, manual);	
+		}
 		
 		Molecule.processing = true;					// 检查此变量确定是否在 molecule 过程中，如不在过程中可以跳过部分代码
 		for(var d = defs.length -1; d >=0; d--){	// 逐代执行脚本

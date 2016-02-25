@@ -252,7 +252,7 @@ molecule 可以继续参与组合更复杂的 molecule， 例如第一版的转�
 			Molecule.create(AmazingMolecule);
 		</script>
 	</div>
-	<div molecule-def="AmazingMoleculeEx">
+	<div molecule-def="AmazingMoleculeEx" init-children-first>
 		<div molecule="AmazingMolecule"><button id="bnLowerCase">Lower Case</button></div>
 		<script>
 			// MOLECULE_DEF
