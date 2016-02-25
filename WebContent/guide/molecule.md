@@ -613,11 +613,10 @@ molecule 的析构过程由 Document 的 `DOMNodeRemoved` 事件引发，也即�
 
 	<div molecule="AmazingMolecule" molecule-auto-dispose="false"></div>
 	
-当需要移除不属于 DOM Document 的 molecule html 元素时，可将 `molecule-auto-dispose` 设为 true, 再手工引发 DOMNodeRemoved 事件。
+当需要移除不属于 DOM Document 的 molecule html 元素时，可执行 molecule.release()。
 
 ```js
-	$ele.attr('molecule-auto-dispose', true);
-	$ele.trigger('DOMNodeRemoved')
+	$ele.molecule().release();
 ```
 
 -----

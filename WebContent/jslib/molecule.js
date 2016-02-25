@@ -62,6 +62,8 @@ function Molecule(container){
 	 * 移除 molecule 及其容器
 	 */
 	this.release = function(){
+		this.dispose && this.dispose();
+		delete Molecule.instances[this.id];
 		this.$el.remove();
 	}
 }
