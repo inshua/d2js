@@ -417,7 +417,8 @@ Molecule.scanMolecules = function(starter, manual){
 		// molecule 声明先创建子molecule的先创建子 molecule
 		if(ele.hasAttribute('init-children-first')){
 			ele.removeAttribute('init-children-first');
-			Molecule.scanMolecules(ele, manual);	
+			Molecule.scanMolecules(ele, manual);
+			ele.setAttribute('init-children-first', '');
 		}
 		
 		Molecule.processing = true;					// 检查此变量确定是否在 molecule 过程中，如不在过程中可以跳过部分代码
