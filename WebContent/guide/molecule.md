@@ -253,7 +253,8 @@ molecule 可以继续参与组合更复杂的 molecule， 例如第一版的转�
 		</script>
 	</div>
 	<div molecule-def="AmazingMoleculeEx" init-children-first>
-		<div molecule="AmazingMolecule"><button id="bnLowerCase">Lower Case</button></div>
+		<div molecule="AmazingMolecule"></div>
+		<button id="bnLowerCase">Lower Case</button>
 		<script>
 			// MOLECULE_DEF
 			function AmazingMoleculeEx(){
@@ -315,6 +316,8 @@ molecule 实例还可以继续扮演 molecule-def 模板元素，这就是 molec
 molecule 的继承思路与 js 的 prototype 原型链相似。实际创建时，先实例化父类，然后再叠加上子类自身的特征并执行子类的 molecule 构造函数。
 
 在子类molecule构造函数中可以使用 `this` 访问原型 molecule。
+
+![molecule combine](images/molecule-inherit.png?raw=true)
 
 ## molecule 与 d2js 的渲染收集
 
