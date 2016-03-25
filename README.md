@@ -4,28 +4,28 @@
 
 里面内容很丰富，点进去点进去点进去
 
-* [d2js](WebContent/guide/d2js.md) SSH 及其它 CRUD 框架杀手
+### [d2js](WebContent/guide/d2js.md) 后端为 SSH 框架杀手，前端为 angular 杀手
 
-0. d2js 框架提出了独有的数据路径、渲染、收集概念，适合各类 js 对象与 html ui 之间交互
-0. d2js 框架借鉴 ado.net 的 dataset-DataTable-DataRow 体系，可以轻松完成批量数据更新、主从表连带更新等特性
-0. d2js 框架后端使用 js 语言编写，结合 sql 块设计，可以大大提高开发效率
-0. d2js 前后端开发实践都是热插拔式开发，不写配置文件，不写 java 代码
-0. d2js 框架允许网页设计与开发分离，先设计再开发
-0. d2js 切割分明，依托于 html 技术，可以和其它 ui 框架如 bootstrap, semantic-ui 等，及 molecule 一同使用
+* d2js 框架提出了独有的数据路径、渲染、收集概念，适合各类 js 对象与 html ui 之间交互
+* d2js 框架借鉴 ado.net 的 dataset-DataTable-DataRow 体系，可以轻松完成批量数据更新、主从表连带更新等特性
+* d2js 框架后端使用 js 语言编写，结合 sql 块设计，可以大大提高开发效率
+* d2js 前后端开发实践都是热插拔式开发，不写配置文件，不写 java 代码
+* d2js 框架允许网页设计与开发分离，先设计再开发
+* d2js 切割分明，依托于 html 技术，可以和其它 ui 框架如 bootstrap, semantic-ui 等，及 molecule 一同使用
 
-* [jssp](WebContent/guide/jssp.md)
+### [jssp](WebContent/guide/jssp.md) 觉得可以取代 php...
 
 尽管 `d2js 前端(html + ajax) + d2js 后端` 可以满足大部分应用场景，还是有很多场景需要页面在服务器端就绪后输出，不宜使用纯 ajax 技术。
 
 jssp 是 JavaScript Server Page 的简称，是建构于 d2js 后端技术上的一种服务器端页面技术，运行于 jdk1.8以上 + servlet3.0 容器，采用 js 作为服务器端编程语言，并可以使用所有 d2js 后端技术，如 `query, queryRow, travel, doTransaction`等便利快捷的 d2js 函数。
 
-* [molecule](WebContent/guide/molecule.md) React.js 等组件化框架杀手
+### [molecule](WebContent/guide/molecule.md) React.js 等组件化框架杀手
 
-0. molecule 组件将 js 与 html 合为一体，每个 html 块都可以形成组件
-0. molecule 开发过程先形成可以运行的功能，再将其组件化，符合先原型后复用的软件工程思想
-0. molecule 无需使用 js 生成 html，html 是 html, js 是 js，混合而不杂乱
-0. molecule 组件页面总是能运行的，不需要写单独的 demo 网页
-0. molecule 切割巧妙，可以和 jQuery 组件互通
+* molecule 组件将 js 与 html 合为一体，每个 html 块都可以形成组件
+* molecule 开发过程先形成可以运行的功能，再将其组件化，符合先原型后复用的软件工程思想
+* molecule 无需使用 js 生成 html，html 是 html, js 是 js，混合而不杂乱
+* molecule 组件页面总是能运行的，不需要写单独的 demo 网页
+* molecule 切割巧妙，可以和 jQuery 组件互通
 
 指南中的例子需按上述研究与参与开发的过程初始化环境后使用。
 
