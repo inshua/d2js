@@ -80,11 +80,13 @@ jssp 是 JavaScript Server Page 的简称，是建构于 d2js 后端技术上的
 
 ### 我想使用 react.js 作为前端，如何实现？
 
-react 技术地位和 molecule 相似，但是又比 molecule 差劲，建议你还是扔了它吧，不信你可以用它试试如何实现 molecule 第一个例子。
+react 技术地位和 molecule 相似，但又比 molecule 差劲，建议你还是扔了它吧，不信你可以用它试试如何实现 molecule 第一个例子。
 
 ### 我想单独使用 molecule，但是molecule中好像使用了 d2js 的东西？
 
-molecule 可以简化 d2js 的很多东西，但它自己是独立的，molecule 自身并没有使用 d2js 任何技术，除了一个 extract.jssp 页面。
+d2js 的 DataTable 使用数据路径的表达方式有时会显得啰嗦，使用 molecule 可以大幅简化 d2js 的开发，所以真正 d2js 项目中离不开 molecule，使用 bootstrap、semantic-ui 等更离不开 molecule 了。
+
+但 molecule 自身是独立的，molecule 自身并没有使用 d2js 任何技术，除了一个 extract.jssp 页面。
 
 该网页用途有2：
 
