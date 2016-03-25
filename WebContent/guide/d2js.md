@@ -135,6 +135,8 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 </script>
 ```
 
+![d2js guide 2](images/d2js-2.png?raw=true)
+
 也可以在渲染时提供自定义的渲染函数，如
 
 ```html
@@ -167,8 +169,6 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 	d2js.render($('#info'), person, true);
 </script>
 ```
-
-![d2js guide 2](images/d2js-2.png?raw=true)
 
 ### 管道
 
@@ -441,7 +441,7 @@ d2js.fetch = function(params){
 <section id="persons" data="#author,rows" renderer="repeater" collector="repeater">
 	<div repeater="true">
 		Name:<input data="name" renderer="std" collector="c|s">
-		Gender:<input data="gender" renderer="std" collector="c|s">
+		Email:<input data="email" renderer="std" collector="c|s">
 	</div>
 </section>
 <script>
@@ -454,6 +454,8 @@ d2js.fetch = function(params){
 	});
 </script>
 ```
+![d2js output](images/d2js-table-render.png?raw=true)
+
 这样，通过 `table.load('fetch')`，数据库中的数据就被提取到了前端。
 
 显然，`load` 函数使用的是 ajax 方式提取的。可见，每个d2js都是一个可以通过ajax访问的服务。这种服务可以通过浏览器直接输入网址的形式观察到：
@@ -585,11 +587,11 @@ d2js.fetch = function(params){
 
 ```js
 d2js.create = function(rcd){
-	return this.insertRow('author', rcd, ['name', 'gender']);
+	return this.insertRow('author', rcd, ['name', 'email']);
 }
 
 d2js.modify = function(rcd){
-	return this.updateRow('author', rcd, ['id', 'name', 'gender']);
+	return this.updateRow('author', rcd, ['id', 'name', 'email']);
 }
 
 d2js.destroy = function(rcd){
@@ -610,7 +612,7 @@ d2js.destroy = function(rcd){
 <section id="persons" data="#author,rows" renderer="repeater" collector="repeater">
 	<div repeater="true">
 		Name:<input data="name" renderer="std" collector="c|s">
-		Gender:<input data="gender" renderer="std" collector="c|s">
+		Email:<input data="email" renderer="std" collector="c|s">
 	</div>
 </section>
 <section>
@@ -618,7 +620,7 @@ d2js.destroy = function(rcd){
 </section>
 <script>
 	var table = new d2js.DataTable('author', 'author.d2js');
-	table.on('load', function(){$('#persons').render(this)};
+	table.on('load', function(){$('#persons').render(this)});
 	table.load('fetch');
 	
 	table.on('submit', function(error){	// 提交成功后再次加载数据
@@ -636,6 +638,11 @@ d2js.destroy = function(rcd){
 	}
 </script>
 ```
+![d2js search](images/d2js-table-collect.png?raw=true)
+
+打开数据库，可见表数据确实发生了变化：
+
+![d2js search](images/d2js-table-submit.png?raw=true)
 
 ## 高级话题
 
