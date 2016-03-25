@@ -86,11 +86,17 @@ react 技术地位和 molecule 相似，但又比 molecule 差劲，建议你还
 
 d2js 的 DataTable 使用数据路径的表达方式有时会显得啰嗦，使用 molecule 可以大幅简化 d2js 的开发，所以真正 d2js 项目中离不开 molecule，使用 bootstrap、semantic-ui 等更离不开 molecule 了。
 
-但 molecule 自身是独立的，molecule 自身并没有使用 d2js 任何技术，除了一个 extract.jssp 页面。
+但 molecule 自身是独立的，molecule 并没有使用 d2js 任何技术，除了一个 extract.jssp 页面。
 
-该网页用途有2：
+extract.jssp 用途有2：
 
-0. 直接调用该网页，可以将所有放在 molecule/ 目录的 html 中的 molecule-def 抽取，生成molecule定义的 json。所以这个过程中， extract.jssp 其实是一个小程序，在后续过程中使用的是生成的 json。你完全可以使用它所生成的 json 而不在自己项目中使用 d2js jssp 技术
-0. 在 `Molecule.loadHtml`中，按本次需要提取的  html 文件中获得相应 molecule定义的json。如果你喜欢 loadHtml 的方式，你可以将 extract.jssp 所做的工作改为 jsp 实现，或者你正在使用的其它语言的实现方式。如果你已经实现了欢迎分享~
+0. 直接调用该网页，可以将所有放在 molecule/ 目录的 html 中的 molecule-def 抽取，生成molecule定义的 json。所以这个过程中， extract.jssp 其实是一个小程序，在后续过程中使用的是其生成的 json。你完全可以使用它生成molecule定义json然后复制到自己的项目中
+0. 在 `Molecule.loadHtml`中，从指定的  html 文件提取相应 molecule定义json。如果你喜欢 loadHtml 的方式，你可以将 extract.jssp 所做的工作改为 jsp 实现，或你正在使用的其它语言的实现方式。如果你已经实现了欢迎分享~
+
+所以，你只要把 molecule.js 复制到项目中即可使用。
+
+### 为什么不提供 d2js.min.js？
+
+我认为这种 js 你在开发中会无法定位错误，无法理解到底发生了什么，请好好学习 ant 或其它打包技术，在打包时生成 min.js 吧。让打包的技术发生在打包阶段，不要干扰开发。
 
 
