@@ -82,11 +82,11 @@ d2js 原型实际上 2007 年即已出现并实用了多年，当时原理是前
 
 只要好好分析一番 d2js 服务器所给出的数据响应以及前端提交数据的处理，实际上很容易使用 php 或其它技术实现一个类似的后端平台。
 
-如果你不与数据库打交道，只是欣赏渲染、收集的思路（嵌入到native app的页面需要这样），那么只要不调用 DataTable.load 及 DataTable.submit，d2js 可以工作的很正常。
+如果你不与数据库打交道，只是欣赏渲染、收集的思路（嵌入到native app的页面需要这样），只要不调用 DataTable.load 及 DataTable.submit，d2js 可以工作的很正常。
 
 ### 我想使用 extjs 作为前端，如何实现？
 
-请放心，你不是来砸场子的，我自己就这么干过。请见[d2js指南](WebContent/guide/d2js-2.md)。 里面提供了一个extjs的 Store类，此外，通过编程，.net 客户端也可以很好的衔接。
+请放心，你不是来砸场子的，我自己就这么干过。请见[d2js指南](WebContent/guide/d2js-2.md)， 里面提供了一个extjs的 Store类。此外，通过编程，.net 客户端也可以很好的衔接。
 
 ### 我想使用 react.js 作为前端，如何实现？
 
