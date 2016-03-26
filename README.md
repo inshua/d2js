@@ -13,6 +13,8 @@
 * d2js 框架允许网页设计与开发分离，先设计再开发
 * d2js 切割分明，依托于 html 技术，可以和其它 ui 框架如 bootstrap, semantic-ui 等，及 molecule 一同使用
 
+d2js 框架学习成本低，可以利用可视化SQL设计器，一般1天就可以上手。由于概念完整，开发中常见的主从表等等问题都可以轻松解决。
+
 ### [jssp](WebContent/guide/jssp.md) 觉得可以取代 php...
 
 尽管 `d2js 前端(html + ajax) + d2js 后端` 可以满足大部分应用场景，还是有很多场景需要页面在服务器端就绪后输出，不宜使用纯 ajax 技术。
@@ -26,6 +28,10 @@ jssp 是 JavaScript Server Page 的简称，是建构于 d2js 后端技术上的
 * molecule 无需使用 js 生成 html，html 是 html, js 是 js，混合而不杂乱
 * molecule 组件页面总是能运行的，不需要写单独的 demo 网页
 * molecule 切割巧妙，可以和 jQuery 组件互通
+ 
+molecule 框架大约 15 分钟即可入门。支持继承、复合等等面向对象技术，有效确保实现更复杂的组件，例子中有树视图、下拉树等供参考。
+
+------
 
 指南中的例子需按上述研究与参与开发的过程初始化环境后使用。
 
