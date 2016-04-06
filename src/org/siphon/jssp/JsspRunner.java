@@ -49,6 +49,7 @@ import org.apache.log4j.Logger;
 import org.siphon.common.js.JsEngineUtil;
 import org.siphon.d2js.D2jsRunner;
 import org.siphon.d2js.D2jsUnitManager;
+import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.JsServlet;
 import org.siphon.d2js.jshttp.ServerUnitManager;
@@ -60,10 +61,8 @@ public class JsspRunner extends D2jsRunner{
 
 	private JsspUnitManager jsspUnitManager;
 
-
-
-	public JsspRunner(DataSource dataSource, JsspUnitManager jsspUnitManager) {
-		super(dataSource, jsspUnitManager);
+	public JsspRunner(D2jsInitParams params, JsspUnitManager jsspUnitManager) {
+		super(params, jsspUnitManager);
 		this.jsspUnitManager = jsspUnitManager;
 	}
 
@@ -91,7 +90,7 @@ public class JsspRunner extends D2jsRunner{
 
 		JsEngineHandlerContext engineContext = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, jsfile, dataSource, otherArgs);
+			engineContext = d2jsManager.getEngineContext(jsfile, jsfile, this.getInitParams());
 		} catch (Exception e3) {
 			logger.error("", e3);
 			throw new ServletException(e3);

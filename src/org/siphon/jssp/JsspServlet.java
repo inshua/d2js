@@ -33,6 +33,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.siphon.d2js.D2jsRunner;
+import org.siphon.d2js.D2jsUnitManager;
+import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsServlet;
 
 /**
@@ -52,16 +54,15 @@ public class JsspServlet extends JsServlet {
 		super.init();
 
 		String path = this.getServletContext().getRealPath("");
-		JsspRunner jsspRunner = new JsspRunner(this.initDataSource(), new JsspUnitManager(path));
-		this.getServletContext().setAttribute("jsspRunner", jsspRunner);
-
-		HashMap<String, Object> otherArgs = new HashMap<String, Object>();
-		otherArgs.put("globalLockObject", new Object());
-		otherArgs.put("application", JsServlet.application);
-		otherArgs.put("preloadJs", this.getPreloadJs());
-		otherArgs.put("jslib", this.getJsLibs());
-
-		jsspRunner.setOtherArgs(otherArgs);
+		
+		D2jsInitParams args = new D2jsInitParams();
+		args.setLibs(this.getJsLibs());
+		args.setApplication(JsServlet.application);
+		args.setPreloadJs(this.getPreloadJs());
+		args.setGlobalLockObject(new Object());
+		
+		JsspRunner jsspRunner = new JsspRunner(args, new JsspUnitManager(path));
+		this.getServletContext().setAttribute("jsspRunner", jsspRunner);		
 	}
 
 	@Override
