@@ -21,7 +21,7 @@
 // 初始化脚本，装载一些常用代码库
 // 入口配置于 web.xml <init-param><param-name>PRELOADJS</param-name></init-param>
 
-imports("./jssp/website.js");
+imports("../config/website.js");
 
 include('d2js.js');
 

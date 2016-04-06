@@ -42,7 +42,7 @@ import org.siphon.d2js.D2jsUnitManager;
 public abstract class ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
-	private Map<String, ObjectPool<JsEngineHandlerContext>> contexts = new ConcurrentHashMap<String, ObjectPool<JsEngineHandlerContext>>();
+	private Map<String, ObjectPool<JsEngineHandlerContext>> contextsPerFile = new ConcurrentHashMap<String, ObjectPool<JsEngineHandlerContext>>();
 	protected String srcFolder;
 
 	public ServerUnitManager() {
@@ -53,12 +53,11 @@ public abstract class ServerUnitManager {
 		this.srcFolder = srcFolder;
 	}
 
-	public JsEngineHandlerContext getEngineContext(final String srcFile, final String aliasPath, final DataSource dataSource,
-			final Map<String, Object> otherArgs) throws Exception {
+	public JsEngineHandlerContext getEngineContext(final String srcFile, final String aliasPath, D2jsInitParams params) throws Exception {
 
 		File file = null;
-		if (contexts.containsKey(srcFile)) {
-			ObjectPool<JsEngineHandlerContext> pool = contexts.get(srcFile);
+		if (contextsPerFile.containsKey(srcFile)) {
+			ObjectPool<JsEngineHandlerContext> pool = contextsPerFile.get(srcFile);
 			JsEngineHandlerContext ctxt = pool.borrowObject();
 			ctxt.setPool(pool);
 			return ctxt;
@@ -68,7 +67,7 @@ public abstract class ServerUnitManager {
 
 				@Override
 				public JsEngineHandlerContext makeObject() throws Exception {
-					return createEngineContext(srcFile, aliasPath, dataSource, otherArgs);
+					return createEngineContext(srcFile, aliasPath, params);
 				}
 			};
 
@@ -77,7 +76,7 @@ public abstract class ServerUnitManager {
 			JsEngineHandlerContext ctxt = enginePool.borrowObject();
 			ctxt.setPool(enginePool);
 
-			contexts.put(srcFile, enginePool);
+			contextsPerFile.put(srcFile, enginePool);
 
 			return ctxt;
 		} else {
@@ -85,25 +84,24 @@ public abstract class ServerUnitManager {
 		}
 	}
 
-	protected abstract JsEngineHandlerContext createEngineContext(String srcFile, String aliasPath, DataSource dataSource,
-			Map<String, Object> otherArgs) throws Exception;
+	protected abstract JsEngineHandlerContext createEngineContext(String srcFile, String aliasPath, D2jsInitParams params) throws Exception;
 
 	public void onFileChanged(WatchEvent<Path> ev, Path file) {
 		Kind<Path> kind = ev.kind();
 		String filename = file.toString();
 		if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-			if (contexts.containsKey(filename)) {
+			if (contextsPerFile.containsKey(filename)) {
 				if (logger.isDebugEnabled()) {
 					logger.debug(filename + " dropped");
 				}
-				contexts.remove(filename);
+				contextsPerFile.remove(filename);
 			}
 		} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-			if (contexts.containsKey(filename)) {
+			if (contextsPerFile.containsKey(filename)) {
 				if (logger.isDebugEnabled()) {
 					logger.debug(filename + " changed");
 				}
-				contexts.remove(filename);
+				contextsPerFile.remove(filename);
 			}
 		}
 	}

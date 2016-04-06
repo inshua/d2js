@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.Context;
@@ -72,13 +73,13 @@ public abstract class JsServlet extends HttpServlet {
 		}
 	}
 
-	public Object[] getJsLibs() {
+	public String[] getJsLibs() {
 		String jslib = this.getServletConfig().getInitParameter("JSLIB");
 		if (!StringUtils.isEmpty(jslib)) {
 			if (StringUtils.isEmpty(jslib)) {
-				return new Object[] {};
+				return new String[] {};
 			} else {
-				List<Object> ls = new ArrayList<Object>();
+				List<String> ls = new ArrayList<String>();
 				for (String s : jslib.split(",")) {
 					if (!StringUtils.isEmpty(s)) {
 						String path = this.getServletContext().getRealPath(s.trim());
@@ -86,10 +87,10 @@ public abstract class JsServlet extends HttpServlet {
 						// ls.add(s.trim());
 					}
 				}
-				return ls.toArray();
+				return (String[]) ls.toArray(new String[ls.size()]);
 			}
 		} else {
-			return new Object[] {};
+			return new String[] {};
 		}
 	}
 
@@ -141,19 +142,19 @@ public abstract class JsServlet extends HttpServlet {
 
 	protected abstract void onFileChanged(WatchEvent<Path> ev, Path file);
 
-	protected DataSource initDataSource() {
-		try {
-			Context ctx = new InitialContext();
-			Object obj = ctx.lookup(this.getServletContext().getInitParameter("dataSource"));
-			DataSource ds = (DataSource) PortableRemoteObject.narrow(obj, DataSource.class);
-			return ds;
-		} catch (ClassCastException e) {
-			logger.error("", e);
-		} catch (NamingException e) {
-			logger.error("", e);
-		}
-		return null;
-	}
+//	protected DataSource initDataSource() {
+//		try {
+//			Context ctx = new InitialContext();
+//			Object obj = ctx.lookup(this.getServletContext().getInitParameter("dataSource"));
+//			DataSource ds = (DataSource) PortableRemoteObject.narrow(obj, DataSource.class);
+//			return ds;
+//		} catch (ClassCastException e) {
+//			logger.error("", e);
+//		} catch (NamingException e) {
+//			logger.error("", e);
+//		}
+//		return null;
+//	}
 
 	public static JsspSession getJsSesson(HttpSession session) {
 		JsspSession jsspSession = (JsspSession) session.getAttribute("JSSPSESSION");

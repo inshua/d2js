@@ -51,6 +51,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.siphon.common.js.JSON;
 import org.siphon.common.js.JsEngineUtil;
 import org.siphon.common.js.JsTypeUtil;
+import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.JsServlet;
 import org.siphon.d2js.jshttp.ServerUnitManager;
@@ -68,21 +69,11 @@ public class D2jsRunner {
 
 	private final Formatter formatter = new D2jsFormatter();
 
-	protected final DataSource dataSource;
+	private D2jsInitParams initParams;
 
-	protected Map<String, Object> otherArgs;
-
-	public synchronized Map<String, Object> getOtherArgs() {
-		return otherArgs;
-	}
-
-	public synchronized void setOtherArgs(Map<String, Object> otherArgs) {
-		this.otherArgs = otherArgs;
-	}
-
-	public D2jsRunner(DataSource dataSource, D2jsUnitManager d2jsManager) {
-		this.dataSource = dataSource;
+	public D2jsRunner(D2jsInitParams params, D2jsUnitManager d2jsManager) {
 		this.d2jsManager = d2jsManager;
+		this.initParams = params;
 	}
 
 	public void run(HttpServletRequest request, HttpServletResponse response, String method)
@@ -98,7 +89,7 @@ public class D2jsRunner {
 
 		JsEngineHandlerContext engineContext = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, request.getServletPath(), dataSource, otherArgs);
+			engineContext = d2jsManager.getEngineContext(jsfile, request.getServletPath(), this.initParams);
 		} catch (Exception e3) {
 			logger.error("", e3);
 			engineContext.free();
@@ -242,7 +233,7 @@ public class D2jsRunner {
 			throws Exception {
 		JsEngineHandlerContext engineContext = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, request.getContextPath(), dataSource, otherArgs);
+			engineContext = d2jsManager.getEngineContext(jsfile, request.getContextPath(), this.initParams);
 
 			initEngineContext(engineContext, request, response);
 
@@ -251,6 +242,14 @@ public class D2jsRunner {
 		} catch (Exception e3) {
 			throw new ServletException(e3);
 		}
+	}
+
+	public D2jsInitParams getInitParams() {
+		return initParams;
+	}
+
+	public void setInitParams(D2jsInitParams initParams) {
+		this.initParams = initParams;
 	}
 	
 }

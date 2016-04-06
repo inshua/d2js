@@ -42,6 +42,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.siphon.common.io.WatchDir;
+import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsServlet;
 import org.siphon.d2js.jshttp.ServerUnitManager;
 
@@ -64,14 +65,14 @@ public class DispatchServlet extends JsServlet {
 	public void init() throws ServletException {
 		super.init();
 		String path = this.getServletContext().getRealPath("");
-		D2jsRunner d2jsRunner = new D2jsRunner(this.initDataSource(), new D2jsUnitManager(path));
-		this.getServletContext().setAttribute("d2jsRunner", d2jsRunner);
 		
-		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("jslib", this.getJsLibs());
-		args.put("preloadJs", this.getPreloadJs());
-		args.put("application", JsServlet.application);
-		d2jsRunner.setOtherArgs(args);
+		D2jsInitParams args = new D2jsInitParams();
+		args.setLibs(this.getJsLibs());
+		args.setApplication(JsServlet.application);
+		args.setPreloadJs(this.getPreloadJs());
+		
+		D2jsRunner d2jsRunner = new D2jsRunner(args, new D2jsUnitManager(path));
+		this.getServletContext().setAttribute("d2jsRunner", d2jsRunner);
 	}
 	
 	public D2jsRunner getD2jsRunner(){

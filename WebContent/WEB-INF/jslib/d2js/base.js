@@ -909,15 +909,6 @@ D2JS.prototype.getConnection = function(){
 	return this.sqlExecutor.getConnection();
 };
 
-var d2js = null;
-var handler = null;
-
-function init(sqlExecutor, client){	
-	d2js = handler = new D2JS(sqlExecutor);
-	engine.put('handler', handler);
-	engine.put('d2js', d2js);
-	sqlExecutor.defaultJsonDbType = 'JSONB';
-}
 
 
 var ObjectArray = Java.type('java.lang.Object[]'), 
@@ -1027,4 +1018,27 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 		}
 	}
 }
+
+// ================ entrance ===========================
+var d2js = null;
+var handler = null;
+
+function init(){
+	
+	var datasource = application.datasource || (application.datasource = (function(){
+		var properties = new java.util.Properties();
+		for(var k in datasourceConfig){
+			properties.setProperty(k, datasourceConfig[k] + '');
+		}
+		return Java.type('org.apache.commons.dbcp.BasicDataSourceFactory').createDataSource(properties);
+	}()));
+	
+	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine);
+	sqlExecutor.defaultJsonDbType = 'JSONB';
+	
+	d2js = handler = new D2JS(sqlExecutor);
+	engine.put('handler', handler);
+	engine.put('d2js', d2js);
+}
+
 

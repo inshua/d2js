@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 import org.siphon.common.js.JSON;
 import org.siphon.common.js.JsEngineUtil;
 import org.siphon.common.js.JsTypeUtil;
+import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.ServerUnitManager;
 import org.siphon.d2js.jshttp.Task;
@@ -58,20 +59,18 @@ public class D2jsUnitManager extends ServerUnitManager {
 	}
 
 	@Override
-	protected JsEngineHandlerContext createEngineContext(String srcFile, String aliasPath, DataSource dataSource,
-			final Map<String, Object> otherArgs) throws Exception {
+	protected JsEngineHandlerContext createEngineContext(String srcFile, String aliasPath, D2jsInitParams initParams) throws Exception {
 		ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
 
-		JsEngineUtil.initEngine(engine, (Object[]) otherArgs.get("jslib"));
+		JsEngineUtil.initEngine(engine, initParams.getLibs());
 
 		File path = new File(srcFolder);
 
 		engine.put("logger", logger);
-		engine.put("dataSource", dataSource);
-		engine.put("application", otherArgs.get("application"));
+		engine.put("application", initParams.getApplication());
 		// 由 js 根据业务需要创建，创建后由 java 关闭
-		if (otherArgs.get("preloadJs") != null) {
-			String[] preloadJs = (String[]) otherArgs.get("preloadJs");		// [abs path, alias]
+		if (initParams.getPreloadJs() != null) {
+			String[] preloadJs = initParams.getPreloadJs();		// [abs path, alias]
 			logger.info("evaluate preload js: " + preloadJs[0]);
 			JsEngineUtil.eval(engine, preloadJs[0], preloadJs[1], FileUtils.readFileToString(new File(preloadJs[0]), "utf-8"), true, false);
 		}
@@ -89,8 +88,7 @@ public class D2jsUnitManager extends ServerUnitManager {
 		JsEngineHandlerContext ctxt = new JsEngineHandlerContext();
 		ctxt.setScriptEngine(engine);
 		ctxt.setHandler((ScriptObjectMirror) engine.eval("d2js"));
-		ctxt.setJson(new JSON(engine)); // jdk has a NativeJSON class inside but
-										// it's sealed
+		ctxt.setJson(new JSON(engine)); // jdk has a NativeJSON class inside but it's sealed
 		ctxt.setJsTypeUtil(new JsTypeUtil(engine));
 
 		return ctxt;
