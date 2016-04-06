@@ -87,7 +87,7 @@ function $SQL(sql){
  * ```
  * @class D2JS
  */
-function D2JS(sqlExecutor){ this.sqlExecutor = sqlExecutor;  }
+function D2JS(sqlExecutor){ this.executor = sqlExecutor;  }
 
 D2JS.prototype = new Object();
 
@@ -172,10 +172,10 @@ D2JS.prototype.query = function(sql, args, pageDef){
 			pageDef = JSON.parse(pageDef, parseDate);
 		}
 		if(logger && logger.isDebugEnabled()) logger.debug("do page query " + sql + " with args: " + JSON.stringify(args));
-		return this.sqlExecutor.pageQuery(this.transactConnection||null, sql,pageDef.start, pageDef.limit, args) 
+		return this.executor.pageQuery(this.transactConnection||null, sql,pageDef.start, pageDef.limit, args) 
 	} else {
 		if(logger && logger.isDebugEnabled()) logger.debug("do query " + sql + " with args: " + JSON.stringify(args));
-		return this.sqlExecutor.query(this.transactConnection || null, sql, args, true);
+		return this.executor.query(this.transactConnection || null, sql, args, true);
 	}
 } ;
 
@@ -205,7 +205,7 @@ D2JS.prototype.travel = function(sql, args, traveler){
 	}
 	
 	if(logger && logger.isDebugEnabled()) logger.debug("travel " + sql + " with args: " + JSON.stringify(args));
-	this.sqlExecutor.travel(this.transactConnection||null,sql, args, traveler);
+	this.executor.travel(this.transactConnection||null,sql, args, traveler);
 } ;
 
 /**
@@ -287,7 +287,7 @@ D2JS.prototype.execute = function(sql, args){
 	}
 	
 	if(logger && logger.isDebugEnabled()) logger.debug("execute " + sql + " with args: " + JSON.stringify(args));
-	return this.sqlExecutor.execute(this.transactConnection||null, sql, args);
+	return this.executor.execute(this.transactConnection||null, sql, args);
 }; 
 
 /**
@@ -317,7 +317,7 @@ D2JS.prototype.call = function(callProcStmt, args){
 		throw new Error('unknown args ' + JSON.stringify(args));
 	}
 	if(logger && logger.isDebugEnabled()) logger.debug("call " + sql + " with args: " + JSON.stringify(args));
-	return this.sqlExecutor.call(this.transactConnection||null,sql, args);
+	return this.executor.call(this.transactConnection||null,sql, args);
 }; 
 
 /**
@@ -325,9 +325,9 @@ D2JS.prototype.call = function(callProcStmt, args){
  * @param seq {string} 序列名
  */
 D2JS.prototype.nextId = function(seq){
-	if(this.sqlExecutor.isOracle()){
+	if(this.executor.isOracle()){
 		var r = this.query('select ' + seq + '.nextval n from dual', []);
-	} else if(this.sqlExecutor.isPostgreSQL()){
+	} else if(this.executor.isPostgreSQL()){
 		var r = this.query("select nextval('" + seq +"') n", []);
 	}
 	return r.rows[0].n;
@@ -381,22 +381,22 @@ D2JS.prototype.insertRow = function(table, row, columns, pkColumn){
 	}
 	insertPart.append(') ');
 	if(row[pkColumn] && ! row[pkColumn].SQL){
-		if(this.sqlExecutor.isOracle()) {
+		if(this.executor.isOracle()) {
 			valuesPart.append(' FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM ' + table + ' WHERE '+pkColumn+'= ?)');
-		} else if(this.sqlExecutor.isPostgreSQL()){
+		} else if(this.executor.isPostgreSQL()){
 			valuesPart.append(' WHERE NOT EXISTS(SELECT 1 FROM ' + table + ' WHERE '+pkColumn+'= ?)');
 		}
 		args.push(row[pkColumn]);
 	} else {
-		if(this.sqlExecutor.isOracle()) {
+		if(this.executor.isOracle()) {
 			valuesPart.append(' FROM DUAL');
 		}
 	}	
-	if(this.sqlExecutor.isPostgreSQL()){
+	if(this.executor.isPostgreSQL()){
 		valuesPart.append(' RETURNING *');
 	}
 	var sql = insertPart.toString() + valuesPart.toString();
-	if(this.sqlExecutor.isPostgreSQL()){
+	if(this.executor.isPostgreSQL()){
 		return this.queryRow(sql, args);
 	} else {
 		return this.execute(sql, args);
@@ -450,7 +450,7 @@ D2JS.prototype.updateRow = function(table, row, columns, pkColumn){
 	sql.append(' WHERE ' + table + '.' + pkColumn + '= ?');
 	args.push(row[pkColumn]);
 	
-	if(this.sqlExecutor.isPostgreSQL()){
+	if(this.executor.isPostgreSQL()){
 		return this.queryRow(sql.toString() + ' RETURNING *', args);
 	} else {
 		return this.execute(sql.toString(), args);
@@ -494,7 +494,7 @@ D2JS.prototype.mergeRow = function(table, row, uniqueFields, columns, pkColumns)
 		}
 	}
 	
-	if(this.sqlExecutor.isOracle()){
+	if(this.executor.isOracle()){
 		return this.mergeRowOracle(table, row, uniqueColumns, columns, pkColumns);
 	} else {
 		return this.mergeRowPostgreSQL(table, row, uniqueColumns, columns, pkColumns);
@@ -850,7 +850,7 @@ function parseNamedArgsSql(sql, args){
 }
 
 D2JS.prototype.clone = function(){
-	var obj = new D2JS(this.sqlExecutor);
+	var obj = new D2JS(this.executor);
 	for(var k in this){
 		if(this.hasOwnProperty(k)) obj[k] = this[k];
 	}
@@ -898,7 +898,7 @@ D2JS.prototype.doTransaction = function(action){
  * 关闭连接池所有连接结束工作, 适用于只用一次的场景，一般不会用到。
  */
 D2JS.prototype.release = function(){
-	this.sqlExecutor.release();
+	this.executor.release();
 };
 
 /**
@@ -906,7 +906,7 @@ D2JS.prototype.release = function(){
  * @returns java.sql.Connection
  */
 D2JS.prototype.getConnection = function(){
-	return this.sqlExecutor.getConnection();
+	return this.executor.getConnection();
 };
 
 
