@@ -686,17 +686,18 @@
         <script>
             // MOLECULE_DEF
             d2js.Renderers.editLink = function (element, v, table) {
-         	        var e = $(element);
-         	        e.html('');
-         	        var a = $(document.createElement('a')).appendTo(e);
-         	        a.html('EDIT');
-         	        a.attr('href', '###');
-         	        a.data('id', v);
-         	        a.on('click', function () {
-         	        	var row = table.find('id', $(this).data('id'));
-         	        	var tl = $(this).closest('[molecule-obj=TableList]');
-         	        	Molecule.of(tl).editRow(row);
-         	        });
+	            	var e = $(element);
+	     	        e.html('');
+	     	        var a = $(document.createElement('a')).appendTo(e);
+	     	        a.html('EDIT');
+	     	        a.attr('href', '###');
+	     	        a.data('id', v);
+	     	        var idColumn = arguments[arguments.length-2];
+	     	        a.on('click', function () {
+	     	        	var row = table.find(idColumn, $(this).data('id'));
+	     	        	var tl = $(this).closest('[molecule-obj=TableList]');
+	     	        	Molecule.of(tl).editRow(row);
+	     	        });
          	    };
          	    
             function TableList() {
