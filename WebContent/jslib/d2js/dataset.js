@@ -415,12 +415,16 @@ d2js.DataTable.prototype.load = function(method, params, option){
 					me.pageCount = Math.ceil(result.total / me.pageSize);
 				}
 				
-				me.initSchema(result.columns);
+				if(result.columns) {
+					me.initSchema(result.columns);
 				
-				var rows = result.rows;
-				for(var i=0; i<rows.length; i++){
-					var row = new d2js.DataRow(me, rows[i]);
-					me.rows.push(row);
+					var rows = result.rows;
+					for(var i=0; i<rows.length; i++){
+						var row = new d2js.DataRow(me, rows[i]);
+						me.rows.push(row);
+					}
+				} else {
+					me.fill(result.rows, {raiseEvent : false, reinit: true});
 				}
 				if(me.indexedColumns) me.rebuildIndexes();
 				
@@ -475,10 +479,17 @@ d2js.DataTable.prototype.fill = function(rows, option){
 	var me = this;
 	
 	if(this.columns.length == 0 || reinit) {
-		var columns = [];
-		for(var k in rows[0]){
-			columns.push(new d2js.DataColumn(k));
+		var r = {};
+		for(var i=0; i<rows.length; i++){
+			var row = rows[i];
+			for(var k in row){
+				if(!r[k]) r[k] = 1;
+			}
 		}
+		var columns = [];
+		for(var k in r){if(r.hasOwnProperty(k)){
+			columns.push(new d2js.DataColumn(k));
+		}}
 		
 		me.initSchema(columns);
 	}
