@@ -72,7 +72,7 @@ d2js.dataset.addRelation = function(parent, parentColumn, child, childColumn){
  * 查看数据，可用来观察所有表的数据
  * 该函数需要打开一个新窗口，请允许浏览器对本站弹出窗口。
  */
-d2js.dataset.inspector = function(){
+d2js.dataset.inspect = function(){
 	var a = [];
 	for(var tb in this){
 		var t = this[tb];
@@ -88,6 +88,12 @@ d2js.dataset.inspector = function(){
 		document.write(a.join(""));
 	}	
 }
+
+/**
+ * 主键字段，默认为 id，使用mongodb应调为 _id
+ */
+d2js.PK = 'id';
+
 /**
  *数据表。与关系型数据库的表、视图、查询结果同构的一个内存镜像。主要包含 DataColumn, DataRow 集合。
  * @class d2js.DataTable
@@ -208,7 +214,7 @@ d2js.DataTable = function (name, url, option){
 	 * 用于索引的字段，值必须唯一，默认为 ['id']
 	 * @type {string[]}
 	 */
-	this.indexedColumns = option.indexedColumns || ['id'];
+	this.indexedColumns = option.indexedColumns || [d2js.PK];
 }
 
 /**
@@ -865,7 +871,7 @@ d2js.DataTable.prototype.findParentRows = function(row, parentTable){
  * 观察本表数据。
  * 该函数需要打开一个新窗口，请允许浏览器对本站弹出窗口。
  */
-d2js.DataTable.prototype.inspector = function(returnHtml){
+d2js.DataTable.prototype.inspect = function(returnHtml){
 	var t = this; 
 	var a = [];
 	a.push("<table border=1>");
