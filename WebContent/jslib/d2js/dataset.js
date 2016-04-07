@@ -309,7 +309,7 @@ d2js.DataTable.prototype.reject = function(){
 
 /**
  * 初始化数据列
- * @param columns {array} 由 [{name : '', type : ''}] 构成的数组
+ * @param columns {array} 由 [{name : '', type : ''}] 或 ['name', 'name', ] 构成的数组
  * @param [raiseEvent=false] {bool}
  */
 d2js.DataTable.prototype.initSchema = function(columns, raiseEvent){
@@ -317,7 +317,7 @@ d2js.DataTable.prototype.initSchema = function(columns, raiseEvent){
 	this.columnNames = [];
 	for(var i=0; i<columns.length; i++){
 		var col = columns[i];
-		if(col instanceof String){
+		if(typeof col == 'string'){
 			this.columns.push(new d2js.DataColumn(col));
 			this.columnNames.push(col);
 		} else {
