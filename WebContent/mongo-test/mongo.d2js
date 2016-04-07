@@ -1,0 +1,6 @@
+d2js.test = function(){
+	var data = [{"id":2,"name":"金庸","email":"jinyong2@tom.com","tel":"11144455","remarks":"金庸原名查良镛"},{"id":3,"name":"玛格丽特 米切尔","email":"Margaret1@yahoo.com","tel":"242421","remarks":"女作家"},{"id":4,"name":"康德","email":"kant3@gmail.com","tel":"null","remarks":"德国哲学家"},{"id":1,"name":"曹雪芹","email":"caoxueqin2@gmail.com","tel":"111222333","remarks":"曹雪芹先生是伟大的作家"}];
+	data.forEach(function(row){
+		this.insertRow('author', row);
+	},this);
+}

@@ -1,0 +1,31 @@
+d2js.fetch = function(params){
+	return this.query('author', params, {name: '$regex'})
+			.setSchema(['_id', 'id', 'name', 'email']);
+}
+
+d2js.create = function(row, columns){
+	$V(row, {
+		name : V.notNull,
+		email : V.email,
+		info : V.attrs(['linkin']),
+		'info,linkin': V.shortest(5)
+	});
+	
+	return this.insertRow('author', row, columns);
+}
+
+d2js.modify = function(row, columns){
+	
+	$V(row, {
+		name : V.notNull,
+		email : V.email,
+		info : V.attrs(['linkin']),
+		'info,linkin': V.shortest(5)
+	});
+	
+	return this.updateRow('author', row, columns);
+}
+
+d2js.destroy = function(row){
+	this.deleteRow('author', row);
+}

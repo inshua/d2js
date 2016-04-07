@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1>表格编辑</h1>
+		<div>
+			
+		</div>
+		<div data="#authors,error" renderer="stderr"></div>
+		<table class="table table-striped" data="#authors" renderer="table">
+			<thead>
+				<tr>
+					<th data-t="rows,N,id" renderer="std">
+						<a href="">id<span class="glyphicon glyphicon-chevron-up"/></a>
+					</th>
+					<th data-t="rows,N,first_name" renderer="std">first name</th>
+					<th data-t="rows,N,last_name" renderer="std">last name</th>
+					<th data-t="rows,N,id" renderer="editLink"></th>
+ 				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<td width="*" align="center">
+						<nav>
+							<ul class="pagination" data="#authors" renderer="pagination">
+							</ul>
+						</nav>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+
+		<!-- editor -->
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        <h4 class="modal-title" id="myModalLabel">Edit <span data="first_name" renderer="std"/></h4>
+		      </div>
+		      <div class="modal-body">
+		      	<form>
+		          <div class="form-group">
+				    <label>First Name</label>
+				    <input type="text" class="form-control" pattern="^([_A-z0-9]){3,}$" data="#authors,curr,first_name" renderer="std" collector="c|s">
+				    <div class="help-block with-errors"></div>
+				  </div>
+				  <div class="form-group" data="#authors,curr,_error_at,last_name" renderer="flderr">
+				    <label>Last Name</label>
+				    <input type="text" class="form-control" data="#authors,curr,last_name" renderer="std" collector="c|s">
+				  </div>
+				  <table class="table table-striped" data="#books" renderer="table">
+					<thead>
+						<tr>
+							<th data-t="rows,N,title" renderer="input('text')" renderer-t="std" collector-t="c|s">Title</th>
+		 				</tr>
+					</thead>
+				  </table>
+				</form>        
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		        <button type="button" class="btn btn-primary" onclick="save()">Save changes</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+		
+	</div>
+</body>
+<script>
+	d2js.Renderers.editLink = function(element, v, table){
+		var e = $(element);
+		e.html('');
+		var a = $(document.createElement('a')).appendTo(e);
+		a.html('EDIT');
+		a.attr('href', '###');
+		a.data('id', v);
+		a.on('click', function(){
+			editRow(table.find('id', $(this).data('id')));
+		});
+	}
+	
+	function editRow(row){
+		table.curr = row;
+		d2js.render($('#myModal')[0], table);
+		
+		book.load({ _m : 'fetch', author_id : row.id}, {callback : function(error) {
+			d2js.render(null, this);
+		}});
+
+		$('#myModal').modal('show');
+	}
+	
+	$('#myModal').on('hide.bs.modal', function() {
+	    table.reject();
+	    table.clearError();
+	    d2js.render();
+	});
+
+	var table = new d2js.DataTable('authors', 'author.d2js', {pageSize : 5});
+	
+	var book = new d2js.DataTable('books', 'book.d2js');
+	d2js.dataset.addRelation('authors', 'id', 'books', 'author_id');
+	
+	function save() {
+		d2js.collect();
+		
+		table.submit({callback : function(error){
+			d2js.render();
+			if(!error){
+				$('#myModal').modal('hide');
+				this.reload();
+			}
+		}});
+	}
+	
+	
+	table.load({ _m : 'fetch'}, {callback : function(error) {
+					d2js.render(null, this);
+				}});
+</script>
+</html>

@@ -1,0 +1,83 @@
+function $INT(o){ return {_d2js_type: 'INT', value: Math.floor(o)};}
+function $LONG(o){ return {_d2js_type: 'LONG', value: Math.floor(o)};}
+function $DOUBLE(o){ return {_d2js_type: 'DOUBLE', value: o * 1};}
+function $FLOAT(o){ return {_d2js_type: 'FLOAT', value: o * 1};}
+function $DECIMAL(o){ return {_d2js_type: 'DECIMAL', value: o * 1};}
+function $BINARY(o){ return {_d2js_type: 'BINARY', value: o};}
+function $DATE(o){ return {_d2js_type: 'DATE', value: o};}
+function $TIME(o){ return {_d2js_type: 'TIME', value: o};}
+function $STRING(o){ return {_d2js_type: 'STRING', value: o + ''};}
+function $BOOLEAN(o){ return {_d2js_type: 'BOOLEAN', value: o ? true : false};}
+function $OUTCURSOR(o){return {_d2js_type: 'OUTCURSOR', value: o};}
+function $ARRAY(type, o){ return o;}
+function $JSONB(o){ return o }
+function $JSON(o){ return o }
+
+function $OBJECTID(s){return {_d2js_type:'OBJECTID', value: s}; }
+
+
+var mary = {name: 'mary', 
+		 gendor: 'f', 
+		 birth: new Date(),
+		 a : $INT(100),
+		 b : $BINARY([1,2,3,4]), 
+		 c : $LONG(2000000),
+		 d : 1,
+		 e : true};
+		 
+var row = {name: 'john', 
+			 gendor: 'm', 
+			 birth: new Date(),
+			 a : $INT(100),
+			 b : $BINARY([1,2,3,4]), 
+			 c : $LONG(2000000),
+			 d : 1,
+			 e : true,
+			 wife : mary,
+			 fav: ['berry', 'apple', mary]
+		 };
+
+//		 
+//var row = executor.insertRow('user', row);
+//
+//print(JSON.stringify(row, null, '\t'));
+
+//var arr = executor.query('user');
+//print(JSON.stringify(arr, null, '\t'));
+
+function j2m(obj){
+	return executor.jsObjectToDocument(obj);
+}
+
+function m2j(bsonDocument){
+	return executor.documentToJsObject(bsonDocument);
+}
+
+function m2arr(iterable){
+	iterable = iterable.iterator();
+	var arr = [];
+	while(iterable.hasNext()){
+		arr.push(m2j(iterable.next()));
+	}
+	return arr;
+}
+
+Object.prototype.asBson = function(){
+	return j2m(this);
+}
+
+// var it = executor.getCollection('user').find({_id : {$eq: $OBJECTID('570384d6097b40677cf80aee')}}.asBson());
+
+//print(JSON.stringify(m2arr(it), null, '\t'));
+
+//var v = executor.database.runCommand({$eval : function(x){return x + x}, args : [3]}.asBson())
+//print(v);
+//var v = executor.eval(function(x){return x + x}, [3]);
+//print(v);
+
+//var v = executor.eval(function(x){return x + 3}, [3]);
+//print(JSON.stringify(v));
+
+
+
+

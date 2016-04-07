@@ -28,7 +28,14 @@ imports("../config/website.js");
 
 imports("../config/database.js");
 
-imports("./d2js/base.js");
+
+if(datasourceConfig.isMongodb){
+	imports("./d2js/mongodb.js");
+} else {
+	imports("./d2js/base.js");
+}
+
+imports("./d2js/cascade.js");
 
 imports("./d2js/validation.js");
 
