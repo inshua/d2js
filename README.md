@@ -13,6 +13,8 @@
 * d2js 框架允许网页设计与开发分离，先设计再开发
 * d2js 切割分明，依托于 html 技术，可以和其它 ui 框架如 bootstrap, semantic-ui 等，及 molecule 一同使用
 
+d2js 框架学习成本低，可以利用可视化SQL设计器，一般1天就可以上手。由于概念完整，开发中常见的主从表等等问题都可以轻松解决。
+
 ### [jssp](WebContent/guide/jssp.md) 觉得可以取代 php...
 
 尽管 `d2js 前端(html + ajax) + d2js 后端` 可以满足大部分应用场景，还是有很多场景需要页面在服务器端就绪后输出，不宜使用纯 ajax 技术。
@@ -26,10 +28,20 @@ jssp 是 JavaScript Server Page 的简称，是建构于 d2js 后端技术上的
 * molecule 无需使用 js 生成 html，html 是 html, js 是 js，混合而不杂乱
 * molecule 组件页面总是能运行的，不需要写单独的 demo 网页
 * molecule 切割巧妙，可以和 jQuery 组件互通
+ 
+molecule 框架大约 15 分钟即可入门。支持继承、复合等面向对象理念，有效确保实现更复杂的组件，例子中有树视图、下拉树等供参考。
 
-指南中的例子需按上述研究与参与开发的过程初始化环境后使用。
+------
 
-注意，题目有点哗众取宠，d2js 原型实际上 2007 年即已出现，当时原理是前端的 ado.net，后端的 ado dataadapter，早于市面上常见的各种框架，到现在也是独立生长的。 这3个框架之间具有可分可合、既互相扶持又能独立作战的生态，并不是为了与市面上的各个框架竞争而发明的，也没有受过什么它们任何思想启发。
+上面的题目有点哗众取宠，一旦实际使用会发现，确实符合事实。需要澄清的是，这几个框架并不是为了扮演对应的那些框架的颠覆者而搞出来的。
+
+d2js 原型早在 2007 年即已实现并实用了多年，当时原理是前端的 ado.net，后端的 ado dataadapter，已经包括了 render-collect等机制（区别于灵敏绑定），后台使用 DSL->Java 带有契约式编程风格，当时取代的是 struts2 框架，限于为原公司成果，此处不多介绍。
+
+这3个框架之间具有可分可合既互相扶持又能独立作战的生态，并不是为了与市面上的各个框架竞争而发明的，也没有受过它们任何思想启发。
+
+```
+指南中的例子请按下述“研究与参与开发的过程”搭建环境后使用。
+```
 
 ## 参考手册
 
@@ -72,23 +84,31 @@ jssp 是 JavaScript Server Page 的简称，是建构于 d2js 后端技术上的
 
 只要好好分析一番 d2js 服务器所给出的数据响应以及前端提交数据的处理，实际上很容易使用 php 或其它技术实现一个类似的后端平台。
 
-如果你不与数据库打交道，只是欣赏渲染、收集的思路（嵌入到native app的页面需要这样），那么只要不调用 DataTable.load 及 DataTable.submit，d2js 可以工作的很正常。
+如果你不与数据库打交道，只是欣赏渲染、收集的思路（嵌入到native app的页面需要这样），只要不调用 DataTable.load 及 DataTable.submit，d2js 可以工作的很正常。
 
 ### 我想使用 extjs 作为前端，如何实现？
 
-请放心，你不是来砸场子的，我自己就这么干过。请见[d2js指南](WebContent/guide/d2js-2.md)。 里面提供了一个extjs的 Store类，此外，通过编程，.net 客户端也可以很好的衔接。
+请放心，你不是来砸场子的，我自己就这么干过。请见[d2js指南](WebContent/guide/d2js-2.md)， 里面提供了一个extjs的 Store类。此外，通过编程，.net 客户端也可以很好的衔接。
 
 ### 我想使用 react.js 作为前端，如何实现？
 
-react 技术地位和 molecule 相似，但是又比 molecule 差劲，建议你还是扔了它吧，不信你可以用它试试如何实现 molecule 第一个例子。
+react 技术地位和 molecule 相似，但又比 molecule 差劲，建议你还是扔了它吧，不信你可以用它试试如何实现 molecule 第一个例子。
 
 ### 我想单独使用 molecule，但是molecule中好像使用了 d2js 的东西？
 
-molecule 可以简化 d2js 的很多东西，但它自己是独立的，molecule 自身并没有使用 d2js 任何技术，除了一个 extract.jssp 页面。
+d2js 的 DataTable 使用数据路径的表达方式有时会显得啰嗦，使用 molecule 可以大幅简化 d2js 的开发，所以真正 d2js 项目中离不开 molecule，使用 bootstrap、semantic-ui 等更离不开 molecule 了。
 
-该网页用途有2：
+但 molecule 自身是独立的，molecule 并没有使用 d2js 任何技术，除了一个 extract.jssp 页面。
 
-0. 直接调用该网页，可以将所有放在 molecule/ 目录的 html 中的 molecule-def 抽取，生成molecule定义的 json。所以这个过程中， extract.jssp 其实是一个小程序，在后续过程中使用的是生成的 json。你完全可以使用它所生成的 json 而不在自己项目中使用 d2js jssp 技术
-0. 在 `Molecule.loadHtml`中，按本次需要提取的  html 文件中获得相应 molecule定义的json。如果你喜欢 loadHtml 的方式，你可以将 extract.jssp 所做的工作改为 jsp 实现，或者你正在使用的其它语言的实现方式。如果你已经实现了欢迎分享~
+extract.jssp 用途有2：
+
+0. 直接调用该网页，可以将所有放在 molecule/ 目录的 html 中的 molecule-def 抽取，生成molecule定义的 json。所以这个过程中， extract.jssp 其实是一个小程序，在后续过程中使用的是其生成的 json。你完全可以使用它生成molecule定义json然后复制到自己的项目中
+0. 在 `Molecule.loadHtml`中，从指定的  html 文件提取相应 molecule定义json。如果你喜欢 loadHtml 的方式，你可以将 extract.jssp 所做的工作改为 jsp 实现，或你正在使用的其它语言的实现方式。如果你已经实现了欢迎分享~
+
+所以，你只要把 molecule.js 复制到项目中即可使用。
+
+### 为什么不提供 d2js.min.js？
+
+我认为这种 js 你在开发中会无法定位错误，无法理解到底发生了什么，请好好学习 ant 或其它打包技术，在打包时生成 min.js 吧。让打包的技术发生在打包阶段，不要干扰开发。
 
 
