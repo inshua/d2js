@@ -1095,7 +1095,10 @@ public class SqlExecutor {
 			return ArrayUtils.toPrimitive((Byte[]) value);
 		}
 		if (value instanceof ScriptObjectMirror && ((ScriptObjectMirror) value).isArray()) {
-			NativeArray arr = ((ScriptObjectMirror) value).to(NativeArray.class);
+			value = ((ScriptObjectMirror) value).to(NativeArray.class);
+		}
+		if(value instanceof NativeArray){
+			NativeArray arr = (NativeArray) value;
 			byte[] r = new byte[JsTypeUtil.getArrayLength(arr)];
 			for (int i = 0; i < JsTypeUtil.getArrayLength(arr); i++) {
 				if (arr.get(i) instanceof Byte) {

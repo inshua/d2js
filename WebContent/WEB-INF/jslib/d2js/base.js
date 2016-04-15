@@ -44,7 +44,7 @@ function $JSON(o){ return {'JSON' : o}; }
  * ```
  * @param jdbcType {string} jdbc 类型, java.sql.Types 成员, 如 INT CHAR NCHAR
  * @param [inValue] {object} IN OUT 型参数时提供, 纯 OUT 可不提供，可推导类型的基本类型数据, 或带有类型声明的元组
- * @returns {OUT : true, JDBC_TYPE: jdbcType, VALUE : o}
+ * @returns {Object} {OUT : true, JDBC_TYPE: jdbcType, VALUE : o}
  */
 function $OUTP(jdbcType, inValue){
 	if(jdbcType in java.sql.Types){
@@ -237,7 +237,7 @@ D2JS.prototype.orderBy = D2JS.prototype.appendSort = function(sql, sorts, defaul
  * 查询单行. 
  * @param sql {string} 同 query
  * @param args {object} 同 query
- * @returns
+ * @returns {Object} DataRow
  */
 D2JS.prototype.queryRow = function(sql, args){
 	return D2JS.prototype.query.apply(this, arguments).rows[0]; 
@@ -247,7 +247,7 @@ D2JS.prototype.queryRow = function(sql, args){
  * 查询单值
  * @param sql
  * @param args
- * @returns
+ * @returns {Object} 值，无类型说明
  */
 D2JS.prototype.queryScalar = function(sql, args){
 	var row = D2JS.prototype.queryRow.apply(this, arguments);
@@ -903,7 +903,7 @@ D2JS.prototype.release = function(){
 
 /**
  * 获取连接
- * @returns java.sql.Connection
+ * @returns {java.sql.Connection}
  */
 D2JS.prototype.getConnection = function(){
 	return this.executor.getConnection();

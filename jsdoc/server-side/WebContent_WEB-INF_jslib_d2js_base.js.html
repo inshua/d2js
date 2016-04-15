@@ -72,7 +72,7 @@ function $JSON(o){ return {'JSON' : o}; }
  * ```
  * @param jdbcType {string} jdbc 类型, java.sql.Types 成员, 如 INT CHAR NCHAR
  * @param [inValue] {object} IN OUT 型参数时提供, 纯 OUT 可不提供，可推导类型的基本类型数据, 或带有类型声明的元组
- * @returns {OUT : true, JDBC_TYPE: jdbcType, VALUE : o}
+ * @returns {Object} {OUT : true, JDBC_TYPE: jdbcType, VALUE : o}
  */
 function $OUTP(jdbcType, inValue){
 	if(jdbcType in java.sql.Types){
@@ -115,7 +115,7 @@ function $SQL(sql){
  * ```
  * @class D2JS
  */
-function D2JS(sqlExecutor){ this.sqlExecutor = sqlExecutor;  }
+function D2JS(sqlExecutor){ this.executor = sqlExecutor;  }
 
 D2JS.prototype = new Object();
 
@@ -200,10 +200,10 @@ D2JS.prototype.query = function(sql, args, pageDef){
 			pageDef = JSON.parse(pageDef, parseDate);
 		}
 		if(logger &amp;&amp; logger.isDebugEnabled()) logger.debug("do page query " + sql + " with args: " + JSON.stringify(args));
-		return this.sqlExecutor.pageQuery(this.transactConnection||null, sql,pageDef.start, pageDef.limit, args) 
+		return this.executor.pageQuery(this.transactConnection||null, sql,pageDef.start, pageDef.limit, args) 
 	} else {
 		if(logger &amp;&amp; logger.isDebugEnabled()) logger.debug("do query " + sql + " with args: " + JSON.stringify(args));
-		return this.sqlExecutor.query(this.transactConnection || null, sql, args, true);
+		return this.executor.query(this.transactConnection || null, sql, args, true);
 	}
 } ;
 
@@ -233,7 +233,7 @@ D2JS.prototype.travel = function(sql, args, traveler){
 	}
 	
 	if(logger &amp;&amp; logger.isDebugEnabled()) logger.debug("travel " + sql + " with args: " + JSON.stringify(args));
-	this.sqlExecutor.travel(this.transactConnection||null,sql, args, traveler);
+	this.executor.travel(this.transactConnection||null,sql, args, traveler);
 } ;
 
 /**
@@ -265,7 +265,7 @@ D2JS.prototype.orderBy = D2JS.prototype.appendSort = function(sql, sorts, defaul
  * 查询单行. 
  * @param sql {string} 同 query
  * @param args {object} 同 query
- * @returns
+ * @returns {Object} DataRow
  */
 D2JS.prototype.queryRow = function(sql, args){
 	return D2JS.prototype.query.apply(this, arguments).rows[0]; 
@@ -275,7 +275,7 @@ D2JS.prototype.queryRow = function(sql, args){
  * 查询单值
  * @param sql
  * @param args
- * @returns
+ * @returns {Object} 值，无类型说明
  */
 D2JS.prototype.queryScalar = function(sql, args){
 	var row = D2JS.prototype.queryRow.apply(this, arguments);
@@ -315,7 +315,7 @@ D2JS.prototype.execute = function(sql, args){
 	}
 	
 	if(logger &amp;&amp; logger.isDebugEnabled()) logger.debug("execute " + sql + " with args: " + JSON.stringify(args));
-	return this.sqlExecutor.execute(this.transactConnection||null, sql, args);
+	return this.executor.execute(this.transactConnection||null, sql, args);
 }; 
 
 /**
@@ -345,7 +345,7 @@ D2JS.prototype.call = function(callProcStmt, args){
 		throw new Error('unknown args ' + JSON.stringify(args));
 	}
 	if(logger &amp;&amp; logger.isDebugEnabled()) logger.debug("call " + sql + " with args: " + JSON.stringify(args));
-	return this.sqlExecutor.call(this.transactConnection||null,sql, args);
+	return this.executor.call(this.transactConnection||null,sql, args);
 }; 
 
 /**
@@ -353,9 +353,9 @@ D2JS.prototype.call = function(callProcStmt, args){
  * @param seq {string} 序列名
  */
 D2JS.prototype.nextId = function(seq){
-	if(this.sqlExecutor.isOracle()){
+	if(this.executor.isOracle()){
 		var r = this.query('select ' + seq + '.nextval n from dual', []);
-	} else if(this.sqlExecutor.isPostgreSQL()){
+	} else if(this.executor.isPostgreSQL()){
 		var r = this.query("select nextval('" + seq +"') n", []);
 	}
 	return r.rows[0].n;
@@ -409,22 +409,22 @@ D2JS.prototype.insertRow = function(table, row, columns, pkColumn){
 	}
 	insertPart.append(') ');
 	if(row[pkColumn] &amp;&amp; ! row[pkColumn].SQL){
-		if(this.sqlExecutor.isOracle()) {
+		if(this.executor.isOracle()) {
 			valuesPart.append(' FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM ' + table + ' WHERE '+pkColumn+'= ?)');
-		} else if(this.sqlExecutor.isPostgreSQL()){
+		} else if(this.executor.isPostgreSQL()){
 			valuesPart.append(' WHERE NOT EXISTS(SELECT 1 FROM ' + table + ' WHERE '+pkColumn+'= ?)');
 		}
 		args.push(row[pkColumn]);
 	} else {
-		if(this.sqlExecutor.isOracle()) {
+		if(this.executor.isOracle()) {
 			valuesPart.append(' FROM DUAL');
 		}
 	}	
-	if(this.sqlExecutor.isPostgreSQL()){
+	if(this.executor.isPostgreSQL()){
 		valuesPart.append(' RETURNING *');
 	}
 	var sql = insertPart.toString() + valuesPart.toString();
-	if(this.sqlExecutor.isPostgreSQL()){
+	if(this.executor.isPostgreSQL()){
 		return this.queryRow(sql, args);
 	} else {
 		return this.execute(sql, args);
@@ -478,7 +478,7 @@ D2JS.prototype.updateRow = function(table, row, columns, pkColumn){
 	sql.append(' WHERE ' + table + '.' + pkColumn + '= ?');
 	args.push(row[pkColumn]);
 	
-	if(this.sqlExecutor.isPostgreSQL()){
+	if(this.executor.isPostgreSQL()){
 		return this.queryRow(sql.toString() + ' RETURNING *', args);
 	} else {
 		return this.execute(sql.toString(), args);
@@ -522,7 +522,7 @@ D2JS.prototype.mergeRow = function(table, row, uniqueFields, columns, pkColumns)
 		}
 	}
 	
-	if(this.sqlExecutor.isOracle()){
+	if(this.executor.isOracle()){
 		return this.mergeRowOracle(table, row, uniqueColumns, columns, pkColumns);
 	} else {
 		return this.mergeRowPostgreSQL(table, row, uniqueColumns, columns, pkColumns);
@@ -878,7 +878,7 @@ function parseNamedArgsSql(sql, args){
 }
 
 D2JS.prototype.clone = function(){
-	var obj = new D2JS(this.sqlExecutor);
+	var obj = new D2JS(this.executor);
 	for(var k in this){
 		if(this.hasOwnProperty(k)) obj[k] = this[k];
 	}
@@ -926,135 +926,40 @@ D2JS.prototype.doTransaction = function(action){
  * 关闭连接池所有连接结束工作, 适用于只用一次的场景，一般不会用到。
  */
 D2JS.prototype.release = function(){
-	this.sqlExecutor.release();
+	this.executor.release();
 };
 
 /**
  * 获取连接
- * @returns java.sql.Connection
+ * @returns {java.sql.Connection}
  */
 D2JS.prototype.getConnection = function(){
-	return this.sqlExecutor.getConnection();
+	return this.executor.getConnection();
 };
 
+
+// ================ entrance ===========================
 var d2js = null;
 var handler = null;
 
-function init(sqlExecutor, client){	
+function init(){
+	
+	var datasource = application.datasource || (application.datasource = (function(){
+		var properties = new java.util.Properties();
+		for(var k in datasourceConfig){
+			properties.setProperty(k, datasourceConfig[k] + '');
+		}
+		return Java.type('org.apache.commons.dbcp.BasicDataSourceFactory').createDataSource(properties);
+	}()));
+	
+	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine);
+	sqlExecutor.defaultJsonDbType = 'JSONB';
+	
 	d2js = handler = new D2JS(sqlExecutor);
 	engine.put('handler', handler);
 	engine.put('d2js', d2js);
-	sqlExecutor.defaultJsonDbType = 'JSONB';
 }
 
-
-var ObjectArray = Java.type('java.lang.Object[]'), 
-	ScriptObjectMirror = Java.type('jdk.nashorn.api.scripting.ScriptObjectMirror'),
-	JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil'),
-	EngineUtil = Java.type('org.siphon.common.js.JsEngineUtil');
-
-/**
- * 调用另一个 d2js 文件的函数
- * @param src {string} 文件名
- * @param method {string} 函数名
- * @param params {*|array} 数组 - 参数列表，单值 - 单个参数
- */
-D2JS.prototype.callD2js = function(src, method, params){
-	var engineContext = d2jsRunner.getEngineContext(findResource(src), request, response);
-	if(engineContext == null) throw new Error(src + ' maybe not exist');
-	try{
-		var another = engineContext.getHandler();	// ScriptObjectMirror
-		if(this.transactConnection){
-			another = engineContext.getEngineAsInvocable().invokeMethod(another, 'clone');	// ScriptObjectMirror
-			another.transactConnection = this.transactConnection;
-		}
-		var engine2 = engineContext.getScriptEngine();
-		var bindings = engine2.getBindings(100);
-		bindings['__s'] = JSON.stringify(params instanceof Array ? params : [params]);		// 欲在两个引擎间传递对象，只能使用这种方法
-		var res = engine2.eval("d2js." + method + '.apply(d2js, JSON.parse(__s, parseDate))', bindings);
-		if(res != null &amp;&amp; res instanceof ScriptObjectMirror) res = org.siphon.common.js.JsTypeUtil.getSealed(res);
-		d2jsRunner.completeTask(engineContext.getScriptEngine(), null);
-		return res;
-	} catch(e){
-		d2jsRunner.completeTask(engineContext.getScriptEngine(), new ECMAException(e, null));
-		throw e;
-	} finally {
-		if (engineContext != null)
-			engineContext.free();
-	}
-}
-
-/**
- * 更新数据总入口
- * @param params {string} {table : *待更新数据*} *待更新数据*定义为： 
- * ```js
- * {name : 'xxx', src : "xxx.d2js", 
- *  columns : [...], 
- *  rows : [{fld: v, fld: v,..., _origin : {}, _state : 'none|edit|remove|new', 
- *  _children : [嵌套子表,同本结构]
- *  }]
- *  }
- *  ```
- */
-D2JS.prototype.update = function(params){
-	this.updateTable(params.table, null, true);
-}
-
-D2JS.prototype.updateTable = function(table, parentRow, isSelf){
-	var path = request.getServletContext().getContextPath();
-	var src = table.src.replace(path, '');
-	src = request.getServletContext().getRealPath(src);
-	this.doTransaction(function(){
-		for(var i=0;i&lt;table.rows.length; i++){
-			var row = table.rows[i];
-			try{
-				switch(row._state){
-				case 'new' : 
-					if(isSelf){
-						this.create(row, table.columns);
-					} else {
-						this.callD2js(src, 'create', [row, table.columns]);
-					}
-					row._children &amp;&amp; updateChildren.call(this, row);
-					break;
-				case 'edit' :
-					row._children &amp;&amp; updateChildren.call(this, row);
-					if(isSelf){
-						this.modify(row, table.columns);
-					} else {
-						this.callD2js(src, 'modify', [row, table.columns]);
-					}
-					break;
-				case 'remove' : 
-					row._children &amp;&amp; updateChildren.call(this, row);
-					if(isSelf){
-						this.destroy(row, table.columns);
-					} else {
-						this.callD2js(src, 'destroy', [row, table.columns]);
-					}
-					break;
-				case 'none' :
-					row._children &amp;&amp; updateChildren.call(this, row);
-					break;
-				}
-			} catch(e){
-				var err = e;
-				if(e instanceof Throwable){
-					var err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
-				}
-				err.table = table.name;
-				err.idx = row._idx;
-				throw e;
-			}
-		}
-	});
-	
-	function updateChildren(row){
-		for(var i=0;i&lt;row._children.length; i++){
-			this.updateTable(row._children[i], row);
-		}
-	}
-}
 
 </code></pre>
         </article>
@@ -1072,7 +977,7 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Feb 17 2016 02:50:59 GMT+0800 (中国标准时间)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Apr 15 2016 10:56:20 GMT+0800 (中国标准时间)
 </footer>
 
 <script> prettyPrint(); </script>

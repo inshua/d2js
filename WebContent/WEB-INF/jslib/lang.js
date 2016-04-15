@@ -129,7 +129,7 @@ String.prototype.contains = function(t) {
  *   alert('Program: {key1} {key2}'.format({ 'key1' : 'Hello', 'key2' : 'World' }));
  * ```
  * @param values
- * @returns
+ * @returns {String}
  */
 String.prototype.format = function (values) {
 
@@ -159,7 +159,7 @@ String.prototype.format = function (values) {
  * 通过排序得到的新数组
  * @param fn {function} 排序函数，与 Array.prototype.sort 同
  * @param [scope] {object} 传入的 this 对象
- * @returns
+ * @returns {Array}
  */
 Array.prototype.orderBy = function(fn, scope) {
 	var result = this.slice();
@@ -215,7 +215,7 @@ var Throwable = Java.type('java.lang.Throwable'),
 /**
  * 将 js 错误包装为可用的 java 错误, 以便在 logger.error(msg, warpJsError(error)) 中使用
  * @param e {Error} js error
- * @returns
+ * @returns {ECMAException}
  */
 function wrapJsError(e){
 	return new ECMAException(e, null);

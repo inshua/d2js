@@ -120,7 +120,7 @@ V.reg = function(reg, desc){
  * @param tableField {string} 字段名。如与传入字段名相同可不填。
  * @param [primaryDesc]{object} 主键与值
  * @param [ignoreCase=false]{bool} 是否忽略大小写. 比较字符串时可以提供该参数.
- * @returns 
+ * @returns {String} 
  */
 V.unique = function(table, tableField, primaryDesc, ignoreCase){	
 	return {
@@ -174,7 +174,7 @@ V.unique = function(table, tableField, primaryDesc, ignoreCase){
 /**
  * 文本长度检查器。不能超过 size。 (<=size)
  * @param size {number}
- * @returns 
+ * @returns {String} 
  */
 V.longest = function(size){
 	return {
@@ -191,7 +191,7 @@ V.longest = function(size){
 /**
  * 文本长度检查器。不能短于 size。 (>=size)
  * @param size {number}
- * @returns 
+ * @returns {String} 
  */
 V.shortest = function(size){
 	return {
@@ -208,7 +208,7 @@ V.shortest = function(size){
 /**
  * 数值检查器。 必须 <= 规定数值。
  * @param size {number | string } number - 数值具体值， string - 另一字段名
- * @returns 
+ * @returns {String} 
  */
 V.most = function(maxValue){
 	return {
@@ -230,7 +230,7 @@ V.most = function(maxValue){
 /**
  * 数值检查器。 必须 >= 规定数值。
  * @param minValue {(number|string)} number - 数值具体值， string - 另一字段名
- * @returns 
+ * @returns {String} 
  */
 V.atLeast = function(minValue){
 	return {
@@ -254,7 +254,7 @@ V.atLeast = function(minValue){
  * 数值检查器。必须 >= minValue && < maxValue
  * @param minValue {(number|string|null)} number - 数值具体值， string - 另一字段名， null - 忽略该参数
  * @param maxValue {(number|string|null)} number - 数值具体值， string - 另一字段名， null - 忽略该参数
- * @returns 
+ * @returns {String} 
  */
 V.between = function(minValue, maxValue){
 	return {
@@ -284,7 +284,7 @@ V.between = function(minValue, maxValue){
  * 散值取值范围检查器。取值必须位于所给数组中。
  * @param dict {array} 取值范围数组。如 `['M', 'F']`
  * @param msg {(string | null)} 错误消息 
- * @returns 
+ * @returns {String} 
  */
 V.inside = function(dict, msg){
 	return {
