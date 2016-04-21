@@ -15,6 +15,22 @@
 
 d2js 框架学习成本低，可以利用可视化SQL设计器，一般1天就可以上手。由于概念完整，开发中常见的主从表等等问题都可以轻松解决。
 
+现在 d2js 已支持 mongodb 数据库, 包括在服务器上执行JavaScript函数：
+
+```js
+d2js.eval1 = function(){
+	return this.eval(function(x, y){
+		return x + y;
+	}, [1,2]);
+}
+
+d2js.eval2 = function(){
+	return this.eval(function(){
+		return db.author.find().toArray(); 
+	});
+}
+```
+
 ### [jssp](WebContent/guide/jssp.md) 觉得可以取代 php...
 
 尽管 `d2js 前端(html + ajax) + d2js 后端` 可以满足大部分应用场景，还是有很多场景需要页面在服务器端就绪后输出，不宜使用纯 ajax 技术。

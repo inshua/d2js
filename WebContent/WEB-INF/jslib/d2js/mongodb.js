@@ -135,6 +135,10 @@ D2JS.prototype.doTransaction = function(fun){
 	return fun.call(this);
 }
 
+D2JS.prototype.eval = function(fun, arguments){
+	return executor.eval(fun, arguments || []);
+}
+
 D2JS.prototype.filterColumns = function(row, columns){
 	if(columns){
 		var result = {};
