@@ -38,6 +38,8 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, 
 		inputRender(e,v);
 	} else if(e.tagName=='TEXTAREA'){
 		inputRender(e,v);
+	} else if(e.tagName == 'IMG'){
+		if(v) e.src = v;
 	} else{
 		tagRender(e,v);
 	}
