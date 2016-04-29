@@ -879,7 +879,7 @@ D2JS.prototype.doTransaction = function(action){
 	} else {
 		var result;
 		try {
-			conn = me.transactConnection = me.sqlExecutor.beginTransaction();
+			conn = me.transactConnection = me.executor.beginTransaction();
 			result = action.call(me)
 			conn.commit();
 			me.transactConnection = null;
