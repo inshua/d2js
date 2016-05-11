@@ -25,9 +25,6 @@ imports("../config/website.js");
 
 include('d2js.js');
 
-var executor = new org.siphon.jssql.SqlExecutor(dataSource, engine);
-init(executor);
-
 /**
  * 包含另一个 jssp 文件。文件路径搜索按当前文件路径、WebContent 路径搜索确定。
  * 该页面将包含入宿主页面，浏览器并未对其发出请求，故其 reqeust 对象即宿主页面的 reqeust 对象, 因此不支持查询字符串如 includeJssp('a.jssp?arg1=v1')，
