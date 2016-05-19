@@ -415,25 +415,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		me.rows = [];
 		if(isJson){
 			if(!result.error){
-				if(result.total != null){
-					me.total = result.total;
-					me.pageIndex = result.start / me.pageSize;
-					me.pageCount = Math.ceil(result.total / me.pageSize);
-				}
-				
-				if(result.columns) {
-					me.initSchema(result.columns);
-				
-					var rows = result.rows;
-					for(var i=0; i<rows.length; i++){
-						var row = new d2js.DataRow(me, rows[i]);
-						me.rows.push(row);
-					}
-				} else {
-					me.fill(result.rows, {raiseEvent : false, reinit: true});
-				}
-				if(me.indexedColumns) me.rebuildIndexes();
-				
+				fillTable(result, me);
 				if(option && option.callback){
 					option.callback.call(me);
 				}
@@ -455,6 +437,41 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		if(option && option.callback){
 			option.callback.call(me, error);
 		}
+	}
+	
+	function fillTable(result, table){
+		if(result.total != null){
+			table.total = result.total;
+			table.pageIndex = result.start / table.pageSize;
+			table.pageCount = Math.ceil(result.total / table.pageSize);
+		}
+		
+		if(result.columns) {
+			table.initSchema(result.columns);
+		
+			var rows = result.rows;
+			for(var i=0; i<rows.length; i++){
+				var row = new d2js.DataRow(table, rows[i]);
+				table.rows.push(row);
+			}
+		} else {
+			table.fill(result.rows, {raiseEvent : false, reinit: true});
+		}
+		if(table.indexedColumns) table.rebuildIndexes();
+		if(result.nested){
+			for(var tname in result.nested){if(result.nested.hasOwnProperty(tname)){
+				var data = result.nested[tname];
+				var childTable = d2js.dataset[tname];
+				if(childTable == null){
+					throw new Error('table ' + tname + ' not defined, but received in nested tables');
+				}
+				childTable.rows = [];
+				fillTable(data, childTable);
+				table.rows.forEach(function(row){
+					row[tname] = table.findChildRows(row, tname);
+				});
+			}}
+		}		
 	}
 }
 

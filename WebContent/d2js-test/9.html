@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js 嵌套表</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1>表格编辑</h1>
+		<div>
+			<form class="form-inline">
+			  <div class="form-group">
+			    <label>Name</label>
+			    <input type="text" class="form-control" placeholder="" data="#author,search,params,name" collector="c|s">
+			  </div>
+			  <button type="button" class="btn btn-default" onclick="search($(this).parent('form'))">Search</button>
+			</form>
+		</div>
+		<div data="#author,error" renderer="stderr"></div>
+		<table class="table table-striped" data="#author" renderer="table">
+			<thead>
+				<tr>
+					<th data-t="rows,N,id" renderer="std">
+						<a data="#author" renderer="sortLink('id', 'id')"/>
+					</th>
+					<th data-t="rows,N,name" renderer="std">
+						<a data="#author" renderer="sortLink('name', 'Name')"/>
+					</th>
+					<th data-t="rows,N,email" renderer="std">
+						<a data="#author" renderer="sortLink('email', 'Email')"/>
+					</th>
+					<th data-t="rows,N,id" renderer="editLink"></th>
+ 				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<td width="*" align="center">
+						<nav>
+							<ul class="pagination" data="#author" renderer="pagination">
+							</ul>
+						</nav>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+
+		<!-- Modal -->
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        <h4 class="modal-title" id="myModalLabel">Edit <span data="first_name" renderer="std"/></h4>
+		      	<div data="#author,curr,_error" renderer="stderr"></div>
+		      </div>
+		      <div class="modal-body">
+		      	<form>
+		          <div class="form-group" data="#author,curr,_error_at,name" renderer="flderr" trace>
+				    <label>Name</label>
+				    <input type="text" class="form-control" data="#author,curr,name" renderer="std" collector="c|s">
+				  </div>
+				  <div class="form-group" data="#author,curr,_error_at,email" renderer="flderr">
+				    <label>Email</label>
+				    <input type="email" class="form-control" data="#author,curr,email" renderer="std" collector="c|s">
+				  </div>
+				  <div class="form-group" data="#author,curr,_error_at,info,linkin" renderer="flderr">
+				    <label>LinkIn</label>
+				    <input type="text" class="form-control" data="#author,curr,info,linkin" renderer="std" collector="c|oc">
+				  </div>
+				  <table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Title</th>
+		 				</tr>
+					</thead>
+					<tbody data="#author,curr,book" renderer="repeater" collector="repeater">
+						<tr repeater="true"><td><input data="title" renderer="std" collector="c|s"></td></tr>
+					</tbody>
+				  </table>
+				</form>        
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		        <button type="button" class="btn btn-primary" onclick="save()">Save changes</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+		
+	</div>
+</body>
+<script>
+	d2js.Renderers.editLink = function(element, v, table){
+		var e = $(element);
+		e.html('');
+		var a = $(document.createElement('a')).appendTo(e);
+		a.html('EDIT');
+		a.attr('href', '###');
+		a.data('id', v);
+		a.on('click', function(){
+			editRow(table.find('id', $(this).data('id')));
+		});
+	}
+	d2js.Renderers.sortLink = function(colName, text){
+		return function(element, table){
+			var e = $(element);
+			e.attr('href', '###');
+			element.onclick =  function(){
+				var sort = {};
+				var old = table.search._sorts && table.search._sorts[colName];
+				if(old == 'asc'){
+					sort[colName] = 'desc';
+				} else {
+					sort[colName] = 'asc';
+				}
+				table.search._sorts = sort;
+				table.load();
+			};
+			var icon =  null;
+			var sorts = table.search._sorts || {};
+			switch(sorts[colName]){
+			case 'asc' : icon = 'glyphicon glyphicon-arrow-up'; break;
+			case 'desc' : icon = 'glyphicon glyphicon-arrow-down'; break;
+			}
+			e.html(text + (icon ? '<span class="'  + icon + '">' : ''));
+		}
+	}
+	
+	function editRow(row){
+		table.curr = row;
+		d2js.render($('#myModal')[0]);
+		$('#myModal').modal('show');
+	}
+	
+	$('#myModal').on('hide.bs.modal', function() {
+	    table.reject();
+	    table.clearError();
+	    d2js.render();
+	});
+
+	var table = new d2js.DataTable('author', 'author-nest.d2js', {pageSize : 2});
+	table.on('load',  function(error) {
+		d2js.render(null, this);
+	});
+	
+	var book = new d2js.DataTable('book', 'book-nest.d2js');
+	d2js.dataset.addRelation('author', 'id', 'book', 'author');
+	
+	function save() {
+		d2js.collect();
+		
+		table.submit({callback : function(error){
+			d2js.render();
+			if(!error){
+				$('#myModal').modal('hide');
+				this.reload();
+			}
+		}});
+	}
+	
+	function search(form){
+		d2js.collect(form[0]);
+		table.load();
+	}
+	
+	
+	table.load({ _m : 'fetch'});
+</script>
+</html>

@@ -235,7 +235,7 @@ public class SqlExecutor {
 						if (oarr instanceof ScriptObjectMirror) {
 							ScriptObjectMirror outArr = (ScriptObjectMirror) oarr;
 							ResultSet rs = (ResultSet) proc.getObject(i + 1);
-							ScriptObjectMirror rsArry = rsToNativeArray(rs);
+							ScriptObjectMirror rsArry = rsToDataTable(rs);
 							rs.close();
 							Object[] ids = rsArry.keySet().toArray();
 							for (int j = 0; j < ids.length; j++) {
@@ -345,7 +345,7 @@ public class SqlExecutor {
 			setArgs(ps, args);
 			rs = ps.executeQuery();
 
-			ScriptObjectMirror arr = rsToNativeArray(rs);
+			ScriptObjectMirror arr = rsToDataTable(rs);
 			return  returnSealed ? jsTypeUtil.getSealed(arr) : arr;	// JSON.stringify(arr)
 		} catch (SQLException | UnsupportedDataTypeException | ScriptException e) {
 			errorOccu = true;
@@ -524,10 +524,10 @@ public class SqlExecutor {
 		}
 	}
 
-	private ScriptObjectMirror rsToNativeArray(ResultSet rs) throws SQLException, SqlExecutorException, ScriptException {
+	private ScriptObjectMirror rsToDataTable(ResultSet rs) throws SQLException, SqlExecutorException, ScriptException {
 		ResultSetMetaData rsm = rs.getMetaData();
 
-		ScriptObjectMirror result = jsTypeUtil.newObject();
+		ScriptObjectMirror result = jsTypeUtil.newDataTable();
 		int c = 0;
 		result.put("columns", columnListToNativeArray(rsm));
 

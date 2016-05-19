@@ -41,6 +41,8 @@ public class JsTypeUtil {
 	private ScriptObjectMirror arrayConstructor;
 	private ScriptObjectMirror objectConstructor;
 	
+	private ScriptObjectMirror dataTableConstructor;
+	
 	public JsTypeUtil(ScriptEngine jsEngine) {
 		this.engine = (NashornScriptEngine) jsEngine;
 		try {
@@ -55,7 +57,7 @@ public class JsTypeUtil {
 	}
 
 	public ScriptObjectMirror newArray(Object... objects) throws ScriptException {
-		ScriptObjectMirror arrayMirror = (ScriptObjectMirror) this.arrayConstructor.call(null);
+		ScriptObjectMirror arrayMirror = (ScriptObjectMirror) this.arrayConstructor.newObject();
 		NativeArray array = arrayMirror.to(NativeArray.class);
 		for (int i = 0; i < objects.length; i++) {
 			//NativeArray.push(array, objects[i]);
@@ -73,7 +75,14 @@ public class JsTypeUtil {
 	}
 
 	public ScriptObjectMirror newObject() throws ScriptException {
-		return (ScriptObjectMirror) this.objectConstructor.call(null);
+		return (ScriptObjectMirror) this.objectConstructor.newObject();
+	}
+	
+	public ScriptObjectMirror newDataTable(){
+		if(this.dataTableConstructor == null){
+			this.dataTableConstructor = (ScriptObjectMirror) ((ScriptObjectMirror) this.engine.get("D2JS")).get("DataTable");
+		}
+		return (ScriptObjectMirror) this.dataTableConstructor.newObject();
 	}
 
 	public static boolean isNull(Object object) {

@@ -1,0 +1,22 @@
+d2js.fetch = function(params){
+	sql{.
+		select * from author where 1 = 1
+		sql{.?(params.name) 
+				and strpos(name, :name) > 0
+		.}
+	.}
+	return this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page)
+			.nest('book', 'book-nest.d2js', 'fetchByAuthors');
+}
+
+d2js.modify = function(row, columns){
+	$V(row, {
+		name : V.notNull,
+		email : V.email,
+		info : V.attrs(['linkin']),
+		'info,linkin': V.shortest(5)
+	});
+	
+	return this.updateRow('author', row, columns);
+}
+

@@ -95,6 +95,10 @@ D2JS.prototype.constructor = D2JS;
 
 D2JS.prototype.transactConnection = null;	// for transaction;
 
+D2JS.DataTable = function(){}
+
+D2JS.DataTable.prototype = new Object();
+
 /**
  *执行SQL查询语句，返回查询结果集。
  *对于不带参数的 sql 语句，args 可以不填， 如
