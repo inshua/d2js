@@ -55,14 +55,18 @@ function m2arr(iterable){
 	return arr;
 }
 
-// nashorn 有 bug， Object 插入的成员在 JSON.stringify 总会出错
-//Object.prototype.asBson = function(){
-//	return j2m(this);
-//}
+// 将 js 对象转为 bson
+Object.defineProperty(Object.prototype, 'asBson', {value: function(){
+	return j2m(this);
+}, enumerable: false})
 
 function D2JS(executor){ this.executor = executor}
 
 D2JS.prototype = new Object();
+
+D2JS.DataTable = function(){}
+
+D2JS.DataTable.prototype = new Object();
 
 D2JS.prototype.insertRow = function(table, row, columns, pkColumn){
 	pkColumn = pkColumn || '_id';

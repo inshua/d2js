@@ -97,20 +97,22 @@ Array.prototype.distinct = function(){
 	return arr;
 }
 
-///**
-// * 将当前对象与另一对象合并，另一对象的属性复制到本对象。
-// * @param b 另一对象
-// * @param override 仅复制本对象没有的属性。
-// * @returns {Object} 当前对象本身
-// */
-//Object.prototype.merge = function(b, override){
-//	for(var k in b){
-//		if(override != false || k in this == false){
-//			this[k] = b[k];
-//		}
-//	}
-//	return this;
-//};
+/**
+ * 将当前对象与另一对象合并，另一对象的属性复制到本对象。
+ * narshorn 的bug，当使用 JSON.parse(obj, parseDate) 后，随着 merge 的引入，就会出现堆栈溢出
+ * 所以采用 defineProperty 的方式声明该成员不可枚举，无法被 JSON.stringify
+ * @param b 另一对象
+ * @param override 仅复制本对象没有的属性。
+ * @returns {Object} 当前对象本身
+ */
+Object.defineProperty(Object.prototype, 'merge', {value: function(b, override){
+	for(var k in b){
+		if(override != false || k in this == false){
+			this[k] = b[k];
+		}
+	}
+	return this;
+}, enumerable: false});
 
 if(!String.prototype.trim){
 	String.prototype.trim = function() {
