@@ -83,7 +83,7 @@ d2js.render = function(htmlElement, baseData, direct, customRenders){
 		var e = stk.pop();
 		var dataPath = e.getAttribute('data');
 		var renderer = e.getAttribute('renderer');
-		var embedRenderer = $(e).find('renderer');
+		var embedRenderer = $(e).children('renderer');
 		if(embedRenderer.length){
 			var emb = prepareEmbedRenderer(embedRenderer.html());
 			renderer = renderer ? renderer + '|' + emb : emb;
