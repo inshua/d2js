@@ -74,6 +74,25 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, 
 	}
 }
 
+/**
+ * 属性渲染器。
+ * 用法：
+ *```html
+ * 	<div data="#table,rows,0,name" renderer="attr('src')">
+ *```
+ *渲染后，该 div 获得 div['src'] = table.rows[0].name
+ */
+d2js.Renderers.attr = function(attr){
+	return function(element, value, table, _1, rows, index, row, columnName){
+		if(element.hasOwnProperty(attr)){
+			element[attr] = value;
+		} else {
+			element.setAttribute(attr, value);
+		}
+	}
+}
+
+
 
 /**
  * 表达式渲染器。适用于 innerHTML 中含有 {{... }} 表达式的渲染器
