@@ -77,7 +77,7 @@ d2js.dataset.inspect = function(){
 	for(var tb in this){
 		var t = this[tb];
 		if(t instanceof d2js.DataTable){							
-			a.push(t.inspect(true))
+			a.push(t.inspector(true))
 		}
 	}
 	
