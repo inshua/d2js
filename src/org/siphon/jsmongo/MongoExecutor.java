@@ -75,7 +75,6 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.postgresql.util.PGobject;
-import org.siphon.common.js.JsDateUtil;
 import org.siphon.common.js.JsTypeUtil;
 import org.siphon.jssql.DbConnectionUtil;
 import org.siphon.jssql.SqlExecutorException;
@@ -113,13 +112,10 @@ public class MongoExecutor {
 
 	private String defaultJsonDbType;
 
-	private JsDateUtil jsDateUtil;
-
 	public MongoExecutor(MongoClient mongoClient, String database, ScriptEngine jsEngine) {
 		this.mongoClient = mongoClient;
 		this.database = mongoClient.getDatabase(database);
 		this.jsEngine = jsEngine;
-		jsDateUtil = new JsDateUtil(jsEngine);
 		jsTypeUtil = new JsTypeUtil(jsEngine);
 		this.JSON = new org.siphon.common.js.JSON(jsEngine);
 	}
@@ -234,7 +230,7 @@ public class MongoExecutor {
 
 		
 		if (arg instanceof ScriptObjectMirror) {
-			if (jsDateUtil.isNativeDate(arg))
+			if (jsTypeUtil.isNativeDate(arg))
 				return jsSimpleValueToBson(((ScriptObjectMirror) arg).to(NativeDate.class));
 			
 			ScriptObjectMirror atm = (ScriptObjectMirror) arg;
@@ -362,7 +358,7 @@ public class MongoExecutor {
 		} else if (arg instanceof Long) {
 			return new BsonInt64(((Double) arg).longValue());
 		} else if (arg instanceof NativeDate) {
-			return new BsonDateTime(jsDateUtil.getTime((NativeDate) arg));
+			return new BsonDateTime(jsTypeUtil.getTime((NativeDate) arg));
 		} else if (arg instanceof Boolean) {
 			return new BsonBoolean((Boolean) arg);
 		} else if(arg instanceof ObjectId){
@@ -416,11 +412,11 @@ public class MongoExecutor {
 				throw new SqlExecutorException("unmatched datetime format " + value, e);
 			}
 		} else if (value instanceof NativeDate) {
-			return jsDateUtil.getTime((NativeDate) value);
+			return jsTypeUtil.getTime((NativeDate) value);
 		} else if (value instanceof ScriptObjectMirror) {
 			ScriptObjectMirror m = (ScriptObjectMirror) value;
 			if (m.to(Object.class) instanceof NativeDate) {
-				return jsDateUtil.getTime(m.to(NativeDate.class));
+				return jsTypeUtil.getTime(m.to(NativeDate.class));
 			} else {
 				throw new SqlExecutorException("unknown date format " + value + " " + m.getClassName());
 			}
@@ -446,9 +442,9 @@ public class MongoExecutor {
 				throw new SqlExecutorException("unmatched datetime format " + value, e);
 			}
 		} else if (value instanceof NativeDate) {
-			return jsDateUtil.getTime((NativeDate) value);
+			return jsTypeUtil.getTime((NativeDate) value);
 		} else if (value instanceof ScriptObjectMirror && ((ScriptObjectMirror) value).to(Object.class) instanceof NativeDate) {
-			return jsDateUtil.getTime((ScriptObjectMirror) value);
+			return jsTypeUtil.getTime((ScriptObjectMirror) value);
 		} else {
 			throw new SqlExecutorException("unknown date format " + value + " " + value.getClass());
 		}
@@ -525,7 +521,7 @@ public class MongoExecutor {
 //			result.put("value", objectId);
 //			return result.to(Object.class);
 		} else if (object instanceof BsonDateTime) {
-			return jsDateUtil.toNativeDate(((BsonDateTime) object).getValue());
+			return jsTypeUtil.toNativeDate(((BsonDateTime) object).getValue());
 		} else if (object instanceof BsonNull) {
 			return null;
 		} else if (object == null) {

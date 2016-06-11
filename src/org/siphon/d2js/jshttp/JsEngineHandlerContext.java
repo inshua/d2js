@@ -28,7 +28,6 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JSON;
-import org.siphon.common.js.JsDateUtil;
 import org.siphon.common.js.JsTypeUtil;
 
 public class JsEngineHandlerContext {
@@ -60,8 +59,6 @@ public class JsEngineHandlerContext {
 	
 	private JsTypeUtil jsTypeUtil;
 
-	private JsDateUtil jsDateUtil;
-
 	private JSON json;
 
 	public Invocable getEngineAsInvocable() {
@@ -87,14 +84,6 @@ public class JsEngineHandlerContext {
 
 	public JsTypeUtil getJsTypeUtil() {
 		return jsTypeUtil;
-	}
-
-	public void setJsDateUtil(JsDateUtil jsDateUtil) {
-		this.jsDateUtil = jsDateUtil;
-	}
-
-	public JsDateUtil getJsDateUtil() {
-		return jsDateUtil;
 	}
 
 	public void setJson(JSON json) {

@@ -62,7 +62,6 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.postgresql.util.PGobject;
-import org.siphon.common.js.JsDateUtil;
 import org.siphon.common.js.JsTypeUtil;
 import org.siphon.common.js.UnsupportedConversionException;
 
@@ -99,8 +98,6 @@ public class SqlExecutor {
 
 	private DataSource dataSource;
 
-	private final JsDateUtil jsDateUtil;
-
 	private String driverClass;
 
 	private boolean oracle;
@@ -120,7 +117,6 @@ public class SqlExecutor {
 	public SqlExecutor(DataSource dataSource, ScriptEngine jsEngine) throws ScriptException {
 		this.dataSource = dataSource;
 		this.jsEngine = jsEngine;
-		jsDateUtil = new JsDateUtil(jsEngine);
 		jsTypeUtil = new JsTypeUtil(jsEngine);
 		this.JSON = new org.siphon.common.js.JSON(jsEngine);
 
@@ -699,7 +695,7 @@ public class SqlExecutor {
 				ps.setLong(i + 1, (Long) arg);
 			} else if (arg instanceof Float) {
 				ps.setFloat(i + 1, (Float) arg);
-			} else if (jsDateUtil.isNativeDate(arg)) {
+			} else if (jsTypeUtil.isNativeDate(arg)) {
 				ps.setTimestamp(i + 1, parseDate(arg));
 			} else if (arg instanceof Boolean) {
 				ps.setBoolean(i + 1, JsTypeUtil.isTrue(arg));
@@ -902,7 +898,7 @@ public class SqlExecutor {
 			return arg;
 		} else if (arg instanceof Float) {
 			return arg;
-		} else if (jsDateUtil.isNativeDate(arg)) {
+		} else if (jsTypeUtil.isNativeDate(arg)) {
 			return parseDate(arg);
 		} else if (arg instanceof Boolean) {
 			return parseBinary(arg);
@@ -971,16 +967,16 @@ public class SqlExecutor {
 			return ((Long) obj).doubleValue();
 		} else if (obj instanceof Timestamp) {
 			Timestamp tstmp = ((java.sql.Timestamp) obj);
-			//return jsDateUtil.toNativeDate(tstmp.getTime());
+			//return jsTypeUtil.toNativeDate(tstmp.getTime());
 			if(this.isPostgreSQL()){
-				return jsDateUtil.toNativeDate(tstmp.getTime() - tstmp.getTimezoneOffset() * 60000);
+				return jsTypeUtil.toNativeDate(tstmp.getTime() - tstmp.getTimezoneOffset() * 60000);
 			} else {
-				return jsDateUtil.toNativeDate(tstmp.getTime());
+				return jsTypeUtil.toNativeDate(tstmp.getTime());
 			}
 		} else if (obj instanceof java.sql.Date) {
-			return jsDateUtil.toNativeDate(((java.sql.Date) obj).getTime());
+			return jsTypeUtil.toNativeDate(((java.sql.Date) obj).getTime());
 		} else if (obj instanceof Time) {
-			return jsDateUtil.toNativeDate(((java.sql.Time) obj).getTime());
+			return jsTypeUtil.toNativeDate(((java.sql.Time) obj).getTime());
 		} else if (obj instanceof RowId) {
 			return jsTypeUtil.bytesToNativeArray(((RowId) obj).getBytes());
 		} else if (obj instanceof Boolean) {
@@ -1184,7 +1180,7 @@ public class SqlExecutor {
 
 	private java.sql.Timestamp nativeDateToTimeStamp(NativeDate value) {
 		try {
-			long time = this.jsDateUtil.getTime(value);
+			long time = JsTypeUtil.getTime(value);
 			return dateToTimeStamp(new java.util.Date(time));
 		} catch (Exception e) {
 			return null;
@@ -1193,7 +1189,7 @@ public class SqlExecutor {
 	
 	private java.sql.Timestamp nativeDateToTimeStamp(ScriptObjectMirror value) {
 		try {
-			long time = this.jsDateUtil.getTime(value);
+			long time = JsTypeUtil.getTime(value);
 			return dateToTimeStamp(new java.util.Date(time));
 		} catch (Exception e) {
 			return null;
