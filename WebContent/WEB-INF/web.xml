@@ -35,8 +35,8 @@
   </servlet-mapping>
   
   <servlet>
-    <servlet-name>SimpleExecutor</servlet-name>
-    <servlet-class>org.siphon.d2js.SimpleExecutor</servlet-class>
+    <servlet-name>D2jsExecutor</servlet-name>
+    <servlet-class>org.siphon.d2js.D2jsExecutor</servlet-class>
     <init-param>
       <param-name>JSLIB</param-name>
       <param-value>/WEB-INF/jslib/</param-value>
