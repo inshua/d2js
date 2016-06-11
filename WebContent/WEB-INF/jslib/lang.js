@@ -114,6 +114,19 @@ Object.defineProperty(Object.prototype, 'merge', {value: function(b, override){
 	return this;
 }, enumerable: false});
 
+var JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil');
+/**
+ * 将本对象转为Java对象，为 JsTypeUtil.jsObjectToJava 的包装。
+ * 很多库，比如activiti，都需要传递 Map<String, Object>等，采取本方式可以写作:
+ *   submit({username: xxx, password: ''}.toJava())
+ * @param b 另一对象
+ * @param override 仅复制本对象没有的属性。
+ * @returns {Object} 当前对象本身
+ */
+Object.defineProperty(Object.prototype, 'toJava', {value: function(b, override){
+	return JsTypeUtil.jsObjectToJava(this);
+}, enumerable: false});
+
 if(!String.prototype.trim){
 	String.prototype.trim = function() {
 		return this.replace(/^\s+|\s+$/g, '');
