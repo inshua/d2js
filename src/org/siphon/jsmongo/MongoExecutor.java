@@ -328,7 +328,7 @@ public class MongoExecutor {
 				return new BsonInt64(new Long(value + ""));
 			}
 		} else if ("REGEX".equals(type)){
-			return new BsonRegularExpression(type);
+			return new BsonRegularExpression(value.toString());
 		} else {
 			throw new SqlExecutorException("unknown object type " + type + "  " + value);
 		}
