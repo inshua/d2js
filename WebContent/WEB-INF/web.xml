@@ -35,6 +35,20 @@
   </servlet-mapping>
   
   <servlet>
+    <servlet-name>SimpleExecutor</servlet-name>
+    <servlet-class>org.siphon.d2js.SimpleExecutor</servlet-class>
+    <init-param>
+      <param-name>JSLIB</param-name>
+      <param-value>/WEB-INF/jslib/</param-value>
+    </init-param>
+    <init-param>
+      <param-name>PRELOADJS</param-name>
+      <param-value>/WEB-INF/jslib/d2js.js</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  
+  <servlet>
     <servlet-name>Jssp</servlet-name>
     <servlet-class>org.siphon.jssp.JsspServlet</servlet-class>
     <init-param>

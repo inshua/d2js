@@ -13,3 +13,6 @@ d2js.fetch = function(params){
 	return this.query(sql, params, params._page);
 }
 
+d2js.test = function(a, b){
+	return {result: a + b}
+}
