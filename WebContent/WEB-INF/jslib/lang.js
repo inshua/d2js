@@ -123,9 +123,22 @@ var JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil');
  * @param override 仅复制本对象没有的属性。
  * @returns {Object} 当前对象本身
  */
-Object.defineProperty(Object.prototype, 'toJava', {value: function(b, override){
+Object.defineProperty(Object.prototype, 'toJava', {value: function(){
 	return JsTypeUtil.jsObjectToJava(this);
 }, enumerable: false});
+
+
+(function(){
+	var jsTypeUtil = new JsTypeUtil(engine);
+	/**
+	 * 从Java对象（Map<String,Object>, List,数组等）转换得到Js对象
+	 * @param b 另一对象
+	 * @returns {Object} 当前对象本身
+	 */
+	Object.fromJava = function(javaObj){
+		return jsTypeUtil.javaObjectToJs(javaObj);
+	}
+})();
 
 if(!String.prototype.trim){
 	String.prototype.trim = function() {
