@@ -63,6 +63,7 @@ import jdk.nashorn.internal.objects.NativeDate;
 import jdk.nashorn.internal.objects.NativeNumber;
 import jdk.nashorn.internal.objects.NativeRegExp;
 import jdk.nashorn.internal.objects.NativeString;
+import jdk.nashorn.internal.runtime.ConsString;
 import jdk.nashorn.internal.runtime.ScriptFunction;
 import jdk.nashorn.internal.runtime.ScriptObject;
 import jdk.nashorn.internal.runtime.Undefined;
@@ -261,7 +262,7 @@ public class JsTypeUtil {
 		if (object instanceof NativeString) {
 			return jsObjectToJava((NativeString) object);
 		}
-
+		
 		Map<String, Object> result = new HashMap<>();
 		String[] names = object.getOwnKeys(false);
 		for (int i = 0; i < names.length; i++) {
@@ -363,6 +364,8 @@ public class JsTypeUtil {
 			return jsObjectToJava((ScriptObjectMirror) arg);
 		} else if (arg instanceof ScriptObject) {
 			return jsObjectToJava((ScriptObject) arg);
+		} else if (arg instanceof ConsString){
+			return arg.toString();
 		} else {
 			return arg;
 		}
