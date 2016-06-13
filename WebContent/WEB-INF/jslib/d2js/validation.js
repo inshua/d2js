@@ -455,3 +455,35 @@ T.date = {name : 'date', check : function(v, fld, rcd){
 		rcd[fld] = v;
 	}
 }}
+
+
+/**
+ * 检查数据为 Boolean 格式。与js逻辑不同，字符串只接受 true,false,yes,no及其首字母。
+ */
+T.boolean = {
+         name : 'boolean',
+         check : function(v, fld, rcd){
+   			var r = false;
+   			switch(typeof v){
+   			case 'boolean': r = v; break;
+   			case 'string':
+   				v = v.toLowerCase();
+   				if(v == 'false' || v == 'f' || v == 'n' || v == 'no' || v == ''){
+   					r = false;
+   				} else if (v == 'true' || v == 't' || v == 'y' || v == 'yes'){
+   					r = true;
+   				} else if(!isNaN(v * 1)){
+   					r = (v * 1 == 0);
+   				} else {
+   					return '不能识别的逻辑值';
+   				}
+   				break;
+   			case 'number':
+   				r = (v == 0);
+   				break;
+   			case 'object':
+   				return '不能识别的逻辑值';
+   			}
+   			rcd[fld] = r;
+         }
+   }
