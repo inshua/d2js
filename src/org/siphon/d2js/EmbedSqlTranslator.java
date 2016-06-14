@@ -121,8 +121,10 @@ public class EmbedSqlTranslator {
 			switch(node.nodeType){
 			case Node.NODE_SQL :
 				boolean inCondition = false;
-				if(node.chidlren.size() >= 2 
-						&& "?".equals(node.chidlren.get(0).tokens.get(0).getText())
+				List<Token> tokens = node.chidlren.get(0).tokens;
+				if(!tokens.isEmpty() 
+						&& node.chidlren.size() >= 2 
+						&& "?".equals(tokens.get(0).getText())
 						&& node.chidlren.get(1).nodeType == Node.NODE_BACKET){
 					inCondition = true;
 					code.currentLine.append("if");
