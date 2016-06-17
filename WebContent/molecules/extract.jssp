@@ -5,7 +5,19 @@
 	  */
 
  	var defines = {};
- 	if(request.html){
+ 	if(request.html && (request.html.endsWith('.jssp') || request.html.endsWith('.jsp'))){	// 组件本身是服务器页面，很可能需要根据session加工
+ 		logger.info('load ' + request.html);
+ 		var DummyResponse = Java.type('org.siphon.servlet.DummyHttpServletResponse');
+ 		response.contentType = 'application/json';
+ 		//var path = request.getRealPath(request.html);
+ 		//processFile(new java.io.File(path));
+ 		var dummyResp = new DummyResponse(response);
+		request.getServletContext().getRequestDispatcher(request.html).include(request, dummyResp);
+		var s = dummyResp.getResponseAsString();
+		var document = org.jsoup.Jsoup.parse(s);
+		processFile(null, document);
+ 		out.print(JSON.stringify(defines));
+ 	} else if(request.html){
  		response.contentType = 'application/json';
  		var path = request.getRealPath(request.html);
  		processFile(new java.io.File(path));
@@ -28,11 +40,24 @@
 		}}
  	}
 	
-	function processFile(file){
+	function processFile(file, document){
 		var sout = '';
-		if(file.name.endsWith(".html") || file.name.endsWith(".htm") || file.name.endsWith(".jssp")){
-			sout +=  ("<h2>parse " + file.name + "</h2>");
-			var document = org.jsoup.Jsoup.parse(file, "utf-8");
+		if(document){
+			processDocument(document)
+		} else {
+			if(file.name.endsWith(".html") || file.name.endsWith(".htm") || file.name.endsWith(".jssp")){
+				sout +=  ("<h2>parse " + file.name + "</h2>");
+				var document = org.jsoup.Jsoup.parse(file, "utf-8");
+				processDocument(document)
+			}
+		}
+		return sout;
+		
+		function printError(error){
+			sout +=  ('<p class="error">' + error + '</p>');
+		}
+		
+		function processDocument(document){
 			var defs = document.select("[molecule-def]");
 			sout +=  ("<p>" + defs.size() + " molecule defs found</p>");
 			if(defs.size() > 0){
@@ -75,11 +100,6 @@
 			} else {
 				sout +=  ("<h3>(empty)</h3>");
 			}
-		}
-		return sout;
-		
-		function printError(error){
-			sout +=  ('<p class="error">' + error + '</p>');
 		}
 	}
 	
