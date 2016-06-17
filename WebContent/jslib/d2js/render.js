@@ -39,17 +39,10 @@ d2js.Renderers.EmbedRenderers.nextId = 1;
 d2js.Renderers.EmbedRenderers.codeMap = {};
 
 (function addcss(){
-	   if(window.ActiveXObject)
-	   {
-		   $('<style id="custom_persona_css"></style>').appendTo('head'); 
-		   $("#custom_persona_css").prop('styleSheet').cssText='render,div.d2js-render {display:none}';
-		   $("#custom_persona_css")[0].id = '';
-	   }
-	   else
-	   {
-		   $('<style type="text/css">render,div.d2js-render {display:none}</style>').appendTo(document.head);
-	   }
-	
+	var css = document.createElement("style");
+	css.type = "text/css";
+	css.innerHTML = "render {display : none;}";
+	document.head.appendChild(css);
 })();
 
 /**
@@ -90,7 +83,7 @@ d2js.render = function(htmlElement, baseData, direct, customRenders){
 		var e = stk.pop();
 		var dataPath = e.getAttribute('data');
 		var renderer = e.getAttribute('renderer');
-		var embedRenderer = $(e).children('renderer, .d2js-render');
+		var embedRenderer = $(e).children('renderer');
 		if(embedRenderer.length){
 			var emb = prepareEmbedRenderer(embedRenderer.html());
 			renderer = renderer ? renderer + '|' + emb : emb;
@@ -156,8 +149,8 @@ d2js.render = function(htmlElement, baseData, direct, customRenders){
 		} else {
 			id = d2js.Renderers.EmbedRenderers.nextId ++;
 			id = '__embed_renderer__' + id;
-			// code = 'function ' + id + '(element, value, table, _1, rows, index, row, columnName){ \r\n' + code + '\r\n}';
-			var fun = new Function('element', 'value', 'table', '_1', 'rows', 'index', 'row', 'columnName', code);
+			code = '(function ' + id + '(element, value, table, _1, rows, index, row, columnName){ \r\n' + code + '\r\n})';
+			var fun = window.eval(code);
 			d2js.Renderers.EmbedRenderers.codeMap[code] = id;
 			d2js.Renderers[id] = fun;
 			return id;
