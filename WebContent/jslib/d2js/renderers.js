@@ -84,17 +84,14 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, 
  */
 d2js.Renderers.attr = function(attr){
 	return function(element, value, table, _1, rows, index, row, columnName){
-		if('hasOwnProperty' in element){
-			if(element.hasOwnProperty(attr)){
-				element[attr] = value;
-			} else {
-				element.setAttribute(attr, value);
-			}
+		if(element.hasOwnProperty(attr)){
+			element[attr] = value;
 		} else {
 			element.setAttribute(attr, value);
 		}
 	}
 }
+
 
 
 /**
@@ -108,12 +105,11 @@ d2js.Renderers.attr = function(attr){
  *```
  */
 d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
-	var $e = $(e)
 	if(e.innerHTML.indexOf('{{') != -1){		// 带有表达式 {{}},以参数 row 为出发路径
-		$e.data('render_expr', e.innerHTML);
+		e.dataset['render_expr'] = e.innerHTML;
 	}
-	if($e.data('render_expr')){
-		var s = $e.data('render_expr');
+	if(e.dataset['render_expr']){
+		var s = e.dataset['render_expr'];
 		var res = '';
 		var start = 0;
 		var withExpr = withStmt(data, 'this');
@@ -317,7 +313,7 @@ function withStmt(obj, varName){
 d2js.Renderers.repeater = function(element, rows){
 	var e = $(element);
 	var copies = e.find('[repeater-copy]');
-	copies.each(function(idx, c){c.parentElement.removeChild(c)});
+	copies.each(function(idx, c){c.remove()});
 
 	var repeater = e.find('[repeater]');
 	repeater = repeater.toArray().filter(function(r){
