@@ -79,7 +79,7 @@ public class JsspRunner extends D2jsRunner{
 	@Override
 	public void run(HttpServletRequest request, HttpServletResponse response, String method)
 			throws ServletException, IOException {
-		String jsfile = request.getServletContext().getRealPath(request.getServletPath());
+		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
 		if(!new File(jsfile).exists()){
 			response.setStatus(404);
 			PrintWriter out = response.getWriter();

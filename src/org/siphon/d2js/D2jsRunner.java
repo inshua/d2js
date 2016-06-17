@@ -33,6 +33,7 @@ import javax.rmi.PortableRemoteObject;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -42,6 +43,7 @@ import javax.sql.DataSource;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
 
+import org.apache.catalina.Globals;
 import org.apache.catalina.startup.EngineConfig;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang3.ObjectUtils;
@@ -75,10 +77,10 @@ public class D2jsRunner {
 		this.d2jsManager = d2jsManager;
 		this.initParams = params;
 	}
-
+	
 	public void run(HttpServletRequest request, HttpServletResponse response, String method)
 			throws ServletException, IOException {
-		String jsfile = request.getServletContext().getRealPath(request.getServletPath());
+		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
 		if (!new File(jsfile).exists()) {
 			response.setStatus(404);
 			PrintWriter out = response.getWriter();
@@ -89,7 +91,7 @@ public class D2jsRunner {
 
 		JsEngineHandlerContext engineContext = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, request.getServletPath(), this.initParams);
+			engineContext = d2jsManager.getEngineContext(jsfile, getServletPath(request), this.initParams);
 		} catch (Exception e3) {
 			logger.error("", e3);
 			engineContext.free();
@@ -252,4 +254,14 @@ public class D2jsRunner {
 		this.initParams = initParams;
 	}
 	
+	public String getServletPath(HttpServletRequest request){
+		// FORWARD,  INCLUDE,  REQUEST,  ASYNC,  ERROR
+		if(request.getDispatcherType() == DispatcherType.REQUEST){
+			return request.getServletPath();
+		} else if(request.getDispatcherType() == DispatcherType.INCLUDE){
+			return (String) request.getAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR);
+		} else {
+			return request.getServletPath();	// not sure
+		}
+	}
 }
