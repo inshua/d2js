@@ -37,14 +37,14 @@ function Molecule(container){
 	this.$el = $(container);
 	if(container == null) debugger;
 	var me = this;
-	this.$el.on('DOMNodeRemoved', function(evt){
-		if(container == evt.originalEvent.srcElement){
-			if(me.$el.closest('[molecule-auto-dispose=false]').length) return;	// 不自动删除
-			
-			me.dispose && me.dispose();
-			delete Molecule.instances[me.id];
-		}
-	});
+	
+	this.onDOMNodeRemoved = function(){
+		if(me.$el.closest('[molecule-auto-dispose=false]').length) return;	// 不自动删除
+		
+		me.dispose && me.dispose();
+		if(Molecule.debug) console.info(this.id, ' removed')
+		delete Molecule.instances[me.id];
+	}
 	/**
 	 * molecule类型
 	 * @type {String} 
@@ -113,7 +113,7 @@ Molecule.create = function(fun){
 	var currentScript = Molecule.currentScript;		// for ie
 	var container = Molecule.currentContainer || Molecule._locateContainer(currentScript);
 	if(container == null) return;
-	// console.log('create molecule ' + fun);
+	if(Molecule.debug) console.info('create molecule ' + fun.name);
 	var existed = container.getAttribute('molecule-id');
 	var obj = null;
 	if(!existed){
@@ -132,7 +132,7 @@ Molecule.create = function(fun){
 	//var obj = new (Function.prototype.bind.apply(fun, args));
 	fun.apply(obj, args);
 	
-	// console.log('create molecule ' + fun + ' complete');
+	if(Molecule.debug) console.log('create molecule ' + fun.name + ' complete');
 	
 	$(currentScript).remove();
 	
@@ -259,14 +259,16 @@ Molecule.loadModule = function(module){
 
 /**
  * 加载指定 html 文件中的所有 molecule，将使用 extract.jssp。
- * @param html {string} 包含有 molecule 的 html 文件的文件路径，从项目中 WebContent/ 出发的路径。
+ * @param html {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
  * @returns {Boolean} 是否加载成功
  */
-Molecule.loadHtml = function(html){
+Molecule.loadHtml = function(res){
 	var result = false;
+	var link = document.createElement('a');
+	link.href = res;
 	$.ajax({
 		url : Molecule.ModulesPath + '/extract.jssp',		
-		data : {html : html}, processData: true,
+		data : {html : res}, processData: true,
 		method : 'post',
 		async : false, cache : false,
 		complete : function(resp, status){
@@ -317,7 +319,10 @@ Molecule.scanMolecules = function(starter, manual){
 	if(starter && starter.jquery){
 		starter = starter[0];
 	}
-	var stk = [starter || document.body];
+	starter = starter || document.body;
+	Molecule._scanningEle = starter;
+	if(Molecule.debug) console.info('molecule scan', starter);
+	var stk = [starter];
 	while(stk.length){
 		var ele = stk.pop();
 		if(ele.hasAttribute('molecule')){
@@ -330,6 +335,9 @@ Molecule.scanMolecules = function(starter, manual){
 			}
 		}
 	}
+	
+	Molecule._scanningEle = null;
+	if(Molecule.debug) console.info('molecule scan', starter, 'over');
 	
 	function findMoleculeDef(moleculeName){
 		var def = Molecule.definesByFullname[moleculeName];
@@ -365,6 +373,7 @@ Molecule.scanMolecules = function(starter, manual){
 		}
 		
 		var inner = ele.innerHTML;
+		if(Molecule.debug) console.info(def.name + ' outerHTML', ele.outerHTML);
 		
 		if(ele.hasAttribute('molecule-trace')) debugger;
 
@@ -402,15 +411,19 @@ Molecule.scanMolecules = function(starter, manual){
 			var isBottom = (d == defs.length - 1), isTop = 0;
 			
 			if(isBottom){
+				if(Molecule.debug) console.info(def.name + ' replace with ', def.html);
 				ele.innerHTML = def.html;
 			} else {
+				if(Molecule.debug) console.info(def.name + ' replace with ', def.html);
 				replaceHtml(ele, superDef && superDef.escapeTag ? unescapeTag(def.html, superDef.escapeTag) : def.html);
 			}
 			markScriptGen(ele, d);
 			superDef = def;
 		}		
 		replaceHtml(ele, def && superDef.escapeTag ? unescapeTag(inner, def.escapeTag) : inner);
+		if(Molecule.debug) console.info(def.name + ' become',ele.outerHTML);
 		markScriptGen(ele, -1);
+		
 		
 		ele.removeAttribute('molecule');
 		
@@ -637,10 +650,29 @@ $(document).ready(function(){
 	Molecule.scanMolecules();
 	
 	$(document).on('DOMNodeInserted', function(e){
-		// console.log('insert ' + e.target.tagName);
 		var target = (e.originalEvent.target || e.target);
 		if(target.tagName){		// 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
-			Molecule.scanMolecules(target);
+			if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;		// 正在扫描父元素，早晚会扫到它
+			if(Molecule.debug) console.info('DOMNodeInserted ', e.target);
+			setTimeout(function(){ // 还不太确定为什么 DOMNodeInserted 时，节点不能访问它的子节点(通过 innerHTML = 'xxx'插入的子节点),该问题还有待研究，先使用 setTimeout 化解
+				if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;
+				Molecule.scanMolecules(target);
+			}, 10);	
+		}
+	});
+	
+	
+	$(document).on('DOMNodeRemoved', function(e){
+		var target = (e.originalEvent.target || e.target);
+		if(target.tagName){		// 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
+			if($(target).is('[molecule-obj]')){
+				var m = $(target).molecule();
+				if(m) m.onDOMNodeRemoved();
+			}
+			$(target).find('[molecule-obj]').toArray().forEach(function(ele){
+				var m = $(ele).molecule();
+				if(m) m.onDOMNodeRemoved();
+			});
 		}
 	});
 });	
