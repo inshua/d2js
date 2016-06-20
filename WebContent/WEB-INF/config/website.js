@@ -19,4 +19,4 @@
  *******************************************************************************/
 
 
-var website = '/d2js/';
+var website = request && request.contextPath;
