@@ -249,6 +249,8 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable,  value, 
 				for(var attr in column){if(column.hasOwnProperty(attr)){
 					if(attr == 'data'){
 						$(cell).attr('data', hTable.getAttribute('data') + ',' + column.data.replace(/,\s*N\s*,/, ',' + i + ','));
+					} else if(attr == 'molecule-obj'){
+						
 					} else {
 						$(cell).attr(attr, column[attr]);
 					}
