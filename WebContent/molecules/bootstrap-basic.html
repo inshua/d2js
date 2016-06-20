@@ -120,7 +120,7 @@
                             }
                         }
                         
-                        var table = d2js.dataset[this.$el.closest('[table]').attr('table')];
+                        var table = d2js.dataset.getTable(this.$el.closest('[table]').attr('table'));
                         table.on(['load', 'submit'], function(){
                         	me.checked([]);
                         });
@@ -361,7 +361,7 @@
 	            			var th = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
 	            			var col = th.attr('col');
 	            			var checked = th.molecule().checked();
-	            			var t = d2js.dataset[table];
+	            			var t = d2js.dataset.getTable(table);
 	            			willDeleteRows = checked.map(function(c){return t.find(col,c)}).filter(function(r){return r});
 	            			if(willDeleteRows.length == 0){
 	            				var a = $('<div class="alert alert-warning" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
@@ -371,7 +371,7 @@
 	            			}
             			}
             		}).on('confirm.ok', function(){
-            			var t = d2js.dataset[table];
+            			var t = d2js.dataset.getTable(table);
             			willDeleteRows.forEach(function(row){ row._remove(); });
             			t.submit(function(error){	    	            				
        	                    if (!error) {
@@ -657,7 +657,7 @@
 	        var btn = this.$el;
 	        btn.on('click', function(){
 	        	d2js.collect(btn.parent('form')[0]);
-	            d2js.dataset[table].navigatePage(0);
+	            d2js.dataset.getTable(table).navigatePage(0);
 	        });	        
 	    }
 	    // MOLECULE_DEF_END
@@ -673,7 +673,7 @@
 	        var btn = this.$el;
 	        btn.on('click', function(){
 	        	var tl = $(this).closest('[molecule-obj=TableList]');
-	        	var row = d2js.dataset[table].addRow(d2js.dataset[table].newRow());
+	        	var row = d2js.dataset.getTable(table).addRow(d2js.dataset.getTable(table).newRow());
  	        	Molecule.of(tl).editRow(row);
 	        });	        
 	    }
@@ -685,7 +685,8 @@
      <div molecule-def="TableList" class="container">
         <script>
             // MOLECULE_DEF
-            d2js.Renderers.editLink = function (element, v, table) {
+            d2js.Renderers.editLink = function (element, v) {
+            		var table = d2js.findArg(arguments, 'table');
 	            	var e = $(element);
 	     	        e.html('');
 	     	        var a = $(document.createElement('a')).appendTo(e);
@@ -708,11 +709,11 @@
                	
            		if(editDialogId == null || newDialogId == null) return;		// 没有提供编辑数据的对话框
            		
-           		$(document).ready(function(){
-	           		if(editDialogId) {
+           		$('body').on('molecule-inited', function(event, ele){
+	           		if(editDialogId && $(ele).is('#' + editDialogId)) {
 	           			initDialog($('#' + editDialogId));
 	           		}
-	           		if(newDialogId && newDialogId != editDialogId){
+	           		if(newDialogId && newDialogId != editDialogId && $(ele).is('#' + newDialogId)){
 	           			initDialog($('#' + newDialogId));
 	           		}
            		});
@@ -722,14 +723,14 @@
 	      	        var dialog = Molecule.of(dialogEle);
 	      	        if(dialog == null) debugger;
 	      	        dialog.on('close', function () {
-	      	     		var table = d2js.dataset[tname];
+	      	     		var table = d2js.dataset.getTable(tname);
 	      	            table.reject();
 	      	            table.clearError();
 	      	            d2js.render();
 	      	        });
 	      	        dialog.on('submit', function () {
 	      	            $(dialogEle).collect();
-	      	         	var table = d2js.dataset[tname];
+	      	         	var table = d2js.dataset.getTable(tname);
 	      	            if(dialogEle[0].hasAttribute('trace-submit')){
 	      	            	table.monitor();
 	      	            	debugger;
@@ -752,8 +753,8 @@
            	    	var dialogId = (row._state == 'new') ? newDialogId : editDialogId;
            	    		
        		        row._table.curr = row;
-       		        d2js.render($('#' + dialogId), row._table);
        		        this.$el.trigger('tablelist.edit', [row]);
+       		        d2js.render($('#' + dialogId), row._table);
        		        $('#' + dialogId).modal('show');
             	}
             }

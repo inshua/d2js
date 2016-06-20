@@ -112,6 +112,7 @@
     	parent-col parent_id 字段名，反身关联 
     	select 选择模式
     	show-header 是否显示表头
+    	paging	是否显示分页
     -->
     <table molecule-def="Tree" class="table table-striped" renderer="tree" checkable="false">
         <!-- {INNER_HTML} -->
@@ -177,6 +178,10 @@
                         	var value = me.$el.data('value');
     	                	me.$el.find('tbody>tr').each(function(idx, tr){
     	                		var row = d2js.locateData(tr)[0];
+    	                		if(row == null){
+    	                			debugger;
+    	                			row = d2js.locateData(tr)[0]
+    	                		}
     	                		if(value && value.indexOf(row[valueColumn]) != -1) $(tr).addClass('info'); else $(tr).removeClass('info');                            
     	                	});
                             me.$el.find('tbody>tr').each(function(idx, tr){
@@ -201,6 +206,10 @@
 	                
 	                this.setValue = this.setMultiValue = function(value){
 	                	var table = d2js.locateData(this.$el)[0];
+	                	if(table == null){
+	                		debugger;
+	                		table = d2js.locateData(this.$el)[0]
+	                	}
 	                	table.tree = null;
 	                	this.$el.data('value', value && value.slice());
 	                	d2js.render(this.$el);
@@ -234,6 +243,7 @@
             }
             
             d2js.Renderers.tree = function(hTable, table){
+            	table = d2js.findArg(arguments, 'table');
             	var checked = $(hTable).data('value');
         		var checkable = hTable.getAttribute('checkable');
         		checkable = (checkable && checkable != 'false');	

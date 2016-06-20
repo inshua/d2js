@@ -199,6 +199,26 @@ d2js.locateData = function(element, baseData, direct){
     };
 }( jQuery ));
 
+/**
+ * 从参数数组查找符合条件的参数
+ * @param {Arguments} arguments。从 locateData, render 等得到的数据参数。
+ * @param pattern {object} 类型字符串，允许的有（table, dataset, row, column），predicate函数，返回 true|false
+ */
+d2js.findArg = function(args, pattern){
+	var types = {table: d2js.DataTable, dataset: d2js.Dataset, row: d2js.DataRow, column: d2js.DataColumn};
+	if(typeof pattern == 'object'){
+		return Array.prototype.find(args, pattern);
+	} else {
+		pattern = types[pattern];
+		for(var i=0;i<args.length; i++){
+			var arg = args[i];
+			if(arg instanceof pattern){
+				return arg;
+			}
+		}
+	}
+}
+
 
 d2js.extractData = function(baseData, dataPath, output, direct){
 	var arr = dataPath.split(',');
