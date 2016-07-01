@@ -20,74 +20,108 @@
 </head>
 <body>
 	<div class="container">
-		<h1>渲染任意对象<small>选择器为 #person </small></h1>
-		
-		<p> Name : <input type="text" data="#person,name" collector="c|s" renderer="std"> </p>
-		<p> Email : <input type="email" data="#person,email" collector="c|s" renderer="std" placeholder="Input Email"></p>
-		<p> Tel : <input type="tel" data="#person,tel" collector="c|s" renderer="std" placeholder="Input Telphone"></p>
-		<p><button class="btn btn-primary" onclick="test1()">Submit</button> </p>
-		
-		<h1>直接渲染<small>不使用选择器</small></h1>
-		
-		<div id="divForPerson2"> 
-			<p> Name : <input type="text" data="name" collector="c|s" renderer="std"> </p>
-			<p> Email : <input type="email" data="email" collector="c|s" renderer="std" placeholder="Input Email"></p>
-			<p> Tel : <input type="tel" data="tel" collector="c|s" renderer="std" placeholder="Input Telphone"></p>
-			<p><button class="btn btn-primary" onclick="test2()">Submit</button> </p>
+		<h2>d2js.root 中带有数据路径<small>绑定到数据路径指定的对象</small></h2>
+		<div id="test1" d2js.root="person,friends">
+			<div>
+				Friend Name: <span data="0,name" renderer="std"></span>
+			</div>
 		</div>
 		
-		<h1>渲染数据表<small>DataTable、 d2js.dataset 均可</small></h1>
-		<div id="divPrompt"></div>
-		<table>
-			<tr>
-				<th>name</th>
-			</tr>
-			<tr>
-				<td><input type="text" data="#test,rows,0,name" collector="c|s" renderer="std"></td>
-			</tr>
-			<tr>
-				<td><input type="text" data="#test,rows,2,name" collector="c|s" renderer="std"></td>
-			</tr>
-		</table>
-		<p><button class="btn btn-primary" onclick="test3()">Submit</button> </p>
+		<h2>较长的数据路径</h2>
+		<div id="test2" d2js.root="person">
+			<div>
+				My Name: <span data="name" renderer="std"></span>
+			</div>
+			<div>
+				Friend Name: <span data="friends,0,name" renderer="std"></span>
+			</div>
+		</div>
+		
+		<h2>渲染<small>d2js.root伴随dom树，随之形成深入退出的栈</small></h2>
+		<div id="test2" d2js.root="person">
+			<div>
+				My Name: <span data="name" renderer="std"></span>
+			</div>
+			<div d2js.root="person,friends">
+				<p>
+					Friend Name: <span data="0,name" renderer="std"></span>
+				</p>
+				<p>
+					Friend Name: <span data="1,name" renderer="std"></span>
+				</p>
+			</div>
+			<div>
+				My Email: <span data="email" renderer="std"></span>
+			</div>
+		</div>
+		
+		
+		<h2>短路径<small>短路径使用 , 开始，粘连上一个有效路径 data，短路径只是书写方便，有过一次渲染收集行为就会展开为 data 属性</small></h2>
+		<div id="test2" d2js.root="person">
+			<div>
+				My Name: <span data="name" renderer="std"></span>
+			</div>
+			<div data=",friends">
+				<p>
+					Friend Name: <span data=",0,name" renderer="std"></span>
+				</p>
+				<div>
+					My Email: <span data="email" renderer="std"></span> <!-- 路径总是从 root 开始 -->
+				</div>
+				<p>
+					Friend Name: <span data=",1,name" renderer="std"></span>
+				</p>
+			</div>
+		</div>
+		
+		<h2>在d2js.root中使用短路径<small>此短路径相对于上一个 d2js.root,不相对于有 data 的元素，此种情形仅用于得到 .data('d2js.root')</small></h2>
+		<div id="test2" d2js.root="person">
+			<div>
+				My Name: <span data="name" renderer="std"></span>
+			</div>
+			<div d2js.root=",friends" id="divFriends"> <!-- 上一个root往下 -->
+				<p>
+					Friend Name: <span data="0,name" renderer="std"></span>
+				</p>
+				<div>
+					My Email: <span data="..email" renderer="std"></span> <!-- 通过 .. 使用上一层d2js.root元素的数据, 每次都上溯，效率较低-->
+				</div>
+				<p>
+					Friend Name: <span data="1,name" renderer="std"></span>
+				</p>
+			</div>
+		</div>
+		
+		
+		<h2>在d2js.root中使用上溯路径<small></small></h2>
+		<div id="test2" d2js.root="person">
+			<div>
+				My Name: <span data="name" renderer="std"></span>
+			</div>
+			<div d2js.root=",friends" id="divFriends"> <!-- 上一个root往下 -->
+				<p>
+					Friend Name: <span data="0,name" renderer="std"></span>
+				</p>
+				<div d2js.root=".."> <!-- 通过 .. 使用上一层d2js.root元素的数据-->
+					My Email: <span data="email" renderer="std"></span>
+					<br> 
+					My Phone: <span data="phone" renderer="std"></span>
+				</div>
+				<p>
+					Friend Name: <span data="1,name" renderer="std"></span>
+				</p>
+			</div>
+		</div>
 	</div>
 </body>
 <script>
-
-	// 渲染任意对象
-	var person = {d2js:'person', name : 'Jack'};		// 该 d2js 属性系为与选择器配对
-	d2js.render(null, person);
-	function test1(){
-		d2js.collect(null, person);
-		alert(JSON.stringify(person));
-	}
 	
+	d2js.root.person  = {name:'Jack', email: 'jack@gmail.com', phone: '137 2222 3333', 
+	                     friends: [{name: 'Tom'}, {name: 'Mary'}]};
 	
-	//  定向渲染
-	var person2 = { name : 'Tom'};
-	d2js.render($('#divForPerson2')[0], person2, true);		// 指定目标元素，不使用选择器, 适合快速渲染
-	function test2(){
-		d2js.collect($('#divForPerson2')[0], person2, true);
-		alert(JSON.stringify(person2));
-	}
-
-	// 渲染表
-	var table = new d2js.DataTable('test', 'author.d2js');
-	table.load({ _m : 'fetch'}, function(error) {
-			if(error){
-				divPrompt.innerText = error.message;
-				return;
-			}
-			divPrompt.innerText = 'success';
-			d2js.render(null, table);
-		});
-
-	function test3(){
-		d2js.collect(null, table);
-		table.monitor();
-	}
-
-
+	// $('body').render(/email|phone/); 按正则表达式过滤数据路径，只渲染 email 和 phone
+	
+	$('body').render();
 	
 </script>
 </html>

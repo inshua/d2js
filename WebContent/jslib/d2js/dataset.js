@@ -152,9 +152,15 @@ d2js.PK = 'id';
 /**
  * dataset全局对象。
  * dataset 是 DataTable, relation 及词典的容器。
- * @namespace d2js.dataset
+ * @object d2js.dataset
  */
 d2js.dataset = new d2js.Dataset();
+
+/**
+ * 别名，对于renderer,collector来说是全局数据对象的根对象（可类比 DOM 树的 document）
+ * @alias d2js.dataset
+ */
+d2js.root = d2js.dataset;
 
 /**
  * 所有词典数据

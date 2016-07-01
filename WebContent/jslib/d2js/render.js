@@ -165,6 +165,279 @@ d2js.render = function(htmlElement, baseData, direct, customRenders){
 	}
 }
 
+
+d2js.render = function(htmlElement, selector, customRenders){
+	if(htmlElement) {
+		if(htmlElement.jquery){
+			if(htmlElement.length == 0){
+				return;		// 选择器未命中任何元素，应退出
+			}
+			htmlElement = htmlElement[0]
+		}
+	} else {
+		htmlElement = document.body;
+	}
+	
+	var e = htmlElement, $e = $(htmlElement);
+	
+	var r = d2js._findRoot($e);
+	if(r.root == null) return;
+	renderElement(htmlElement, r.root, r.crumb, r.ele);
+	
+	function renderElement(e, root, crumb, rootEle){
+		var fullPath = e.getAttribute('d2js.fullpath');
+		
+		if(fullPath == null && e.hasAttribute('data')){
+			var dataPath = e.getAttribute('data');
+			if(dataPath.charAt(0) == ','){
+				dataPath = parseShortPath(dataPath, e, rootEle);
+				e.setAttribute('d2js.fullpath', fullPath = dataPath);
+			} else if(dataPath.startsWith('..')){	// change d2js.root to upper
+				var $re = $(rootEle);
+				do{
+					dataPath = dataPath.substr(2);
+					var r = d2js._findRoot($re.parent());
+					$re = $(r.rootEle);
+				} while(dataPath.startsWith('..'));
+				root = r.root; crumb = r.crumb; rootEle = r.rootEle;
+				fullPath = dataPath;
+			} else {
+				e.setAttribute('d2js.fullpath', fullPath = dataPath);
+			}
+		}
+		
+		if(fullPath && (selector == null || selector.test(fullPath))){
+			crumb = crumb.slice();
+			var match = d2js.extractData(root, fullPath, crumb);
+			
+			if(match){
+				var renderer = e.getAttribute('renderer');
+				var embedRenderer = $(e).children('renderer, .d2js-render');
+				if(embedRenderer.length){
+					var emb = prepareEmbedRenderer(embedRenderer.html());
+					renderer = renderer ? renderer + '|' + emb : emb;
+				}
+			}
+		}
+		
+		if(renderer){
+			if(e.hasAttribute('trace-render')) debugger;
+			
+			var pipelined = (renderer.indexOf('|') != -1);
+			if(pipelined){		// pipeline 函数仅翻译值，其有可能会加 html 效果
+				var parr = renderer.split('|');
+				for(var i=0; i<parr.length - 1; i++){
+					var fun = extractPipeline(parr[i].trim());
+					if(fun != null) {
+						var piped = fun.apply(null, [e].concat(crumb));
+						crumb[0] = piped;
+					}
+				}
+				renderer = parr[parr.length -1];
+			} 
+			var fun = extractRenderer(renderer.trim());
+			if(fun){
+				var r = fun.apply(null, [e].concat(crumb));				
+				$(e).trigger('d2js.rendered', crumb, renderer);
+				//if(direct && r == 'break') return;
+			} else {
+				console.error(renderer + ' not found');
+			}
+		}
+		
+		for(var i=0; i<e.children.length; i++){
+			var child = e.children[i];
+			if(child.hasAttribute('d2js.root')){ 	// 根数据另起炉灶
+				var renderChild = true;
+				var rootPath = child.getAttribute('d2js.root');
+				if(rootPath.startsWith('..')){		// 相对路径
+					if(!d2js.bindData($(child))){
+						renderChild = false;
+					}
+				} 
+				if(renderChild){
+					var r = d2js._findRoot(child, $(child));
+					renderElement(child, r.root, r.crumb, r.ele);
+				}
+			} else {
+				renderElement(child, root, crumb, rootEle);
+			}
+		}
+	}
+	
+	// 分析短路径
+	function parseShortPath(shortPath, startEle, rootEle){
+		var dataPath = '';
+		var found = false;
+		for(var p = startEle.parentElement; p != document; p = p.parentElement){
+			// if(shortPath == 'this') shortPath = '';
+			var s = p.getAttribute('data');
+			if(s == null){
+				// nothing to do
+			} else if(s.charAt(0) == ','){
+				shortPath = s + shortPath;
+			} else if(s.startsWith('..')){
+				dataPath = s.substr(2) + shortPath;
+				found = true;
+			} else {
+				dataPath = s + shortPath;
+				found = true;
+			}
+			
+			if(p == rootEle){
+				found = true;
+				dataPath = shortPath.substr(1);
+			}
+			if(found) break;
+		}
+		if(!found) {
+			console.error('cannot parse short path ' + shortPath, startEle, rootEle);
+			throw new Error('cannot parse short path ' + shortPath);
+		}
+		return dataPath;
+	}
+
+	
+	function extractRenderer(rendererDesc){
+		if(customRenders){
+			var fun = customRenders[rendererDesc];
+			if(fun) return fun;
+		}
+		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
+	}
+	
+	function extractPipeline(pipelineDesc){
+		if(customRenders){
+			var fun = customRenders[pipelineDesc];
+			if(fun) return fun;
+		}
+		return d2js.extractCachedFunction(pipelineDesc, d2js.Renderers.Pipelines, 'd2js.Renderers.Pipelines.', d2js.KNOWN_RENDER_PIPELINES);
+	}
+	
+	function prepareEmbedRenderer(code){
+		var id = d2js.Renderers.EmbedRenderers.codeMap[code];
+		if(id){
+			return id;
+		} else {
+			id = d2js.Renderers.EmbedRenderers.nextId ++;
+			id = '__embed_renderer__' + id;
+			// code = 'function ' + id + '(element, value, table, _1, rows, index, row, columnName){ \r\n' + code + '\r\n}';
+			var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
+			d2js.Renderers.EmbedRenderers.codeMap[code] = id;
+			d2js.Renderers[id] = fun;
+			return id;
+		}
+	}
+}
+
+//命中root，并存储 data('d2js.root') 及 crumb，返回命中的root数据、元素及root的面包屑
+d2js._findRoot = function($el, $suggestRootEle){
+	var $rootEle = $suggestRootEle || $el.closest('[d2js\\.root]');
+	
+	var crumb = null, root = null, ele = null;
+	if($rootEle.length == 0) {
+		root = d2js.root;
+		crumb = [root];
+		ele = document.body;
+	} else {
+		root = $rootEle.data('d2js.root');		
+		if(root == null){
+			d2js.bindData($rootEle);
+		}
+		root = $rootEle.data('d2js.root');
+		crumb = $rootEle.data('d2js.crumb');
+		ele = $rootEle[0];
+	}
+	return {root: root, crumb: crumb, ele: ele};
+}
+
+
+d2js.bindData = function($element, data){
+	if(data == null){
+		data = $element[0].getAttribute('d2js.root');
+		if(data == null) return false;
+	} 
+	if(typeof data == 'string'){
+		var root = d2js.root;
+		if(data.startsWith('..')){
+			var crumb = null;
+			do{
+				var $re = $element.parent('[d2js\\.root]').parent('[d2js\\.root]');
+				if($re.data('d2js.root') == null){
+					if(d2js.bindData($re) == false) return false;
+				}
+				crumb = $re.data('d2js.crumb');
+				data = data.substr(2);
+			}while(data.startsWith('..'));
+			root = crumb[0];
+			if(root == null) return false;
+			
+			if(data.charAt(0) == ','){	// ..,name(just eq ..name) or ....,name 
+				data = data.substr(1);
+			}
+			var match = d2js.extractData(root, data, crumb);
+			if(!match || crumb[0] == null/* root cannot be null */) return false;
+			$element.data('d2js.root', crumb[0]);
+			$element.data('d2js.crumb', crumb);
+		} else {
+			if(data.charAt(0) == ','){	// d2js.root 也可以使用短路径
+				var r = d2js._findRoot($element.parent());
+				if(r.root == null) return;
+				crumb = r.crumb.slice(); root = crumb[0]; data = data.substr(1);
+			}
+			var crumb = [root];
+			var match = d2js.extractData(root, data, crumb);
+			if(!match || crumb[0] == null/* root cannot be null */) return false;
+			$element.data('d2js.root', crumb[0]);
+			$element.data('d2js.crumb', crumb);
+		}
+	} else {
+		$element[0].setAttribute('d2js.root', '');
+		$element.data('d2js.root', data);
+		$element.data('d2js.crumb', [data]);
+	}
+	return true;
+}
+
+d2js.extractData = function(baseData, dataPath, crumb){
+	if(dataPath.charAt(0) == ',') throw new Error('short path not allowed when extract data');
+
+	var currCrumb = [];
+	
+	if(dataPath === '' || dataPath == 'this') {
+		return true;
+	}
+	
+	var arr = dataPath.split(',');
+	var obj = baseData;
+	for(var i=0; i<arr.length; i++){
+		if(obj == null){		// cannot extract more
+			return false;
+		}
+		
+		var a = arr[i].trim();
+		if(!isNaN(a)){
+			currCrumb.push(a * 1);		// 数字，应该是个索引
+		} else {
+			currCrumb.push(a);
+		}
+		if(obj != null) obj = obj[a];
+		if(typeof obj == 'function') obj = obj.call(currCrumb[currCrumb.length-2]);	// call zero-arguments function direct
+		currCrumb.push(obj);
+	}
+	
+	// put currCrumb into crumb, at the head, and reverse order
+	for(var i = currCrumb.length + crumb.length - 1; i >= 0; i--){
+		if(i>=currCrumb.length){
+			crumb[i] = crumb[i - currCrumb.length];
+		} else {
+			crumb[i] = currCrumb[currCrumb.length - 1 - i]
+		}
+	}
+	
+	return true;
+};
+
 /**
  * 按 element 指定的 data 路径定位数据
  * 可使用 jQuery 函数：
@@ -187,6 +460,7 @@ d2js.locateData = function(element, baseData, direct){
 	return data;
 };
 
+
 +(function ( $ ) {
     $.fn.locateData = function() {
     	return d2js.locateData(this);
@@ -194,8 +468,20 @@ d2js.locateData = function(element, baseData, direct){
 }( jQuery ));
 
 +(function ( $ ) {
-    $.fn.render = function(baseData, direct, customRenders) {
-    	return d2js.render(this, baseData, direct, customRenders);
+    $.fn.render = function(selector, customRenders) {
+    	if(!(selector instanceof RegExp)){
+	    	customRenders = selector;
+	    	selector = null;
+    	}
+    	d2js.render(this, selector, customRenders);
+    	return this;
+    };
+}( jQuery ));
+
++(function ( $ ) {
+    $.fn.bindData = function(selectorOrData) {
+    	d2js.bindData(this, selectorOrData);
+    	return this;
     };
 }( jQuery ));
 
@@ -217,63 +503,6 @@ d2js.findArg = function(args, pattern){
 			}
 		}
 	}
-}
-
-
-d2js.extractData = function(baseData, dataPath, output, direct){
-	var arr = dataPath.split(',');
-	var attr = arr[0].trim();		// 对象，通常为表名
-	var start = baseData;
-	
-	var i = 0;
-	if(attr.charAt(0) == '#'){		// find d2js attr in descendent
-		var selector = attr.substr(1);
-		var found = false;
-		if(baseData['d2js'] == selector) {
-			// start = baseData;		
-			found = true;
-		} else {
-			var history = [];
-			for(var stk = [baseData]; stk.length;){
-				if(stk.length > 100) debugger;
-				var obj = stk.pop();
-				history.push(obj);
-				if(obj != null && obj['d2js'] == selector){
-					start = obj;
-					found = true;
-					break;
-				}
-				if((typeof obj == 'object' || typeof obj == 'function') && obj && !obj['isD2jsTerm']){
-					for(var k in obj){
-						var v = obj[k];
-						if(history.indexOf(v) == -1){
-							stk.push(v);
-						}
-					}
-				}
-			}
-		}
-		if(!found) return false;
-		i = 1;		// by-pass the selector;
-	} else {
-		if(!direct) return false;		// 只有direct方式可以不使用命中器
-	}
-	output.push(start);
-	
-	if(arr.length == 1 && arr[0] == 'this') return true;	// 像这种<p data="this"></p>只为命中本身
-	
-	var obj = start;
-	for(; i<arr.length; i++){
-		var a = arr[i].trim();
-		if(!isNaN(a)){
-			output.push(a * 1);		// 数字，应该是个索引
-		} else {
-			output.push(a);
-		}
-		if(obj != null) obj = obj[a];
-		output.push(obj);
-	}
-	return true;
 }
 
 
