@@ -20,6 +20,21 @@
 </head>
 <body>
 	<div class="container">
+		<h2>d2js.root 与 data 在同一元素</h2>
+		<div>
+			My Name: <span d2js.root="person" data="name" renderer="std"></span>
+		</div>
+		
+		<h2>只有data<small>data 从 d2js.root 展开</small></h2>
+		<div>
+			My Email: <span data="person,email" renderer="std"></span>
+		</div>
+		
+		<h2>使用this作为数据路径<small>目标数据即 d2js.root，而数据路径必须填写，填写this</small></h2>
+		<div>
+			My Phone: <span d2js.root="person" data="this" renderer="phone|std"></span>
+		</div>
+		
 		<h2>d2js.root 中带有数据路径<small>绑定到数据路径指定的对象</small></h2>
 		<div id="test1" d2js.root="person,friends">
 			<div>
@@ -38,7 +53,7 @@
 		</div>
 		
 		<h2>渲染<small>d2js.root伴随dom树，随之形成深入退出的栈</small></h2>
-		<div id="test2" d2js.root="person">
+		<div id="test3" d2js.root="person">
 			<div>
 				My Name: <span data="name" renderer="std"></span>
 			</div>
@@ -57,7 +72,7 @@
 		
 		
 		<h2>短路径<small>短路径使用 , 开始，粘连上一个有效路径 data，短路径只是书写方便，有过一次渲染收集行为就会展开为 data 属性</small></h2>
-		<div id="test2" d2js.root="person">
+		<div id="test4" d2js.root="person">
 			<div>
 				My Name: <span data="name" renderer="std"></span>
 			</div>
@@ -75,7 +90,7 @@
 		</div>
 		
 		<h2>在d2js.root中使用短路径<small>此短路径相对于上一个 d2js.root,不相对于有 data 的元素，此种情形仅用于得到 .data('d2js.root')</small></h2>
-		<div id="test2" d2js.root="person">
+		<div id="test5" d2js.root="person">
 			<div>
 				My Name: <span data="name" renderer="std"></span>
 			</div>
@@ -94,7 +109,7 @@
 		
 		
 		<h2>在d2js.root中使用上溯路径<small></small></h2>
-		<div id="test2" d2js.root="person">
+		<div id="test6" d2js.root="person">
 			<div>
 				My Name: <span data="name" renderer="std"></span>
 			</div>
@@ -115,6 +130,7 @@
 	</div>
 </body>
 <script>
+	d2js.Renderers.Pipelines.phone = function(ele, o){return o.phone};
 	
 	d2js.root.person  = {name:'Jack', email: 'jack@gmail.com', phone: '137 2222 3333', 
 	                     friends: [{name: 'Tom'}, {name: 'Mary'}]};
@@ -122,6 +138,8 @@
 	// $('body').render(/email|phone/); 按正则表达式过滤数据路径，只渲染 email 和 phone
 	
 	$('body').render();
+	
+	// $('#test6').bindRoot().render()	// 重新bindRoot，会导致子元素中的与 data('d2js.root')有关的元素抹除（之后会重新绑定）
 	
 </script>
 </html>

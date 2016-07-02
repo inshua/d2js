@@ -49,7 +49,7 @@
 	$('#test2').render();	// wont work, wont error, since no d2js.root data bound to #test2
 	
 	var mary = {name:'Mary', gender: 'F'};
-	$('#test2').bindData(mary).render();
+	$('#test2').bindRoot(mary).render();
 	
 	setTimeout(function(){
 		d2js.root.person.name = 'Tom';
@@ -61,7 +61,7 @@
 			$('#test1').render();
 			
 			setTimeout(function(){
-				$('#test1').bindData().render();	// rebind data, $e.data('d2js.root') synced now
+				$('#test1').bindRoot().render();	// rebind root, $e.data('d2js.root') synced now
 			}, 3000);
 		}, 3000);
 	}, 3000);

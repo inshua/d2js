@@ -69,103 +69,6 @@ d2js.Renderers.EmbedRenderers.codeMap = {};
  * ```
  * 对 htmlElement 及其子元素有指定 renderer="myRender"，该函数会被套用。
  */
-d2js.render = function(htmlElement, baseData, direct, customRenders){
-	baseData = baseData || d2js.dataset;
-
-	var stk = [];
-	if(htmlElement) {
-		if(htmlElement.jquery){
-			stk = htmlElement.toArray();
-			if(stk.length == 0){
-				stk = [document.body];
-			}
-		} else {
-			stk = [htmlElement]
-		}
-	} else {
-		stk = [document.body];
-	}
-	
-	while(stk.length){
-		var e = stk.pop();
-		var dataPath = e.getAttribute('data');
-		var renderer = e.getAttribute('renderer');
-		var embedRenderer = $(e).children('renderer, .d2js-render');
-		if(embedRenderer.length){
-			var emb = prepareEmbedRenderer(embedRenderer.html());
-			renderer = renderer ? renderer + '|' + emb : emb;
-		}
-		if(dataPath && renderer){
-			var data = [e]; 
-			var match = d2js.extractData(baseData, dataPath, data, direct);
-			if(match){
-				if(e.hasAttribute('trace-render')) debugger;
-				
-				data.splice(1, 0, data[data.length - 1]);		// value 始终作为第二个参数
-				
-				var pipelined = (renderer.indexOf('|') != -1);
-				if(pipelined){		// pipeline 函数仅翻译值，其有可能会加 html 效果
-					var parr = renderer.split('|');
-					for(var i=0; i<parr.length - 1; i++){
-						var fun = extractPipeline(parr[i].trim());
-						if(fun != null) {
-							var piped = fun.apply(null, data);
-							data[1] = piped;
-						}
-					}
-					renderer = parr[parr.length -1];
-				} 
-				var fun = extractRenderer(renderer.trim());
-				if(fun){
-					var r = fun.apply(null, data);				
-					$(e).trigger('d2js.rendered', data);
-					if(direct && r == 'break') continue;
-				} else {
-					console.error(renderer + ' not found');
-				}
-			}
-		}
-		
-		if(e.children.length){
-			for(var i=e.children.length -1; i>=0; i--){
-				stk.push(e.children[i]);
-			}
-		}
-	}
-	
-	function extractRenderer(rendererDesc){
-		if(customRenders){
-			var fun = customRenders[rendererDesc];
-			if(fun) return fun;
-		}
-		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
-	}
-	
-	function extractPipeline(pipelineDesc){
-		if(customRenders){
-			var fun = customRenders[pipelineDesc];
-			if(fun) return fun;
-		}
-		return d2js.extractCachedFunction(pipelineDesc, d2js.Renderers.Pipelines, 'd2js.Renderers.Pipelines.', d2js.KNOWN_RENDER_PIPELINES);
-	}
-	
-	function prepareEmbedRenderer(code){
-		var id = d2js.Renderers.EmbedRenderers.codeMap[code];
-		if(id){
-			return id;
-		} else {
-			id = d2js.Renderers.EmbedRenderers.nextId ++;
-			id = '__embed_renderer__' + id;
-			// code = 'function ' + id + '(element, value, table, _1, rows, index, row, columnName){ \r\n' + code + '\r\n}';
-			var fun = new Function('element', 'value', 'table', '_1', 'rows', 'index', 'row', 'columnName', code);
-			d2js.Renderers.EmbedRenderers.codeMap[code] = id;
-			d2js.Renderers[id] = fun;
-			return id;
-		}
-	}
-}
-
-
 d2js.render = function(htmlElement, selector, customRenders){
 	if(htmlElement) {
 		if(htmlElement.jquery){
@@ -178,9 +81,7 @@ d2js.render = function(htmlElement, selector, customRenders){
 		htmlElement = document.body;
 	}
 	
-	var e = htmlElement, $e = $(htmlElement);
-	
-	var r = d2js._findRoot($e);
+	var r = d2js._findRoot(htmlElement);
 	if(r.root == null) return;
 	renderElement(htmlElement, r.root, r.crumb, r.ele);
 	
@@ -193,11 +94,11 @@ d2js.render = function(htmlElement, selector, customRenders){
 				dataPath = parseShortPath(dataPath, e, rootEle);
 				e.setAttribute('d2js.fullpath', fullPath = dataPath);
 			} else if(dataPath.startsWith('..')){	// change d2js.root to upper
-				var $re = $(rootEle);
+				var re = rootEle;
 				do{
 					dataPath = dataPath.substr(2);
-					var r = d2js._findRoot($re.parent());
-					$re = $(r.rootEle);
+					var r = d2js._findRoot(re.parentElement);
+					re = r.rootEle;
 				} while(dataPath.startsWith('..'));
 				root = r.root; crumb = r.crumb; rootEle = r.rootEle;
 				fullPath = dataPath;
@@ -212,10 +113,11 @@ d2js.render = function(htmlElement, selector, customRenders){
 			
 			if(match){
 				var renderer = e.getAttribute('renderer');
-				var embedRenderer = $(e).children('renderer, .d2js-render');
-				if(embedRenderer.length){
-					var emb = prepareEmbedRenderer(embedRenderer.html());
+				var embedRenderer = e.querySelector('renderer, .d2js-render');
+				if(embedRenderer){
+					var emb = prepareEmbedRenderer(embedRenderer, e);
 					renderer = renderer ? renderer + '|' + emb : emb;
+					e.setAttribute('renderer', renderer);
 				}
 			}
 		}
@@ -227,7 +129,7 @@ d2js.render = function(htmlElement, selector, customRenders){
 			if(pipelined){		// pipeline 函数仅翻译值，其有可能会加 html 效果
 				var parr = renderer.split('|');
 				for(var i=0; i<parr.length - 1; i++){
-					var fun = extractPipeline(parr[i].trim());
+					var fun = extractPipeline(parr[i].trim(), e);
 					if(fun != null) {
 						var piped = fun.apply(null, [e].concat(crumb));
 						crumb[0] = piped;
@@ -235,7 +137,7 @@ d2js.render = function(htmlElement, selector, customRenders){
 				}
 				renderer = parr[parr.length -1];
 			} 
-			var fun = extractRenderer(renderer.trim());
+			var fun = extractRenderer(renderer.trim(), e);
 			if(fun){
 				var r = fun.apply(null, [e].concat(crumb));				
 				$(e).trigger('d2js.rendered', crumb, renderer);
@@ -251,12 +153,12 @@ d2js.render = function(htmlElement, selector, customRenders){
 				var renderChild = true;
 				var rootPath = child.getAttribute('d2js.root');
 				if(rootPath.startsWith('..')){		// 相对路径
-					if(!d2js.bindData($(child))){
+					if(!d2js.bindRoot(child)){
 						renderChild = false;
 					}
 				} 
 				if(renderChild){
-					var r = d2js._findRoot(child, $(child));
+					var r = d2js._findRoot(child, child);
 					renderElement(child, r.root, r.crumb, r.ele);
 				}
 			} else {
@@ -274,6 +176,9 @@ d2js.render = function(htmlElement, selector, customRenders){
 			var s = p.getAttribute('data');
 			if(s == null){
 				// nothing to do
+			} else if(s == 'this'){
+				dataPath = shortPath.substr(1);
+				found = true;
 			} else if(s.charAt(0) == ','){
 				shortPath = s + shortPath;
 			} else if(s.startsWith('..')){
@@ -284,9 +189,9 @@ d2js.render = function(htmlElement, selector, customRenders){
 				found = true;
 			}
 			
-			if(p == rootEle){
-				found = true;
+			if(!found && p == rootEle){
 				dataPath = shortPath.substr(1);
+				found = true;
 			}
 			if(found) break;
 		}
@@ -298,73 +203,94 @@ d2js.render = function(htmlElement, selector, customRenders){
 	}
 
 	
-	function extractRenderer(rendererDesc){
+	function extractRenderer(rendererDesc, e){
+		if($.hasData(e)){
+			var d = $.data(e)['d2js.renderers'];
+			var fun = d && d[rendererDesc];
+			if(fun) return fun;
+		}
 		if(customRenders){
 			var fun = customRenders[rendererDesc];
+			store(e, 'd2js.renderers', rendererDesc, fun);
 			if(fun) return fun;
 		}
 		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
 	}
 	
-	function extractPipeline(pipelineDesc){
+	function extractPipeline(pipelineDesc, e){
+		if($.hasData(e)){
+			var d = $.data(e)['d2js.renderers'];
+			var fun = d && d[pipelineDesc];
+			if(fun) return fun;
+		}
 		if(customRenders){
 			var fun = customRenders[pipelineDesc];
+			store(e, 'd2js.renderers', pipelineDesc, fun);
 			if(fun) return fun;
 		}
 		return d2js.extractCachedFunction(pipelineDesc, d2js.Renderers.Pipelines, 'd2js.Renderers.Pipelines.', d2js.KNOWN_RENDER_PIPELINES);
 	}
 	
-	function prepareEmbedRenderer(code){
-		var id = d2js.Renderers.EmbedRenderers.codeMap[code];
-		if(id){
-			return id;
-		} else {
-			id = d2js.Renderers.EmbedRenderers.nextId ++;
-			id = '__embed_renderer__' + id;
-			// code = 'function ' + id + '(element, value, table, _1, rows, index, row, columnName){ \r\n' + code + '\r\n}';
-			var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
-			d2js.Renderers.EmbedRenderers.codeMap[code] = id;
-			d2js.Renderers[id] = fun;
-			return id;
-		}
+	function store(e, bundle, key, fun){
+		var $e = $(e); 
+		var data = $e.data(bundle);
+		if(data == null) $e.data(bundle, data = {});
+		data[key] = fun;
+	}
+	
+	function prepareEmbedRenderer(embedRenderer, e){
+		var code = embedRenderer.innerHTML;
+		embedRenderer.remove();
+		
+		var id = d2js.Renderers.EmbedRenderers.nextId ++;
+		id = '__embed_renderer__' + id;
+		var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
+		store(e, 'd2js.renderers', id, fun);
+		
+		return id;
 	}
 }
 
 //命中root，并存储 data('d2js.root') 及 crumb，返回命中的root数据、元素及root的面包屑
-d2js._findRoot = function($el, $suggestRootEle){
-	var $rootEle = $suggestRootEle || $el.closest('[d2js\\.root]');
+d2js._findRoot = function(el, suggestRootEle){
+	var rootEle = suggestRootEle;
+	if(!rootEle){
+		for(rootEle = el; rootEle != null; rootEle = rootEle.parentElement){
+			if(rootEle.hasAttribute('d2js.root')) break;
+		}
+	}
 	
 	var crumb = null, root = null, ele = null;
-	if($rootEle.length == 0) {
-		root = d2js.root;
-		crumb = [root];
-		ele = document.body;
+	if(rootEle == null) {
+		return {root:d2js.root, crumb: crumb, ele: document.body};
 	} else {
-		root = $rootEle.data('d2js.root');		
-		if(root == null){
-			d2js.bindData($rootEle);
+		if($.hasData('d2js.root') == false){
+			d2js.bindRoot(rootEle);
 		}
-		root = $rootEle.data('d2js.root');
-		crumb = $rootEle.data('d2js.crumb');
-		ele = $rootEle[0];
+		var result = $.data(rootEle);
+		return {root:result['d2js.root'], crumb: result['d2js.crumb'], ele: rootEle};
 	}
-	return {root: root, crumb: crumb, ele: ele};
 }
 
 
-d2js.bindData = function($element, data){
+d2js.bindRoot = function(element, data){
 	if(data == null){
-		data = $element[0].getAttribute('d2js.root');
+		data = element.getAttribute('d2js.root');
 		if(data == null) return false;
-	} 
+	}
+	$element = $(element);
 	if(typeof data == 'string'){
 		var root = d2js.root;
 		if(data.startsWith('..')){
 			var crumb = null;
 			do{
 				var $re = $element.parent('[d2js\\.root]').parent('[d2js\\.root]');
+				if($re.length == 0) {
+					console.error(data, 'cannot found root element for ', element);
+					throw new Error('cannot found root element for ' + data)
+				}
 				if($re.data('d2js.root') == null){
-					if(d2js.bindData($re) == false) return false;
+					if(d2js.bindRoot(re.context) == false) return false;
 				}
 				crumb = $re.data('d2js.crumb');
 				data = data.substr(2);
@@ -381,7 +307,7 @@ d2js.bindData = function($element, data){
 			$element.data('d2js.crumb', crumb);
 		} else {
 			if(data.charAt(0) == ','){	// d2js.root 也可以使用短路径
-				var r = d2js._findRoot($element.parent());
+				var r = d2js._findRoot(element.parentElement);
 				if(r.root == null) return;
 				crumb = r.crumb.slice(); root = crumb[0]; data = data.substr(1);
 			}
@@ -392,10 +318,18 @@ d2js.bindData = function($element, data){
 			$element.data('d2js.crumb', crumb);
 		}
 	} else {
-		$element[0].setAttribute('d2js.root', '');
-		$element.data('d2js.root', data);
-		$element.data('d2js.crumb', [data]);
+		var root = data;
+		$element[0].setAttribute('d2js.root', '#');
+		$element.data('d2js.root', root);
+		$element.data('d2js.crumb', [root]);
 	}
+	// 子元素中带有与本次 bind root有关的 d2js.root 的全部取消
+	$element.find('[d2js\\.root]').each(function(){
+		var crumb = $(this).data('d2js.crumb');
+		if(crumb && crumb.indexOf(root) != -1){
+			$(this).removeData('d2js.root').removeData('d2js.crumb');			
+		}
+	});
 	return true;
 }
 
@@ -479,8 +413,10 @@ d2js.locateData = function(element, baseData, direct){
 }( jQuery ));
 
 +(function ( $ ) {
-    $.fn.bindData = function(selectorOrData) {
-    	d2js.bindData(this, selectorOrData);
+    $.fn.bindRoot = function(selectorOrData) {
+    	this.each(function(){
+    		d2js.bindRoot(this, selectorOrData);
+    	});
     	return this;
     };
 }( jQuery ));
@@ -504,8 +440,6 @@ d2js.findArg = function(args, pattern){
 		}
 	}
 }
-
-
 
 d2js.extractCachedFunction = (function(){
 	var JsSymbols = '~!@#%^&*()-+=[]{}\|;:\'",.<>/? \r\n\t';
