@@ -260,14 +260,14 @@ d2js.Collectors.repeater = function(element, rows){
  */
 d2js.Collectors.oc = d2js.KNOWN_COLLECTORS['oc'] = function(element, newValue){
 	var row = null;
-	for(var i=1; i<arguments.length-1; i++){
-		var colname = arguments[i+1];
+	for(var i = arguments.length-1; i>1; i--){
+		var colname = arguments[i-1];
 		if(arguments[i] instanceof d2js.DataRow){
 			row = arguments[i];
-			for(i+=2; i<arguments.length-1; i+=2){
+			for(i-=2; i>1; i-=2){
 				if(arguments[i] == null){
-					var attr = arguments[i-1];
-					arguments[i] = arguments[i-2][attr] = {};
+					var attr = arguments[i+1];
+					arguments[i] = arguments[i+2][attr] = {};
 				}
 			}
 			break;
