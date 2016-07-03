@@ -23,7 +23,7 @@
  * @param element
  * @param value
  */
-d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, columnName, row, index, rows, _1, table){
 	var e = element, v = value;
 	
 	if(e.tagName == "INPUT"){
@@ -75,7 +75,7 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, 
 }
 
 d2js.Renderers.attr = function(attr){
-	return function(element, value, table, _1, rows, index, row, columnName){
+	return function(element, value, columnName, row, index, rows, _1, table){
 		if('hasOwnProperty' in element){
 			if(element.hasOwnProperty(attr)){
 				element[attr] = value;
@@ -208,7 +208,7 @@ d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
  * 这里 N 是固定写法，会被替换为行ID。
  * 渲染表格也可以使用 repeater 渲染器。
  */
-d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable,  value, table){
+d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 	var columnRenders = [];
 	var headRow = hTable.tHead.rows[0];
 	for(var i=0; i<headRow.cells.length; i++){
@@ -242,13 +242,13 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable,  value, 
 		for(var i=0; i<table.rows.length; i++){
 			var tr = tBody.insertRow();
 			if(headRow.hasAttribute('data')){
-				tr.setAttribute('data', hTable.getAttribute('data') + ',' + headRow.getAttribute('data').replace(/,\s*N/, ',' + i));
+				tr.setAttribute('data', ',' + headRow.getAttribute('data').replace(/,\s*N/, ',' + i));
 			}
 			columnRenders.forEach(function(column){
 				var cell = document.createElement('td');
 				for(var attr in column){if(column.hasOwnProperty(attr)){
 					if(attr == 'data'){
-						$(cell).attr('data', hTable.getAttribute('data') + ',' + column.data.replace(/,\s*N\s*,/, ',' + i + ','));
+						$(cell).attr('data', ',' + column.data.replace(/,\s*N\s*,/, ',' + i + ','));
 					} else if(attr == 'molecule-obj'){
 						
 					} else {
@@ -269,11 +269,11 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable,  value, 
  *```
  */
 d2js.Renderers.input = function(inputType){
-	return function(element,  value, table, _1, rows, index, row, columnName){
+	return function(element,  value, columnName, row, index, rows, _1, table){
 		element.innerHTML = '';
 		var ele = document.createElement('input');
 		ele.type = inputType;
-		ele.setAttribute('data', element.getAttribute('data'));
+		ele.setAttribute('data', ',this');
 		var renderer = element.getAttribute('renderer-t');
 		if(renderer){
 			ele.setAttribute('renderer', renderer);
@@ -361,7 +361,7 @@ d2js.Renderers.repeater = function(element, rows){
  * <div data="..." molecule="Select" renderer="molecule"></div>
  *```
  */
-d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, value, columnName, row, index, rows, _1, table){
 	var m = Molecule.of(element);
 	if(m != null){
 		if(m.setValue){

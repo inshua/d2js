@@ -51,77 +51,63 @@ d2js.KNOWN_COLLECT_PIPELINES = {};
  * ```
  * 对 htmlElement 及其子元素有指定 collector="myCollector|s"，该函数会被套用。
  */
-d2js.collect = function(htmlElement, baseData, direct, customCollectors){
-	baseData = baseData || d2js.dataset;
-
-	var stk = [];
-	if(htmlElement) {
-		if(htmlElement.jquery){
-			stk = htmlElement.toArray();
-			if(stk.length == 0){
-				stk = [document.body];
-			}
-		} else {
-			stk = [htmlElement]
-		}
-	} else {
-		stk = [document.body];
-	}
-	while(stk.length){
-		var e = stk.pop();
-		var dataPath = e.getAttribute('data');
+d2js.collect = function(htmlElement, pattern, customCollectors){
+	
+	d2js.travel(htmlElement, pattern, collectElement)
+	
+	function collectElement(e, crumb){
+		if(e.hasAttribute('no-collect')) return 'stop';
+		
 		var collector = e.getAttribute('collector');
-		if(e.hasAttribute('no-collect')) continue;
-		
-		if(dataPath && collector){
+		if(collector){
 			if(e.hasAttribute('trace-collect')) debugger;
-			var data = [e]; 
-			var match = d2js.extractData(baseData, dataPath, data, direct);
-
-			if(match){
-				data.splice(1, 0, data[data.length - 1]);		// value 始终作为第二个参数
-				data.pop();
-				
-				var pipelined = (collector.indexOf('|') != -1);
-				if(pipelined){		// pipeline 函数仅翻译值，其有可能会加 html 效果
-					var parr = collector.split('|');
-					for(var i=0; i<parr.length - 1; i++){
-						var fun = extractPipeline(parr[i].trim());
-						if(fun != null) {
-							var piped = fun.apply(null, data);
-							data[1] = piped;
-						}
+			
+			var pipelined = (collector.indexOf('|') != -1);
+			if(pipelined){		// pipeline 函数仅翻译值，其有可能会加 html 效果
+				var parr = collector.split('|');
+				for(var i=0; i<parr.length - 1; i++){
+					var fun = extractPipeline(parr[i].trim(), e);
+					if(fun != null) {
+						var piped = fun.apply(null, [e].concat(crumb));
+						crumb[0] = piped;
 					}
-					collector = parr[parr.length -1];
-				} 
-				var fun = extractCollector(collector.trim());
-				if(fun){
-					fun.apply(null, data);
-					$(e).trigger('d2js.collected', data);
-				} else {
-					console.error(collector + ' not found');
 				}
-			}
-		}
-		
-		if(e.children.length){
-			for(var i=e.children.length -1; i>=0; i--){
-				stk.push(e.children[i]);
+				collector = parr[parr.length -1];
+			} 
+			var fun = extractCollector(collector.trim(), e);
+			if(fun){
+				var r = fun.apply(null, [e].concat(crumb));				
+				$(e).trigger('d2js.collected', crumb, collector);
+				//if(direct && r == 'break') return;
+			} else {
+				console.error(collector + ' not found');
 			}
 		}
 	}
 	
-	function extractCollector(desc){
+	function extractCollector(desc, e){
+		if($.hasData(e)){
+			var d = $.data(e)['d2js.collectors'];
+			var fun = d && d[desc];
+			if(fun) return fun;
+		}
 		if(customCollectors){
 			var fun = customCollectors[desc];
+			d2js._store(e, 'd2js.collectors', desc, fun);
 			if(fun) return fun;
 		}
 		return d2js.extractCachedFunction(desc, d2js.Collectors, 'd2js.Collectors.', d2js.KNOWN_COLLECTORS);
 	}
 	
-	function extractPipeline(pipelineDesc){
+	function extractPipeline(pipelineDesc, e){
+		if($.hasData(e)){
+			var d = $.data(e)['d2js.collectors'];
+			var fun = d && d[pipelineDesc];
+			if(fun) return fun;
+		}
 		if(customCollectors){
-			var fun = customCollectors[desc];
+			var fun = customCollectors[pipelineDesc];
+			d2js._store(e, 'd2js.collectors', pipelineDesc, fun);
 			if(fun) return fun;
 		}
 		return d2js.extractCachedFunction(pipelineDesc, d2js.Collectors.Pipelines, 'd2js.Collectors.Pipelines.', d2js.KNOWN_COLLECT_PIPELINES);
@@ -130,17 +116,19 @@ d2js.collect = function(htmlElement, baseData, direct, customCollectors){
 };
 
 +(function ( $ ) {
-    $.fn.collect = function(baseData, direct, customCollectors) {
-    	return d2js.collect(this, baseData, direct, customCollectors);
+    $.fn.collect = function(pattern, customCollectors) {
+    	this.each(function(){
+    		d2js.collect(this, pattern, customCollectors);
+    	});
+    	return this;
     };
 }( jQuery ));
-
 
 /**
  * 常用 html 元素收集器管道函数。收集 html element 的 value 属性或 innerHTML 属性。
  * 通常收集器写为 c|s 前者由控件获取内容，后者设置到对象，中间可插入其它管道，如 c|n|s
  */
-d2js.Collectors.Pipelines.c = d2js.KNOWN_COLLECT_PIPELINES['c'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Collectors.Pipelines.c = d2js.KNOWN_COLLECT_PIPELINES['c'] = function(element, value, columnName, row, index, rows, _1, table){
 	var newValue = null;
 	if('value' in element){
 		newValue = element.value;
@@ -155,7 +143,7 @@ d2js.Collectors.Pipelines.c = d2js.KNOWN_COLLECT_PIPELINES['c'] = function(eleme
 /**
  * 复选框勾中状态收集器。单独使用时，勾中为 true, 未勾中为 false
  */
-d2js.Collectors.Pipelines.check = d2js.KNOWN_COLLECT_PIPELINES['check'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Collectors.Pipelines.check = d2js.KNOWN_COLLECT_PIPELINES['check'] = function(element, value, columnName, row, index, rows, _1, table){
 	return element.checked;
 }
 
@@ -166,9 +154,7 @@ d2js.Collectors.Pipelines.check = d2js.KNOWN_COLLECT_PIPELINES['check'] = functi
  * 该函数设置新值到数据对象。用法 collector="c|s"。遇到普通对象，则使用 obj[attr] = value, 遇到 d2js.DataRow，则调用 row._set('attr', value)。
  * @param newValue {object} 从前面的管道函数获得
  */
-d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, table, _1, rows, index, row, columnName){
-	var obj = arguments[arguments.length -2];
-	var attr = arguments[arguments.length -1];
+d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, attr, obj, index, rows, _1, table){
 	if(newValue === '') newValue = null;
 	if(obj != null){	// dont test attr in obj
 		if(obj.set){
@@ -185,7 +171,7 @@ d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, tab
  * 数字转换管道。将值转为数字类型。用法 collector="c|n|s"
  * @returns {number} 数字
  */
-d2js.Collectors.Pipelines.n = d2js.KNOWN_COLLECT_PIPELINES['n'] = function(element, newValue, table, _1, rows, index, row, columnName){
+d2js.Collectors.Pipelines.n = d2js.KNOWN_COLLECT_PIPELINES['n'] = function(element, newValue, columnName, row, index, rows, _1, table){
 	if(newValue instanceof String) newValue = newValue.trim();
 	if(isNaN(newValue)){
 		return null;
@@ -200,7 +186,7 @@ d2js.Collectors.Pipelines.n = d2js.KNOWN_COLLECT_PIPELINES['n'] = function(eleme
  * @param newValue
  * @returns {Date}
  */
-d2js.Collectors.Pipelines.d = d2js.KNOWN_COLLECT_PIPELINES['d'] = function(element, newValue, table, _1, rows, index, row, columnName){
+d2js.Collectors.Pipelines.d = d2js.KNOWN_COLLECT_PIPELINES['d'] = function(element, newValue, columnName, row, index, rows, _1, table){
 	if(newValue instanceof String) newValue = newValue.trim();
 	if(!newValue){
 		return null;
@@ -217,7 +203,7 @@ d2js.Collectors.Pipelines.d = d2js.KNOWN_COLLECT_PIPELINES['d'] = function(eleme
  * 对支持 getValue 的 molecule 收集。 
  * 用法: colector="m|s"
  */
-d2js.Collectors.Pipelines.m = d2js.KNOWN_COLLECT_PIPELINES['m'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Collectors.Pipelines.m = d2js.KNOWN_COLLECT_PIPELINES['m'] = function(element, value, columnName, row, index, rows, _1, table){
 	var m = Molecule.of(element);
 	if(m == null || !m.getValue){
 		return;

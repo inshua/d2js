@@ -20,10 +20,10 @@
 
 </head>
 <body>
-	<div class="container">
+	<div class="container" d2js.root="author">
 		<h1>表格编辑</h1>
-		<div data="#author,error" renderer="stderr"></div>
-		<table class="table table-striped" data="#author" renderer="table">
+		<div data="error" renderer="stderr"></div>
+		<table class="table table-striped" data="this" renderer="table">
 			<thead>
 				<tr>
 					<th data-t="rows,N,name" renderer="std">name</th>
@@ -35,7 +35,36 @@
 				<tr>
 					<td width="*" align="center">
 						<nav>
-							<ul class="pagination" data="#author" renderer="pagination">
+							<ul class="pagination" data="this" renderer="pagination">
+							</ul>
+						</nav>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+
+		<p>
+			<button class="btn btn-primary" onclick="submit()">Submit</button>
+		</p>
+	</div>
+	
+	
+	<div class="container" d2js.root="ns_test,author">	<!-- 子数据集只需要加上子数据集名称 -->
+		<h1>表格编辑</h1>
+		<div data="error" renderer="stderr"></div>
+		<table class="table table-striped" data="this" renderer="table">
+			<thead>
+				<tr>
+					<th data-t="rows,N,name" renderer="std">name</th>
+					<th data-t="rows,N,email" renderer="input('email')" renderer-t="std" collector-t="c|s">email</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+			<tfoot>
+				<tr>
+					<td width="*" align="center">
+						<nav>
+							<ul class="pagination" data="this" renderer="pagination">
 							</ul>
 						</nav>
 					</td>
@@ -60,6 +89,22 @@
 		table.submit(function(error){
 			if(!error) alert('提交成功!');
 			d2js.render(null, table);
+		});
+	}
+	
+	
+	var subset = d2js.dataset.create('ns_test')
+	// 渲染表
+	var table2 = subset.addTable('author', 'author.d2js');
+	table2.load({ _m : 'fetch'}, function(error) {
+			d2js.render(null, table2);
+		});
+
+	function submit() {
+		d2js.collect(null, table2);
+		table2.submit(function(error){
+			if(!error) alert('提交成功!');
+			d2js.render(null, table2);
 		});
 	}
 </script>

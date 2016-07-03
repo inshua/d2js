@@ -135,8 +135,6 @@
 	d2js.root.person  = {name:'Jack', email: 'jack@gmail.com', phone: '137 2222 3333', 
 	                     friends: [{name: 'Tom'}, {name: 'Mary'}]};
 	
-	// $('body').render(/email|phone/); 按正则表达式过滤数据路径，只渲染 email 和 phone
-	
 	$('body').render();
 	
 	// $('#test6').bindRoot().render()	// 重新bindRoot，会导致子元素中的与 data('d2js.root')有关的元素抹除（之后会重新绑定）

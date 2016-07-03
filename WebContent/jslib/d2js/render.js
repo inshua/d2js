@@ -69,57 +69,16 @@ d2js.Renderers.EmbedRenderers.codeMap = {};
  * ```
  * 对 htmlElement 及其子元素有指定 renderer="myRender"，该函数会被套用。
  */
-d2js.render = function(htmlElement, selector, customRenders){
-	if(htmlElement) {
-		if(htmlElement.jquery){
-			if(htmlElement.length == 0){
-				return;		// 选择器未命中任何元素，应退出
-			}
-			htmlElement = htmlElement[0]
-		}
-	} else {
-		htmlElement = document.body;
-	}
+d2js.render = function(htmlElement, pattern, customRenders){
+	d2js.travel(htmlElement, pattern, renderElement)
 	
-	var r = d2js._findRoot(htmlElement);
-	if(r.root == null) return;
-	renderElement(htmlElement, r.root, r.crumb, r.ele);
-	
-	function renderElement(e, root, crumb, rootEle){
-		var fullPath = e.getAttribute('d2js.fullpath');
-		
-		if(fullPath == null && e.hasAttribute('data')){
-			var dataPath = e.getAttribute('data');
-			if(dataPath.charAt(0) == ','){
-				dataPath = parseShortPath(dataPath, e, rootEle);
-				e.setAttribute('d2js.fullpath', fullPath = dataPath);
-			} else if(dataPath.startsWith('..')){	// change d2js.root to upper
-				var re = rootEle;
-				do{
-					dataPath = dataPath.substr(2);
-					var r = d2js._findRoot(re.parentElement);
-					re = r.rootEle;
-				} while(dataPath.startsWith('..'));
-				root = r.root; crumb = r.crumb; rootEle = r.rootEle;
-				fullPath = dataPath;
-			} else {
-				e.setAttribute('d2js.fullpath', fullPath = dataPath);
-			}
-		}
-		
-		if(fullPath && (selector == null || selector.test(fullPath))){
-			crumb = crumb.slice();
-			var match = d2js.extractData(root, fullPath, crumb);
-			
-			if(match){
-				var renderer = e.getAttribute('renderer');
-				var embedRenderer = e.querySelector('renderer, .d2js-render');
-				if(embedRenderer){
-					var emb = prepareEmbedRenderer(embedRenderer, e);
-					renderer = renderer ? renderer + '|' + emb : emb;
-					e.setAttribute('renderer', renderer);
-				}
-			}
+	function renderElement(e, crumb){
+		var renderer = e.getAttribute('renderer');
+		var embedRenderer = e.querySelector('renderer, .d2js-render');
+		if(embedRenderer){
+			var emb = prepareEmbedRenderer(embedRenderer, e);
+			renderer = renderer ? renderer + '|' + emb : emb;
+			e.setAttribute('renderer', renderer);
 		}
 		
 		if(renderer){
@@ -146,23 +105,116 @@ d2js.render = function(htmlElement, selector, customRenders){
 				console.error(renderer + ' not found');
 			}
 		}
+	}
+	
+	function extractRenderer(rendererDesc, e){
+		if($.hasData(e)){
+			var d = $.data(e)['d2js.renderers'];
+			var fun = d && d[rendererDesc];
+			if(fun) return fun;
+		}
+		if(customRenders){
+			var fun = customRenders[rendererDesc];
+			d2js._store(e, 'd2js.renderers', rendererDesc, fun);
+			if(fun) return fun;
+		}
+		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
+	}
+	
+	function extractPipeline(pipelineDesc, e){
+		if($.hasData(e)){
+			var d = $.data(e)['d2js.renderers'];
+			var fun = d && d[pipelineDesc];
+			if(fun) return fun;
+		}
+		if(customRenders){
+			var fun = customRenders[pipelineDesc];
+			d2js._store(e, 'd2js.renderers', pipelineDesc, fun);
+			if(fun) return fun;
+		}
+		return d2js.extractCachedFunction(pipelineDesc, d2js.Renderers.Pipelines, 'd2js.Renderers.Pipelines.', d2js.KNOWN_RENDER_PIPELINES);
+	}
+	
+	function prepareEmbedRenderer(embedRenderer, e){
+		var code = embedRenderer.innerHTML;
+		embedRenderer.remove();
+		
+		var id = d2js.Renderers.EmbedRenderers.nextId ++;
+		id = '__embed_renderer__' + id;
+		var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
+		d2js._store(e, 'd2js.renderers', id, fun);
+		
+		return id;
+	}
+}
+/**
+ * 内部函数。对符合d2js规则的元素应用 processor 动作。
+ */
+d2js.travel = function(htmlElement, pattern, processor){
+	if(htmlElement) {
+		if(htmlElement.jquery){
+			if(htmlElement.length == 0){
+				return;		// 选择器未命中任何元素，应退出
+			}
+			htmlElement = htmlElement[0]
+		}
+	} else {
+		htmlElement = document.body;
+	}
+	
+	var rootDesc = d2js._findRoot(htmlElement);
+	if(rootDesc.root == null) return;
+	travelElement(htmlElement, rootDesc);
+	
+	function travelElement(e, rootDesc){
+				
+		var fullPath = e.getAttribute('d2js.fullpath');
+		
+		if(fullPath == null && e.hasAttribute('data')){
+			var dataPath = e.getAttribute('data');
+			if(dataPath.charAt(0) == ','){
+				dataPath = parseShortPath(dataPath, e, rootDesc.ele);
+				e.setAttribute('d2js.fullpath', fullPath = dataPath);
+			} else if(dataPath.startsWith('..')){	// change d2js.root to upper
+				var re = rootDesc.ele;
+				do{
+					dataPath = dataPath.substr(2);
+					var r = d2js._findRoot(re.parentElement);
+					re = r.ele;
+				} while(dataPath.startsWith('..'));
+				rootDesc = r;
+				fullPath = dataPath;
+			} else {
+				e.setAttribute('d2js.fullpath', fullPath = dataPath);
+			}
+		}
+		
+		if(fullPath){	// 原设想每个元素都用 fullpath 匹配 selector（一个正则表达式）: (selector == null || selector.test(fullPath)), 实用性不高，现改为直接匹配root
+			var crumb = rootDesc.crumb.slice();
+			var match = d2js.extractData(rootDesc.root, fullPath, crumb);
+
+			if(match && (pattern == null || crumb.lastIndexOf(pattern) != -1)){
+				var r = processor(e, crumb);
+				if(r == 'stop') return;
+			}
+		}
 		
 		for(var i=0; i<e.children.length; i++){
 			var child = e.children[i];
 			if(child.hasAttribute('d2js.root')){ 	// 根数据另起炉灶
-				var renderChild = true;
+				var travelChild = true;
 				var rootPath = child.getAttribute('d2js.root');
 				if(rootPath.startsWith('..')){		// 相对路径
 					if(!d2js.bindRoot(child)){
-						renderChild = false;
+						travelChild = false;
 					}
 				} 
-				if(renderChild){
+				if(travelChild){
 					var r = d2js._findRoot(child, child);
-					renderElement(child, r.root, r.crumb, r.ele);
+					travelElement(child, r);
 				}
 			} else {
-				renderElement(child, root, crumb, rootEle);
+				travelElement(child, rootDesc);
 			}
 		}
 	}
@@ -201,54 +253,6 @@ d2js.render = function(htmlElement, selector, customRenders){
 		}
 		return dataPath;
 	}
-
-	
-	function extractRenderer(rendererDesc, e){
-		if($.hasData(e)){
-			var d = $.data(e)['d2js.renderers'];
-			var fun = d && d[rendererDesc];
-			if(fun) return fun;
-		}
-		if(customRenders){
-			var fun = customRenders[rendererDesc];
-			store(e, 'd2js.renderers', rendererDesc, fun);
-			if(fun) return fun;
-		}
-		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
-	}
-	
-	function extractPipeline(pipelineDesc, e){
-		if($.hasData(e)){
-			var d = $.data(e)['d2js.renderers'];
-			var fun = d && d[pipelineDesc];
-			if(fun) return fun;
-		}
-		if(customRenders){
-			var fun = customRenders[pipelineDesc];
-			store(e, 'd2js.renderers', pipelineDesc, fun);
-			if(fun) return fun;
-		}
-		return d2js.extractCachedFunction(pipelineDesc, d2js.Renderers.Pipelines, 'd2js.Renderers.Pipelines.', d2js.KNOWN_RENDER_PIPELINES);
-	}
-	
-	function store(e, bundle, key, fun){
-		var $e = $(e); 
-		var data = $e.data(bundle);
-		if(data == null) $e.data(bundle, data = {});
-		data[key] = fun;
-	}
-	
-	function prepareEmbedRenderer(embedRenderer, e){
-		var code = embedRenderer.innerHTML;
-		embedRenderer.remove();
-		
-		var id = d2js.Renderers.EmbedRenderers.nextId ++;
-		id = '__embed_renderer__' + id;
-		var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
-		store(e, 'd2js.renderers', id, fun);
-		
-		return id;
-	}
 }
 
 //命中root，并存储 data('d2js.root') 及 crumb，返回命中的root数据、元素及root的面包屑
@@ -262,7 +266,7 @@ d2js._findRoot = function(el, suggestRootEle){
 	
 	var crumb = null, root = null, ele = null;
 	if(rootEle == null) {
-		return {root:d2js.root, crumb: crumb, ele: document.body};
+		return {root:d2js.root, crumb: [root], ele: document.body};
 	} else {
 		if($.hasData('d2js.root') == false){
 			d2js.bindRoot(rootEle);
@@ -350,6 +354,7 @@ d2js.extractData = function(baseData, dataPath, crumb){
 		}
 		
 		var a = arr[i].trim();
+		if(a == 'this') continue;
 		if(!isNaN(a)){
 			currCrumb.push(a * 1);		// 数字，应该是个索引
 		} else {
@@ -372,6 +377,13 @@ d2js.extractData = function(baseData, dataPath, crumb){
 	return true;
 };
 
+d2js._store = function(e, bundle, key, fun){
+	var $e = $(e); 
+	var data = $e.data(bundle);
+	if(data == null) $e.data(bundle, data = {});
+	data[key] = fun;
+};
+
 /**
  * 按 element 指定的 data 路径定位数据
  * 可使用 jQuery 函数：
@@ -379,35 +391,29 @@ d2js.extractData = function(baseData, dataPath, crumb){
  * $(element).locateData(baseData, direct)
  * ```
  * @param [element=document.body] {HTMLElement} 包含数据路径的 html 元素
- * @param [baseData=d2js.dataset] {object} 出发数据
- * @param [direct=false] {bool} true - 不使用绝对路径  false - 使用绝对路径
  * @return {array} 数组，第一项为最终锚定的值，后面项为按数据路径展开的各项
  */
-d2js.locateData = function(element, baseData, direct){
-	if(element.jquery) element = element[0];
-	baseData = baseData || d2js.dataset;
-	var dataPath = element.getAttribute('data');
-	var data = [];
-	if(dataPath == null) return null;
-	this.extractData(baseData, dataPath, data, direct);
-	data.splice(0, 0, data[data.length - 1]);		// value 设为第一个值
-	return data;
+d2js.locateData = function(element){
+	var result = null
+	d2js.travel(element, null, function renderElement(e, crumb){
+		result = crumb;
+		return 'stop'
+	})
+	return result;
 };
 
 
 +(function ( $ ) {
     $.fn.locateData = function() {
-    	return d2js.locateData(this);
+    	return d2js.locateData(this.context);
     };
 }( jQuery ));
 
 +(function ( $ ) {
-    $.fn.render = function(selector, customRenders) {
-    	if(!(selector instanceof RegExp)){
-	    	customRenders = selector;
-	    	selector = null;
-    	}
-    	d2js.render(this, selector, customRenders);
+    $.fn.render = function(pattern, customRenders) {
+    	this.each(function(){
+    		d2js.render(this, pattern, customRenders);
+    	});
     	return this;
     };
 }( jQuery ));

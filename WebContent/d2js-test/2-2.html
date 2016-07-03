@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1>渲染数据表<small>d2js.render()</small></h1>
+		<div id="divPrompt"></div>
+		<table d2js.root="test">
+			<tr>
+				<th>name</th>
+			</tr>
+			<tr>
+				<td><input type="text" data="rows,0,name" collector="c|s" renderer="std"></td>
+			</tr>
+			<tr>
+				<td><input type="text" data="rows,2,name" collector="c|s" renderer="std"></td>
+			</tr>
+		</table>
+		<p><button class="btn btn-primary" onclick="test3()">Submit</button> </p>
+	</div>
+	
+	
+	<div class="container">
+		<h1>渲染数据表<small>DataTable、 d2js.dataset 均可</small></h1>
+		<div id="divPrompt"></div>
+		<table d2js.root="test">
+			<tr>
+				<th>name</th>
+			</tr>
+			<tr>
+				<td><input type="text" data="rows,0,name" collector="c|s" renderer="std"></td>
+			</tr>
+			<tr>
+				<td><input type="text" data="rows,2,name" collector="c|s" renderer="std"></td>
+			</tr>
+		</table>
+		<p><button class="btn btn-primary" onclick="test3()">Submit</button> </p>
+	</div>
+</body>
+<script>
+
+	// 渲染表
+	var table = new d2js.DataTable('test', 'author.d2js');
+	table.load({ _m : 'fetch'}, function(error) {
+			if(error){
+				divPrompt.innerText = error.message;
+				return;
+			}
+			divPrompt.innerText = 'success';
+			d2js.render(null, table);	// or $(document.body).render(table)
+		});
+
+	function test3(){
+		d2js.collect(null, table);	// or $(document.body).collect(table)
+		table.inspect();
+	}
+
+
+	
+</script>
+</html>

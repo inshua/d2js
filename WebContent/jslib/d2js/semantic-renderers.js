@@ -2,7 +2,7 @@
 /**
  * 分页组件。渲染 DataTable。
  */
-d2js.Renderers.pagination = d2js.KNOWN_RENDERERS['pagination'] = function(element,  value, table){
+d2js.Renderers.pagination = d2js.KNOWN_RENDERERS['pagination'] = function(element, table){
 	var ul = $(element);
 	ul.html('');
 	
@@ -61,7 +61,7 @@ d2js.Renderers.pagination = d2js.KNOWN_RENDERERS['pagination'] = function(elemen
  * @param row
  * @param columnName
  */
-d2js.Renderers.stderr = d2js.KNOWN_RENDERERS['stderr'] = function(element,  value, table, _1, rows, index, row, columnName){
+d2js.Renderers.stderr = d2js.KNOWN_RENDERERS['stderr'] = function(element,  value, columnName, row, index, rows, _1, table){
 	var e = $(element), v = value;
 	if(value == null){
 		e.hide();
@@ -82,7 +82,7 @@ d2js.Renderers.stderr = d2js.KNOWN_RENDERERS['stderr'] = function(element,  valu
 /**
  * 字段错误渲染器
  */
-d2js.Renderers.flderr = d2js.KNOWN_RENDERERS['flderr'] = function(element,  value, table, _1, rows, index, row, columnName){
+d2js.Renderers.flderr = d2js.KNOWN_RENDERERS['flderr'] = function(element,  value, columnName, row, index, rows, _1, table){
 	var e = $(element), v = value;
 	var helpDiv = null;
 	if(e.is('.ui.orange.label')){
