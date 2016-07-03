@@ -189,7 +189,7 @@ d2js.travel = function(htmlElement, pattern, processor){
 			}
 		}
 		
-		if(fullPath){	// 原设想每个元素都用 fullpath 匹配 selector（一个正则表达式）: (selector == null || selector.test(fullPath)), 实用性不高，现改为直接匹配root
+		if(fullPath && rootDesc.root){	// 原设想每个元素都用 fullpath 匹配 selector（一个正则表达式）: (selector == null || selector.test(fullPath)), 实用性不高，现改为直接匹配root
 			var crumb = rootDesc.crumb.slice();
 			var match = d2js.extractData(rootDesc.root, fullPath, crumb);
 
@@ -282,7 +282,7 @@ d2js.bindRoot = function(element, data){
 		data = element.getAttribute('d2js.root');
 		if(data == null) return false;
 	}
-	$element = $(element);
+	var $element = $(element);
 	if(typeof data == 'string'){
 		var root = d2js.root;
 		if(data.startsWith('..')){
@@ -310,12 +310,14 @@ d2js.bindRoot = function(element, data){
 			$element.data('d2js.root', crumb[0]);
 			$element.data('d2js.crumb', crumb);
 		} else {
+			var crumb = null;
 			if(data.charAt(0) == ','){	// d2js.root 也可以使用短路径
 				var r = d2js._findRoot(element.parentElement);
 				if(r.root == null) return;
 				crumb = r.crumb.slice(); root = crumb[0]; data = data.substr(1);
+			} else {
+				crumb = [root]
 			}
-			var crumb = [root];
 			var match = d2js.extractData(root, data, crumb);
 			if(!match || crumb[0] == null/* root cannot be null */) return false;
 			$element.data('d2js.root', crumb[0]);
@@ -349,10 +351,6 @@ d2js.extractData = function(baseData, dataPath, crumb){
 	var arr = dataPath.split(',');
 	var obj = baseData;
 	for(var i=0; i<arr.length; i++){
-		if(obj == null){		// cannot extract more
-			return false;
-		}
-		
 		var a = arr[i].trim();
 		if(a == 'this') continue;
 		if(!isNaN(a)){
