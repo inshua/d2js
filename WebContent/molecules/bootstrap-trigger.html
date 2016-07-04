@@ -101,11 +101,6 @@
             	var autoCompleteCol = this.$el.attr('autocomplete-col'); 
             	if(autoCompleteCol){
             		var table = me.$el.find('[molecule-obj=List]').findRoot().root;
-            		if(table == d2js.root) {
-            			// TODO 会出现奇怪的问题，回头再处理
-            			var el = me.$el.find('[molecule-obj=List]')
-            			table = d2js.findRoot(el[0]).root;
-            		}
             		table.autoCompleteRows = function(){
             			return this.rows.filter(function(row){
             				return this.autoCompletePattern == null 

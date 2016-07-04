@@ -23,8 +23,7 @@
  * @param element
  * @param value
  */
-d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, columnName, row, index, rows, _1, table){
-	var e = element, v = value;
+d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(e, v, columnName, row, index, rows, _1, table){
 	
 	if(e.tagName == "INPUT"){
 		if(e.type == 'radio'){
@@ -43,6 +42,7 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, columnN
 	} else{
 		tagRender(e,v);
 	}
+	return v;
 	
 	function inputRender(e, v){
 		if(v == null)
@@ -82,6 +82,7 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, columnN
 d2js.Renderers.prop = function(attr){
 	return function(element, value, columnName, row, index, rows, _1, table){
 		$.prop(element, attr, value);
+		return value;
 	}
 }
 
@@ -369,6 +370,7 @@ d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, v
 			m.setValue && m.setValue(value);
 		})
 	}
+	return value;
 }
 
 
