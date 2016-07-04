@@ -74,17 +74,14 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, columnN
 	}
 }
 
-d2js.Renderers.attr = function(attr){
+/**
+ * 将元素的某项属性设为value。
+ * 用法
+ * <input type="date" renderer="prop('valueAsDate')">
+ */
+d2js.Renderers.prop = function(attr){
 	return function(element, value, columnName, row, index, rows, _1, table){
-		if('hasOwnProperty' in element){
-			if(element.hasOwnProperty(attr)){
-				element[attr] = value;
-			} else {
-				element.setAttribute(attr, value);
-			}
-		} else {
-			element.setAttribute(attr, value);
-		}
+		$.prop(element, attr, value);
 	}
 }
 
@@ -196,16 +193,16 @@ d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
  * 表格渲染器。
  * 用法：
  *```html
- * <table data="#table" renderer="table">
+ * <table data="table" renderer="table">
  * 		<thead>
  * 			<tr>
- * 				<td data-t="rows,N,name" renderer="std"></td>  <!-- 注意  data-t 和  N，是固定用法 -->
- * 				<td data-t="rows,N,remarks" renderer="input('text')"></td>
+ * 				<td data-t="name" renderer="std"></td>  <!-- 注意应写作  data-t，是固定用法 -->
+ * 				<td data-t="remarks" renderer="input('text')"></td>
  * 			</tr>
  * 		</thead>
  * </table>
  *```
- * 这里 N 是固定写法，会被替换为行ID。
+ * data 也可直接使用 rows 数组
  * 渲染表格也可以使用 repeater 渲染器。
  */
 d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
@@ -235,21 +232,21 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 			tBody.rows[0].remove();
 		}
 	}
-	if(table.rows.length == 0){
+	var rows = (table && table.rows) || table || [];
+	if(rows.length == 0){
 		if(tBodyEmpty) tBodyEmpty.style.display = '';
 	} else {
 		if(tBodyEmpty) tBodyEmpty.style.display = 'none';
-		for(var i=0; i<table.rows.length; i++){
+		for(var i=0; i<rows.length; i++){
 			var tr = tBody.insertRow();
-			if(headRow.hasAttribute('data')){
-				tr.setAttribute('data', ',' + headRow.getAttribute('data').replace(/,\s*N/, ',' + i));
-			}
+			$(tr).bindRoot(rows[i])
+//			if(headRow.hasAttribute('data')){
+//				tr.setAttribute('data', ',' + headRow.getAttribute('data').replace(/,\s*N/, ',' + i));
+//			}
 			columnRenders.forEach(function(column){
 				var cell = document.createElement('td');
 				for(var attr in column){if(column.hasOwnProperty(attr)){
-					if(attr == 'data'){
-						$(cell).attr('data', ',' + column.data.replace(/,\s*N\s*,/, ',' + i + ','));
-					} else if(attr == 'molecule-obj'){
+					if(attr == 'molecule-obj'){	
 						
 					} else {
 						$(cell).attr(attr, column[attr]);
@@ -257,6 +254,7 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 				}}
 				tr.appendChild(cell);
 			});
+			$(tr).render();
 		}
 	}
 }
@@ -342,16 +340,13 @@ d2js.Renderers.repeater = function(element, rows){
 				$(e).attr('molecule', $(e).attr('molecule-r')); 
 			});
 			r.attr('repeater-copy', true);
-			// r.attr('no-collect', false);	
+			r.attr('no-collect', false);	
 			
-			r.data('repeater-obj', row);
-			r.insertAfter(prev);
-			d2js.render(r[0], row, true);
-			r.show();
+			r.bindRoot(row).insertAfter(prev).render().show();
 			prev = r;
 		}
 	}
-	return 'break';
+	return 'stop';
 }
 
 /**

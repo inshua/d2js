@@ -16,12 +16,6 @@
 <script src="../jslib/d2js/pipelines.js"></script>
 <script src="../jslib/molecule.js"></script>
 
-<style>
-	renderer{
-		display: none;
-	}
-</style>
-
 </head>
 <body>
 	<div class="container">
@@ -62,6 +56,8 @@
 			
 			setTimeout(function(){
 				$('#test1').bindRoot().render();	// rebind root, $e.data('d2js.root') synced now
+				
+				$('h1').hide()
 			}, 3000);
 		}, 3000);
 	}, 3000);

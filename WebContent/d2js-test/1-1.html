@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+<script src="../jslib/date.js/Date.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1>无参数函数可以放在渲染路径并被求值</h1>
+		
+		<div id="test1">
+			<div>Name:<span data="name" renderer="std"></span></div>
+			<div>Birth: <span data="birth" format="yyyy-MM-dd" renderer="date|std"></span></div>
+			<div>Age: <span data="age" renderer="std"></span></div>
+		</div>	
+	</div>
+</body>
+<script>
+
+	var person = {name: 'Jack', gender: 'M', birth: new Date(2001, 3, 3),
+	                    age: function(){
+	                    	return new Date().getYear() - this.birth.getYear();
+	                    }}
+	$('#test1').bindRoot(person).render()
+	
+</script>
+</html>

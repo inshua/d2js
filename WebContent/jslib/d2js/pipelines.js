@@ -26,7 +26,7 @@
  * <input format="yyy-MM-dd" renderer="date|std">
  * ```
  */
-d2js.Renderers.Pipelines.date = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Renderers.Pipelines.date = function(element, value,  columnName, row, index, rows, _1, table){
 	if(value == null) return '';
 	return value.format(element.getAttribute('format') || 'yyyy-MM-dd hh:mm:ss');
 }
@@ -52,7 +52,7 @@ d2js.Renderers.Pipelines.date = function(element, value, table, _1, rows, index,
  * 		<input dict="gender" data="xxx" renderer="dict|std">
  * ```
  */
-d2js.Renderers.Pipelines.dict = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Renderers.Pipelines.dict = function(element, value,  columnName, row, index, rows, _1, table){
 	if(element && element.tagName){	// if it's html element
 		if(value == null) return null;
 		var lov = element.getAttribute('dict');
@@ -72,7 +72,7 @@ d2js.Renderers.Pipelines.dict = function(element, value, table, _1, rows, index,
 		if(dict instanceof Array){
 			dict = dict.reduce(function(acc, item){acc[item] = item; return acc}, {});
 		}
-		return function(element, value, table, _1, rows, index, row, columnName){
+		return function(element, value,  columnName, row, index, rows, _1, table){
 			if(value == null) return '';
 			return dict[value] || '';
 		}
@@ -98,7 +98,7 @@ d2js.Renderers.Pipelines.dict = function(element, value, table, _1, rows, index,
  *  
  * 词典也可以是一个数组，用法同 dict 管道
  */
-d2js.Renderers.Pipelines.dictToList = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Renderers.Pipelines.dictToList = function(element, value,  columnName, row, index, rows, _1, table){
 	if(element && element.tagName){	// if it's html element
 		if(value == null) return null;
 		var lov = element.getAttribute('dict');
@@ -134,7 +134,7 @@ d2js.Renderers.Pipelines.dictToList = function(element, value, table, _1, rows, 
  * 管道函数。转为大写。
  * 测试用的，没有什么实际用途。
  */
-d2js.Renderers.Pipelines.uppercase = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Renderers.Pipelines.uppercase = function(element, value,  columnName, row, index, rows, _1, table){
 	if(typeof value == 'string'){
 		return value.toUpperCase();
 	} else if(value == null){
@@ -158,7 +158,7 @@ d2js.Renderers.Pipelines.uppercase = function(element, value, table, _1, rows, i
  * <tag dict="gender" data="xxx" collector="c|dict|s">
  * ```
  */
-d2js.Collectors.Pipelines.dict = d2js.KNOWN_COLLECT_PIPELINES['dict'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Collectors.Pipelines.dict = d2js.KNOWN_COLLECT_PIPELINES['dict'] = function(element, value,  columnName, row, index, rows, _1, table){
 	var lov = element.getAttribute('lov');
 	if(!lov) return 'no dict attribute';
 	var dict = Dicts[lov];

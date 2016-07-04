@@ -59,7 +59,8 @@ D2JS.prototype.callD2js = function(src, method, params){
 		var engine2 = engineContext.getScriptEngine();
 		var bindings = engine2.getBindings(100);
 		bindings['__s'] = JSON.stringify(params instanceof Array ? params : [params]);		// 欲在两个引擎间传递对象，只能使用这种方法
-		var res = engine2.eval("d2js." + method + '.apply(d2js, JSON.parse(__s, parseDate))', bindings);
+		bindings['__another'] = another;
+		var res = engine2.eval("__another." + method + '.apply(d2js, JSON.parse(__s, parseDate))', bindings);
 		if(res != null && res instanceof ScriptObjectMirror) res = org.siphon.common.js.JsTypeUtil.getSealed(res);
 		d2jsRunner.completeTask(engineContext.getScriptEngine(), null);
 		return res;

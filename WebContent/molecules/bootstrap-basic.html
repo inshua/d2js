@@ -35,14 +35,14 @@
                         var table = this.$el.closest('[table]').attr('table');
                         var col = this.$el.attr('col');
                         var text = this.$el.attr('text');
-                        this.$el.attr('data-t', 'rows,N,' + col);
+                        this.$el.attr('data-t', col);
 
                         var sortable = this.$el.attr('sortable');
                         sortable = (sortable && sortable != 'false')
                         
 	                    var a = this.$el.find('a');
                         if(sortable){
-	                        a.attr('data', '#' + table);
+	                        a.attr('data', 'this');
 	                        a.attr('renderer', "sortLink('" + col + "','" + text + "')");
                         } else {
                         	a[0].outerHTML = text;
@@ -87,7 +87,7 @@
                         var checked = [];
                         var checkboxes = [];
                         var col = this.$el.attr('col');
-                        this.$el.attr('data-t', 'rows,N,' + col);
+                        this.$el.attr('data-t', col);
 
                         this.$el.attr('check-all-id', this.id);
                         
@@ -180,10 +180,10 @@
 	                var table = this.$el.closest('[table]').attr('table');
 	                var col = this.$el.attr('col');
 	                var text = this.$el.attr('text');
-	                this.$el.attr('data-t', 'rows,N,' + col);
+	                this.$el.attr('data-t', col);
 	
 	                var a = this.$el.find('a');
-                    a.attr('data', '#' + table);
+                    a.attr('data-t', 'this');
                     var onclick = (this.$el.attr('onclick') || '').replace(/\'/g, "\"");                    
                     this.$el.attr('renderer', "actionLink('" + col + "','" + text + "','" + onclick +"')");
                     this.$el.removeAttr('onclick');
@@ -244,17 +244,16 @@
             function List() {
                 var table = this.$el.closest('[table]').attr('table');
                 var valueColumn = this.$el.closest('[value-col]').attr('value-col') || 'id'
-                this.$el.attr('data', '#' + table);
+                this.$el.attr('d2js.root', table).attr('data', 'this');
                 var paging = this.$el.closest('[paging]').attr('paging');
                 if (paging == 'false') {
                     this.$el.find('.pagination').closest('tfoot').remove();
                 } else {
-                	this.$el.find('.pagination').attr('data', '#' + table);
+                	this.$el.find('.pagination').attr('data', 'this');
                 }
                 if(this.$el.closest('[show-header]').attr('show-header') == 'false'){
                 	this.$el.find('thead').hide();
                 }
-                this.$el.find('thead>tr').attr('data', "rows,N");
                 
 				var me = this;
                 var select = this.$el.closest('[select]').attr('select') || 'none';
@@ -267,7 +266,7 @@
                         if (event.target == me.$el[0]) {
                             var storeValue = me.$el.data('value'); 
                             $(event.target).find('tbody.data>tr').each(function (idx, tr) {
-                                var row = d2js.locateData(tr)[0];
+                                var row = $(tr).findRoot().root;
                                 var value = row[valueColumn];
                                 if(storeValue && storeValue == value){
                                 	$(tr).addClass('info');
@@ -308,7 +307,7 @@
 	                $(this.$el).on('valuechange', function(evt, checked){
 	                	if(evt.target != me.$el[0]){
 		                	me.$el.find('tbody.data>tr').each(function(idx, tr){
-		                		var d = d2js.locateData(tr);
+		                		var d = $(tr).findRoot().root;
 		                		if(!d) return;
 		                		var row = d && d[0];
 	                            var value = row[valueColumn];
@@ -352,6 +351,7 @@
                 } 
                 
                 var allowRemove = this.$el.closest('[allow-remove]').attr('allow-remove') == 'true';
+                
                 var willDeleteRows = null;                
             	if(allowRemove){            		
             		var leftFoot = this.$el.find('#leftFoot');
@@ -410,11 +410,11 @@
                 var col = this.$el.attr('col');
                 var text = this.$el.attr('text');
 
-                this.$el.find('.help-block').attr('data', '#' + table + ',curr,_error_at,' + col);
+                this.$el.find('.help-block').attr('data', '_error_at,' + col);
                 this.$el.find('label').html(text);
                 
                 if(this.$el.is('[dict]') && this.$el.find('select').length){
-                	this.$el.attr('data', '#' + table);
+                	this.$el.attr('data', 'this');
                 	this.$el.attr('renderer', "dictToList|options('name','id',false)");
                 }
             }
@@ -432,7 +432,7 @@
 	        function FormImageItem() {
 	            var table = this.$el.closest('[table]').attr('table');
 	            var col = this.$el.closest('.form-group').attr('col');
-	            this.$el.attr('data', '#' + table + ',curr,' + col);
+	            this.$el.attr('data', col);
 
 	            var imgPreview = this.$el.find('#imgPreview')[0];
 	            var imageData = '';
@@ -495,7 +495,7 @@
             var table = this.$el.closest('[table]').attr('table');
             var col = this.$el.closest('.form-group').attr('col');
 
-            this.$el.attr('data', '#' + table + ',curr,' + col);
+            this.$el.attr('data', col);
         }
         // MOLECULE_DEF_END
         Molecule.create(Input);
@@ -512,7 +512,7 @@
             var table = this.$el.closest('[table]').attr('table');
             var col = this.$el.closest('.form-group').attr('col');
 
-            this.$el.attr('data', '#' + table + ',curr,' + col);
+            this.$el.attr('data', col);
             
             this.$el.closest('.form-group').addClass('form-textarea-item');
         }
@@ -520,53 +520,15 @@
         Molecule.create(TextArea);
     </script>
     
-    
-	<!-- 输入的 input, 放在 SearchFormItem 内
-		用法：
-			<div molecule="SearchFormItem" col="name" text="Name">
-            	<select molecule="SearchSelect">
-            </div>
-	-->
-    <input molecule-def="SearchInput" type="text" class="form-control" renderer="std" collector="c|s">
-    <script molecule-for="SearchInput">
-        // MOLECULE_DEF
-        function SearchInput() {
-            var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
+	<form molecule-def="SearchForm" class="form-inline" style="float:right" d2js.root=",search,params">
+	</form>
 
-            this.$el.attr('data', '#' + table + ',search,params,' + col);
-        }
-        // MOLECULE_DEF_END
-        Molecule.create(SearchInput);
-    </script>
-
-	<!-- 输入的 select, 放在 SearchFormItem 内
-		用法：
-			<div molecule="SearchFormItem" col="gender" text="Gendor">
-            	<select molecule="SearchSelect">
-            </div>
-	-->
-    <select molecule-def="SearchSelect" class="form-control" renderer="std" collector="c|s"></select>
-    <script molecule-for="SearchSelect">
-        // MOLECULE_DEF
-        function SearchSelect() {
-            var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
-
-            this.$el.attr('data', '#' + table + ',search,params,' + col);
-            d2js.render(this.$el.parent());
-        }
-        // MOLECULE_DEF_END
-        Molecule.create(SearchSelect);
-    </script>
-    
-    
     <!-- 
     	输入的 select form item, 放在 search form 中，已嵌套一个 select 元素
     	用法：
     	<div molecule="SearchFormSelectItem" col="gender" text="Gendor" [dict="gender"] [allow-empty="true|false"]></div>
     -->
-    <div molecule-def="SearchFormSelectItem" molecule="SearchFormItem" col="gender" text="Gendor" dict="gender" data="#dicts" allow-empty="true">
+    <div molecule-def="SearchFormSelectItem" molecule="SearchFormItem" col="gender" text="Gendor" dict="gender" allow-empty="true">
 		<select class="form-control" renderer="std" collector="c|s"></select>
 		<script>
 			// MOLECULE_DEF
@@ -575,8 +537,8 @@
 	            var col = this.$el.closest('.form-group').attr('col');
 	            var allowEmpty = (this.$el.closest('[allow-empty]').attr('allow-empty') != 'false');
 	
-	            this.$el.attr('data', '#dicts');
-	            this.$el.find('select').attr('data', '#' + table + ',search,params,' + col);
+	            this.$el.attr('data', 'this');
+	            this.$el.find('select').attr('data', col);
 				this.$el.attr('renderer', 'dictToList|options(\'name\',\'id\', ' + allowEmpty + ')');
 	            d2js.render(this.$el);
 	        }
@@ -590,10 +552,12 @@
     <script molecule-for="Select">
         // MOLECULE_DEF
         function Select() {
-            var table = this.$el.closest('[table]').attr('table');
-            var col = this.$el.closest('.form-group').attr('col');
-
-            this.$el.attr('data', '#' + table + ',curr,' + col);
+        	var col = this.$el.closest('[col]').attr('col');
+        	if(this.$el.parent().is('[d2js\\.root]')){
+            	this.$el.attr('data', '..' + col);
+        	} else {
+        		this.$el.attr('data', col);
+        	}
         }
         // MOLECULE_DEF_END
         Molecule.create(Select);
@@ -630,7 +594,9 @@
             function Dialog() {
                 var title = this.$el.attr('title');
                 this.$el.find('.modal-title').html(title);
-
+ 				this.el.title = '';
+                
+                if(this.$el.attr('show-buttons') == 'false') this.$el.find('#bnSave').hide();
                 EventDispatcher.call(this);
                 this.regEvent(['close', 'submit']);
 
@@ -687,15 +653,15 @@
             // MOLECULE_DEF
             d2js.Renderers.editLink = function (element, v) {
             		var table = d2js.findArg(arguments, 'table');
-	            	var e = $(element);
-	     	        e.html('');
-	     	        var a = $(document.createElement('a')).appendTo(e);
+	            	var $e = $(element);
+	     	        $e.html('');
+	     	        var a = $(document.createElement('a')).appendTo($e);
 	     	        a.html('EDIT');
 	     	        a.attr('href', '###');
 	     	        a.data('id', v);
 	     	        var idColumn = arguments[arguments.length-2];
 	     	        a.on('click', function () {
-	     	        	var row = table.find(idColumn, $(this).data('id'));
+	     	        	var row = $e.findRoot().root;
 	     	        	var tl = $(this).closest('[molecule-obj=TableList]');
 	     	        	Molecule.of(tl).editRow(row);
 	     	        });
@@ -703,6 +669,7 @@
          	    
             function TableList() {
                	var tname = this.$el.closest('[table]').attr('table');
+               	this.el.setAttribute('d2js.root', tname);
                	
                	var editDialogId = this.$el.attr('edit-dialog');
                	var newDialogId = this.$el.attr('new-dialog') || editDialogId;
@@ -717,9 +684,10 @@
 	           			initDialog($('#' + newDialogId));
 	           		}
            		});
-           		
+
+           		var me = this;
            		function initDialog(dialogEle){
-           			dialogEle.find('#divRowError').attr('data', "#" + tname + ",curr,_error");
+           			dialogEle.find('#divRowError').attr('data', "_error");
 	      	        var dialog = Molecule.of(dialogEle);
 	      	        if(dialog == null) debugger;
 	      	        dialog.on('close', function () {
@@ -729,11 +697,13 @@
 	      	            d2js.render();
 	      	        });
 	      	        dialog.on('submit', function () {
+	      	        	var e = {cancel:false};
+	      	        	dialogEle.trigger('willsubmit', e);
+	      	        	if(e.cancel) return;
 	      	            $(dialogEle).collect();
 	      	         	var table = d2js.dataset.getTable(tname);
 	      	            if(dialogEle[0].hasAttribute('trace-submit')){
-	      	            	table.monitor();
-	      	            	debugger;
+	      	            	table.inspect();
 	      	            	return;
 	      	            }
 	      	            table.submit({
@@ -754,8 +724,7 @@
            	    		
        		        row._table.curr = row;
        		        this.$el.trigger('tablelist.edit', [row]);
-       		        d2js.render($('#' + dialogId), row._table);
-       		        $('#' + dialogId).modal('show');
+       		     	$('#' + dialogId).bindRoot(row).render().modal('show');
             	}
             }
             // MOLECULE_DEF_END
@@ -765,16 +734,7 @@
     
     
     <!-- TableError -->
-	<div molecule-def="TableError" renderer="stderr">
-		<script>
-            // MOLECULE_DEF
-            function TableError() {
-            	var tname = this.$el.closest('[table]').attr('table');
-            	this.$el.attr('data', '#' + tname + ',error');
-            }
-            // MOLECULE_DEF_END
-            Molecule.create(TableError);
-        </script>
+	<div molecule-def="TableError" renderer="stderr" data="error">
 	</div>
 	
 	<!-- 确认组件，显示 OK Cancel 两个按钮，点击后产生 confirm.ok, confirm.cancel 事件 -->
@@ -813,13 +773,13 @@
 		复选框组
 	 -->
 	<div molecule-def="CheckGroup" renderer="molecule" collector="m|s">
-		<ul class="list-inline checkgroup" renderer="dictToList|checkgroup('name','id')" data="#dicts"></ul>
+		<ul class="list-inline checkgroup" renderer="dictToList|checkgroup('name','id')" d2js.root="dicts"></ul>
         <script>
             // MOLECULE_DEF
             function CheckGroup() {
                 var table = this.$el.closest('[table]').attr('table');
                 var col = this.$el.closest('[col]').attr('col');
-                this.$el.attr('data', '#' + table + ',curr,' + col);
+                this.$el.attr('data', col);
 
                 var dict = this.$el.is('[dict]') || this.$el.parent('[dict][molecule-obj=FormItem]').attr('dict');
                 var ckgrp = this.$el.find('.checkgroup');
@@ -990,14 +950,14 @@
     <div molecule="TableList" table="book" edit-dialog="dialog1" allow-remove="true">
         <h1>Book</h1>
         <div>
-            <form class="form-inline text-right">
-                <div molecule="SearchFormItem" col="name" text="Name">
-                    <input type="text" molecule="SearchInput">
+            <form molecule="SearchForm">
+                <div molecule="SearchFormItem" col="title" text="Title">
+                    <input type="text" molecule="Input">
                 </div>
                 <div molecule="SearchFormSelectItem" col="kind" text="Kind" dict="book_kind">                    
                 </div>
-                <div molecule="SearchFormItem" col="author" text="Author" data="#author,rows" renderer="options('name','id',true)">
-                    <select molecule="SearchSelect"></select>
+                <div molecule="SearchFormItem" col="author" text="Author" d2js.root="author" data="rows" renderer="options('name','id',true)">
+                    <select molecule="Select"></select>
                 </div>
                 <button molecule="SearchButton">Search</button>
                 <button molecule="AddButton">Add</button>
@@ -1013,19 +973,19 @@
                     <th molecule="Header" col="title" text="Title" sortable="true"></th>
                     <th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
                     <th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
-                    <th data-t="rows,N,id" renderer="editLink"></th>
+                    <th data-t="id" renderer="editLink"></th>
                     <th molecule="ActionHeader" col="id" text="点击我" onclick="alert('111')">动作</th>
                 </tr>
             </thead>
         </table>
     </div>
 
-    <div molecule="Dialog" title="Book" id="dialog1" table="book">
+    <div molecule="Dialog" title="Book" id="dialog1">
         <form>
             <div molecule="FormItem" col="title" text="Title">
                 <input type="text" molecule="Input">
             </div>
-            <div molecule="FormItem" col="author" text="Author" data="#author,rows" renderer="options('name','id',false)" >
+            <div molecule="FormItem" col="author" text="Author" d2js.root="author" data="rows" renderer="options('name','id',false)" >
                 <select molecule="Select"></select>
             </div>
             <div molecule="FormItem" col="kind" text="Kind" dict="book_kind">

@@ -828,7 +828,7 @@ if (typeof jQuery === 'undefined') {
 
   function clearMenus(e) {
     if (e && e.which === 3) return
-    console.log(e && e.target);
+    //console.log(e && e.target);
     if(e && ($(e.target).closest('.dropdown-menu').length || $(e.target).closest('html').length == 0)) return;
     		
     $(backdrop).remove()

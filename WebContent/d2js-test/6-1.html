@@ -28,9 +28,11 @@
 			<h2>author</h2>
 			<hr>
 			<div repeater="true">
-				<h2><span data=name renderer="std"></span><small data="email" renderer="std"></small></h2>
+				<h2><input data=name renderer="std" collector="c|s"></span><small><input data="email" renderer="std" collector="c|s"></small></h2>
 				<div data="book" renderer="repeater">
-					<div data="title" repeater="true" renderer="std"></div>
+					<div repeater="true">
+						<input data="title" renderer="std" collector="c|s">
+					</div>
 				</div>
 			</div>
 			
@@ -40,7 +42,9 @@
 			</nav>
 		</div>
 		
-
+		<p>
+			<button class="btn btn-primary" onclick="submit()">Submit</button>
+		</p>
 		
 	</div>
 </body>
@@ -52,5 +56,10 @@
 	d2js.dataset.addRelation('author', 'id', 'book', 'author');
 	
 	table.load({ _m : 'fetch'}, function(error){d2js.render(null, this);});
+	
+	function submit() {
+		d2js.collect();
+		d2js.dataset.inspect();
+	}
 </script>
 </html>

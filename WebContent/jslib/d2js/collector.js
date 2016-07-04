@@ -212,29 +212,15 @@ d2js.Collectors.Pipelines.m = d2js.KNOWN_COLLECT_PIPELINES['m'] = function(eleme
 	}
 }
 
-
 /**
- * repeater 收集器。对 repeater 渲染器产生的元素进行收集。
- * usage:
- * ```html
- * <div data="#authors,rows" renderer="repeater" collector="repeater">
-		<h2 repeater="true"><span data="name" renderer="std"></span></h2>
-		<h2 repeater-empty="true">no data found</h2>
-	</div>
-	```
- * @member
+ * 从元素属性收集数据的收集器。
+ * 用法
+ * <input type="date" collector="prop('valueAsDate')|s">
  */
-d2js.Collectors.repeater = function(element, rows){
-	var e = $(element);
-	var copies = e.find('[repeater-copy]');
-	copies.each(function(idx, c){
-		if($(c).closest('[renderer=repeater]').is(e)){
-			c.removeAttribute('no-collect');
-			var row = $(c).data('repeater-obj');		
-			if(row) d2js.collect(c, row, true);
-			c.setAttribute('no-collect', true);
-		}
-	});
+d2js.Collectors.Pipelines.prop = function(attr){
+	return function(element, value, columnName, row, index, rows, _1, table){
+		return $.prop(element, attr);
+	}
 }
 
 

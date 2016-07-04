@@ -1000,6 +1000,14 @@ d2js.DataTable.prototype.inspect = function(returnHtml){
 }
 
 /**
+ * 没有删除的行，常置于渲染路径
+ * @returns {DataRow[]} 没有删除的行数组
+ */
+d2js.DataTable.prototype.unremovedRows = function(){
+	return this.rows.filter(function(row){return row._state != 'remove'});
+}
+
+/**
  * 事件分发器
  * @mixin
  * @class

@@ -162,7 +162,7 @@ d2js.travel = function(htmlElement, pattern, processor){
 		htmlElement = document.body;
 	}
 	
-	var rootDesc = d2js._findRoot(htmlElement);
+	var rootDesc = d2js.findRoot(htmlElement);
 	if(rootDesc.root == null) return;
 	travelElement(htmlElement, rootDesc);
 	
@@ -179,7 +179,7 @@ d2js.travel = function(htmlElement, pattern, processor){
 				var re = rootDesc.ele;
 				do{
 					dataPath = dataPath.substr(2);
-					var r = d2js._findRoot(re.parentElement);
+					var r = d2js.findRoot(re.parentElement);
 					re = r.ele;
 				} while(dataPath.startsWith('..'));
 				rootDesc = r;
@@ -210,7 +210,7 @@ d2js.travel = function(htmlElement, pattern, processor){
 					}
 				} 
 				if(travelChild){
-					var r = d2js._findRoot(child, child);
+					var r = d2js.findRoot(child, child);
 					travelElement(child, r);
 				}
 			} else {
@@ -256,7 +256,7 @@ d2js.travel = function(htmlElement, pattern, processor){
 }
 
 //命中root，并存储 data('d2js.root') 及 crumb，返回命中的root数据、元素及root的面包屑
-d2js._findRoot = function(el, suggestRootEle){
+d2js.findRoot = function(el, suggestRootEle){
 	var rootEle = suggestRootEle;
 	if(!rootEle){
 		for(rootEle = el; rootEle != null; rootEle = rootEle.parentElement){
@@ -312,7 +312,7 @@ d2js.bindRoot = function(element, data){
 		} else {
 			var crumb = null;
 			if(data.charAt(0) == ','){	// d2js.root 也可以使用短路径
-				var r = d2js._findRoot(element.parentElement);
+				var r = d2js.findRoot(element.parentElement);
 				if(r.root == null) return;
 				crumb = r.crumb.slice(); root = crumb[0]; data = data.substr(1);
 			} else {
@@ -359,7 +359,13 @@ d2js.extractData = function(baseData, dataPath, crumb){
 			currCrumb.push(a);
 		}
 		if(obj != null) obj = obj[a];
-		if(typeof obj == 'function') obj = obj.call(currCrumb[currCrumb.length-2]);	// call zero-arguments function direct
+		if(typeof obj == 'function') {	// call zero-arguments function direct
+			var thiz = baseData
+			if(currCrumb.length >= 2){
+				thiz = currCrumb[currCrumb.length-2]
+			}
+			obj = obj.call(thiz);	
+		}
 		currCrumb.push(obj);
 	}
 	
@@ -422,6 +428,12 @@ d2js.locateData = function(element){
     		d2js.bindRoot(this, selectorOrData);
     	});
     	return this;
+    };
+}( jQuery ));
+
++(function ( $ ) {
+    $.fn.findRoot = function() {
+    	return d2js.findRoot(this.context);
     };
 }( jQuery ));
 
