@@ -128,8 +128,8 @@ Object.defineProperty(Object.prototype, 'toJava', {value: function(){
 }, enumerable: false});
 
 
+var jsTypeUtil = new JsTypeUtil(engine);
 (function(){
-	var jsTypeUtil = new JsTypeUtil(engine);
 	/**
 	 * 从Java对象（Map<String,Object>, List,数组等）转换得到Js对象
 	 * @param b 另一对象
