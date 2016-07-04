@@ -98,12 +98,46 @@ d2js.Renderers.prop = function(attr){
  *```
  */
 d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
-	var $e = $(e)
-	if(e.innerHTML.indexOf('{{') != -1){		// 带有表达式 {{}},以参数 row 为出发路径
-		$e.data('render_expr', e.innerHTML);
+	if(data instanceof d2js.DataTable) debugger;
+	
+	var dump = e['expr_dump']
+	if(dump == null){
+		e['expr_dump'] = dump = e.cloneNode(true);
 	}
-	if($e.data('render_expr')){
-		var s = $e.data('render_expr');
+	e.innerHTML = '';
+
+	for(var i=0; i<dump.childNodes.length; i++){
+		e.appendChild(process(dump.childNodes[i].cloneNode(true)));
+	}
+	
+	function process(node){
+		var newExpr = ('getAttribute' in node && node.getAttribute('renderer') == 'expr')	// 另一个表达式
+		switch(node.nodeType){
+		case Node.TEXT_NODE:
+			if(node.nodeValue.indexOf('{{') != -1){
+				node.nodeValue = processExpr(node.nodeValue);
+			}
+			break;
+		case Node.ELEMENT:
+			if(!newExpr){
+				for(var a=0; a<node.attributes.length; a++){
+					if(attr.value.indexOf('{{') != -1){
+						attr.value = processExpr(attr.value);
+					}
+				}
+			}
+			break;
+		}
+		if(!newExpr && node.childNodes){
+			for(var i=0; i<node.childNodes.length; i++){
+				process(node.childNodes[i]);
+			}
+		}
+		return node;
+	}
+	
+	function processExpr(expr){
+		var s = expr;
 		var res = '';
 		var start = 0;
 		var withExpr = withStmt(data, 'this');
@@ -118,8 +152,7 @@ d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
 					res += (function(s){eval(withExpr); return eval(s)}).call(data, expr);
 				}catch(e){
 					res += e.message;
-					console.error('eval error, expr : ', expr);
-					console.log(e);
+					console.error('eval error, expr : ', expr, e, data);
 					console.log(data);
 				}
 				start = end + 2;
@@ -129,9 +162,7 @@ d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
 			}
 		}
 		if(start < s.length -1) res += s.substr(start);
-		e.innerHTML = res;
-	} else {
-		//nothing todo
+		return res;
 	}
 	
 }
@@ -308,23 +339,30 @@ function withStmt(obj, varName){
 ```
  */
 d2js.Renderers.repeater = function(element, rows){
-	var e = $(element);
-	var copies = e.find('[repeater-copy]');
-	copies.each(function(idx, c){c.parentElement.removeChild(c)});
+	var repeater = element['repeater-tpl'];
+	if(element['repeater-tpl'] == null){
+		var arr = $(element).find('[repeater]').toArray().filter(function(r){
+			return $(r).closest('[renderer=repeater]').is(element);
+		});
+		if(arr.length == 0) return console.error('repeater child not found');
+		element['repeater-prev'] = arr[0].previousSibling; 		
+		
+		element['repeater-tpl'] = repeater = arr.map(function(n){return n.cloneNode(true)});
+		arr.forEach(function(n){
+			n.parentNode.removeChild(n);
+		});
+		
+		var $empty = $(element).find('[repeater-empty]');
+		element['repeater-empty'] = $empty.clone(true);
+		$empty.remove();
+	}
+	
+	$(element).find('[repeater-copy]').each(function(){this.parentElement.removeChild(this)});
 
-	var repeater = e.find('[repeater]');
-	repeater = repeater.toArray().filter(function(r){
-		return $(r).closest('[renderer=repeater]').is(e);
-	})
-	if(repeater.length == 0) return console.error('repeater child not found');
-	
-	repeater.forEach(function(e, idx){ $(e).hide().attr('no-collect', 'true'); });
-	
 	if(rows == null || rows.length == 0){
-		e.find('[repeater-empty]').show();
+		element['repeater-empty'].clone(true).appendTo(element);
 	} else {
-		e.find('[repeater-empty]').hide();
-		var prev = repeater[repeater.length-1];
+		var prev = element['repeater-prev'];
 		for(var rowIndex=0; rowIndex<rows.length; rowIndex++){
 			var row = rows[rowIndex];
 			var tpl = repeater.filter(function(item, idx){
@@ -341,7 +379,6 @@ d2js.Renderers.repeater = function(element, rows){
 				$(e).attr('molecule', $(e).attr('molecule-r')); 
 			});
 			r.attr('repeater-copy', true);
-			r.attr('no-collect', false);	
 			
 			r.bindRoot(row).insertAfter(prev).render().show();
 			prev = r;
