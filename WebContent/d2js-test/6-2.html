@@ -29,9 +29,9 @@
 			<hr>
 			<div repeater="true" data="this" renderer="expr">
 				<h2>{{name}}<small><a href="mailto:{{email}}">{{email}}</a></small></h2>
-				<div data="book" renderer="repeater">
-					<div repeater="true" data="this" renderer="expr">{{title}}</div>
-				</div>
+				<ul data="book" renderer="repeater">
+					<li repeater="true" data="this" renderer="expr">{{title}}</li>
+				</ul>
 			</div>
 			
 			<nav>

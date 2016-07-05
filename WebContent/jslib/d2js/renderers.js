@@ -98,7 +98,7 @@ d2js.Renderers.prop = function(attr){
  *```
  */
 d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
-	if(data instanceof d2js.DataTable) debugger;
+	// if(data instanceof d2js.DataTable) debugger;
 	
 	var dump = e['expr_dump']
 	if(dump == null){
@@ -271,10 +271,7 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 		if(tBodyEmpty) tBodyEmpty.style.display = 'none';
 		for(var i=0; i<rows.length; i++){
 			var tr = tBody.insertRow();
-			$(tr).bindRoot(rows[i])
-//			if(headRow.hasAttribute('data')){
-//				tr.setAttribute('data', ',' + headRow.getAttribute('data').replace(/,\s*N/, ',' + i));
-//			}
+			$(tr).bindRoot(rows[i], hTable)
 			columnRenders.forEach(function(column){
 				var cell = document.createElement('td');
 				for(var attr in column){if(column.hasOwnProperty(attr)){
@@ -286,7 +283,6 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 				}}
 				tr.appendChild(cell);
 			});
-			$(tr).render();
 		}
 	}
 }
@@ -380,11 +376,10 @@ d2js.Renderers.repeater = function(element, rows){
 			});
 			r.attr('repeater-copy', true);
 			
-			r.bindRoot(row).insertAfter(prev).render().show();
+			r.bindRoot(row, element).insertAfter(prev).show(); 
 			prev = r;
 		}
 	}
-	return 'stop';
 }
 
 /**

@@ -321,7 +321,7 @@
         			var idx = nd.row._table.rows.indexOf(nd.row);
         			
         			var tr = tBody.insertRow();
-        			$(tr).bindRoot(nd);
+        			$(tr).bindRoot(nd, hTable);
         			columnRenders.forEach(function(column){
         				var cell = document.createElement('td');
         				var isTreeNode = false;

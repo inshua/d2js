@@ -724,7 +724,7 @@
            	    		
        		        row._table.curr = row;
        		        this.$el.trigger('tablelist.edit', [row]);
-       		     	$('#' + dialogId).bindRoot(row).render().modal('show');
+       		     	$('#' + dialogId).bindRoot(row, this.el).render().modal('show');
             	}
             }
             // MOLECULE_DEF_END

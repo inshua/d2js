@@ -136,10 +136,14 @@ d2js.travel = function(htmlElement, pattern, processor){
 	
 	var rootDesc = d2js.findRoot(htmlElement);
 	if(rootDesc.root == null) return;
-	travelElement(htmlElement, rootDesc);
 	
-	function travelElement(e, rootDesc){
-				
+	var stk = [[htmlElement, rootDesc]];
+	while(stk.length){
+		var args = stk.pop();
+		var e = args[0], rootDesc = args[1];
+		//console.log('render ', e.getAttribute('renderer'),e, rootDesc);
+		//if($(e).is('span[data=name]')) debugger;
+		
 		var fullPath = e.getAttribute('d2js.fullpath');
 		
 		if(fullPath == null && e.hasAttribute('data')){
@@ -161,17 +165,18 @@ d2js.travel = function(htmlElement, pattern, processor){
 			}
 		}
 		
+		var exit = false;
 		if(fullPath && rootDesc.root){	// 原设想每个元素都用 fullpath 匹配 selector（一个正则表达式）: (selector == null || selector.test(fullPath)), 实用性不高，现改为直接匹配root
 			var crumb = rootDesc.crumb.slice();
 			var match = d2js.extractData(rootDesc.root, fullPath, crumb);
 
-			if(match && (pattern == null || crumb.lastIndexOf(pattern) != -1)){
+			if(match && (pattern == null || testPattern(crumb))){
 				var r = processor(e, crumb);
-				if(r == 'stop') return;
+				if(r == 'stop') exit = true;
 			}
 		}
 		
-		for(var i=0; i<e.children.length; i++){
+		for(var i=e.children.length-1; i>=0; i--){
 			var child = e.children[i];
 			if(child.hasAttribute('d2js.root')){ 	// 根数据另起炉灶
 				var travelChild = true;
@@ -183,13 +188,14 @@ d2js.travel = function(htmlElement, pattern, processor){
 				} 
 				if(travelChild){
 					var r = d2js.findRoot(child, child);
-					travelElement(child, r);
+					stk.push([child, r])
 				}
 			} else {
-				travelElement(child, rootDesc);
+				stk.push([child, rootDesc]);
 			}
 		}
 	}
+	
 	
 	// 分析短路径
 	function parseShortPath(shortPath, startEle, rootEle){
@@ -225,6 +231,14 @@ d2js.travel = function(htmlElement, pattern, processor){
 		}
 		return dataPath;
 	}
+	
+	function testPattern(crumb){
+		if(pattern.isArray){
+			return pattern.some(function(p){return crumb.lastIndexOf(p) != -1})
+		} else {
+			return crumb.lastIndexOf(pattern) != -1
+		}
+	}
 }
 
 //命中root，并存储 data('d2js.root') 及 crumb，返回命中的root数据、元素及root的面包屑
@@ -240,7 +254,7 @@ d2js.findRoot = function(el, suggestRootEle){
 	if(rootEle == null) {
 		return {root:d2js.root, crumb: [root], ele: document.body};
 	} else {
-		if($.hasData('d2js.root') == false){
+		if($.hasData(rootEle, 'd2js.root') == false){
 			d2js.bindRoot(rootEle);
 		}
 		var result = $.data(rootEle);
@@ -248,8 +262,13 @@ d2js.findRoot = function(el, suggestRootEle){
 	}
 }
 
-
-d2js.bindRoot = function(element, data){
+/**
+ * 绑定数据为根数据
+ * @param element {HTMLElement} DOM元素，充当根数据附着元素
+ * @param data {string|object} string 则为从 d2js.root 出发的属性路径，object 则为直接绑定的对象
+ * @param [baseElement] {HTMLElement} 当使用 object 作为绑定对象时，从 baseElement 继承数据展开面包屑（crumb）
+ */
+d2js.bindRoot = function(element, data, baseElement){
 	if(data == null){
 		data = element.getAttribute('d2js.root');
 		if(data == null) return false;
@@ -299,12 +318,18 @@ d2js.bindRoot = function(element, data){
 		var root = data;
 		$element[0].setAttribute('d2js.root', '#');
 		$element.data('d2js.root', root);
-		$element.data('d2js.crumb', [root]);
+		if(baseElement){
+			var crumb = d2js.findRoot(baseElement).crumb;
+			$element.data('d2js.crumb', [root].concat(crumb));
+		} else {
+			$element.data('d2js.crumb', [root]);
+		}
 	}
 	// 子元素中带有与本次 bind root有关的 d2js.root 的全部取消
 	$element.find('[d2js\\.root]').each(function(){
 		var crumb = $(this).data('d2js.crumb');
 		if(crumb && crumb.indexOf(root) != -1){
+			// console.log('will remove ', this, ' when bindRoot ', element)
 			$(this).removeData('d2js.root').removeData('d2js.crumb');			
 		}
 	});
@@ -395,9 +420,9 @@ d2js.locateData = function(element){
 }( jQuery ));
 
 +(function ( $ ) {
-    $.fn.bindRoot = function(selectorOrData) {
+    $.fn.bindRoot = function(selectorOrData, baseElement) {
     	this.each(function(){
-    		d2js.bindRoot(this, selectorOrData);
+    		d2js.bindRoot(this, selectorOrData, baseElement);
     	});
     	return this;
     };
