@@ -251,7 +251,7 @@ d2js.findRoot = function(el, suggestRootEle){
 	if(rootEle == null) {
 		return {root:d2js.root, crumb: [root], ele: document.body};
 	} else {
-		if($.hasData(rootEle, 'd2js.root') == false){
+		if($.hasData(rootEle) == false || $.data(rootEle, 'd2js.root') == null){
 			d2js.bindRoot(rootEle);
 		}
 		var result = $.data(rootEle);
