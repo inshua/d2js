@@ -118,9 +118,10 @@ d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
 				node.nodeValue = processExpr(node.nodeValue);
 			}
 			break;
-		case Node.ELEMENT:
+		case Node.ELEMENT_NODE:
 			if(!newExpr){
 				for(var a=0; a<node.attributes.length; a++){
+					var attr = node.attributes[a];
 					if(attr.value.indexOf('{{') != -1){
 						attr.value = processExpr(attr.value);
 					}
