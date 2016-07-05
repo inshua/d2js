@@ -137,12 +137,10 @@ d2js.travel = function(htmlElement, pattern, processor){
 	var rootDesc = d2js.findRoot(htmlElement);
 	if(rootDesc.root == null) return;
 	
-	var stk = [[htmlElement, rootDesc]];
-	while(stk.length){
-		var args = stk.pop();
-		var e = args[0], rootDesc = args[1];
+	travelElement(htmlElement, rootDesc);
+	
+	function travelElement(e, rootDesc){
 		//console.log('render ', e.getAttribute('renderer'),e, rootDesc);
-		//if($(e).is('span[data=name]')) debugger;
 		
 		var fullPath = e.getAttribute('d2js.fullpath');
 		
@@ -165,18 +163,17 @@ d2js.travel = function(htmlElement, pattern, processor){
 			}
 		}
 		
-		var exit = false;
 		if(fullPath && rootDesc.root){	// 原设想每个元素都用 fullpath 匹配 selector（一个正则表达式）: (selector == null || selector.test(fullPath)), 实用性不高，现改为直接匹配root
 			var crumb = rootDesc.crumb.slice();
 			var match = d2js.extractData(rootDesc.root, fullPath, crumb);
 
 			if(match && (pattern == null || testPattern(crumb))){
 				var r = processor(e, crumb);
-				if(r == 'stop') exit = true;
+				if(r == 'stop') return;
 			}
 		}
 		
-		for(var i=e.children.length-1; i>=0; i--){
+		for(var i=0; i<e.children.length; i++){
 			var child = e.children[i];
 			if(child.hasAttribute('d2js.root')){ 	// 根数据另起炉灶
 				var travelChild = true;
@@ -188,10 +185,10 @@ d2js.travel = function(htmlElement, pattern, processor){
 				} 
 				if(travelChild){
 					var r = d2js.findRoot(child, child);
-					stk.push([child, r])
+					travelElement(child, r);
 				}
 			} else {
-				stk.push([child, rootDesc]);
+				travelElement(child, rootDesc);
 			}
 		}
 	}
