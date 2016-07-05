@@ -8,34 +8,46 @@
 	<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
 </head>
 <body class="container">
-	<h1>数据绑定之渲染</h1>
+	<h1>数据绑定之渲染<small>对象式d2js.root 和路径式d2js.root</small></h1>
 	<a href="1.html">1</a>
 	
-	<h1>数据绑定之收集</h1>
+	<h1>无参数函数可以放在渲染路径并被求值</h1>
+	<a href="1-1.html">1-1</a>
+	
+	<h1>各种数据路径表示方法</h1>
 	<a href="2.html">2</a>
 	
-	<h1>表格编辑 批量提交</h1>
+	<h1>自定义渲染器</h1>
+	<a href="2-1.html">2-1</a>
+	
+	<h1>渲染数据表，收集</h1>
+	<a href="2-2.html">2-2</a>
+	
+	<h1>常用控件<small>下拉列表框等</small></h1>
+	<a href="2-3.html">2-3</a>
+	
+	<h1>表格编辑 批量提交<small>支持子数据集</small></h1>
 	<a href="3.html">3</a>
 	
 	<h1>典型的列表编辑页面</h1>
 	<a href="4.html">4</a>
 	
-	<h1>REPEATER</h1>
+	<h1>REPEATER<small>支持repeater嵌套</small></h1>
 	<a href="6.html">6</a>
+	
+	<h1>REPEATER<small>支持收集</small></h1>
+	<a href="6-1.html">6-1</a>
+	
+	<h1>使用expr渲染器</h1>
+	<a href="6-2.html">6-2</a>
 	
 	
 	<h1>使用 Molecule 技术简化列表与表单</h1>
 	<a href="../molecules/bootstrap-basic.html">7</a>
 	
-	<h2>molecule 组件化后</h2>
-	将7.html放入 molecules/，之后调用 执行<a href="../molecules/extract.jssp">molecules/extract.jssp</a> 抽出组件到组件库, 得到如下页面
-	<p>
-	<a href="8.html">8</a>
-	</p>
-	
 	<h1>嵌套表</h1>
 	<a href="9.html">嵌套表</a>
-	<p>在服务器端使用 this.query(...).nest(...) 函数级联子表，这样在前端可以通过<b>#主表,rows,n,子表名</b>访问子表行(数组)，如 #author,rows,0,book，在渲染时可以通过该数据路径渲染，代码可以通过 author.rows[0].book 访问，但 book 行本身仍属于 book.rows，所以提交等不受影响
+	<p>在服务器端使用 this.query(...).nest(...) 函数级联子表，这样在前端可以通过<b>主表,rows,n,子表名</b>访问子表行(数组)，如 author,rows,0,book，在渲染时可以通过该数据路径渲染，代码可以通过 author.rows[0].book 访问，但 book 行本身仍属于 book.rows，所以提交等不受影响
 	</p>
 	<p>
 		后端为 author-nest.d2js 和 book-nest.d2js
