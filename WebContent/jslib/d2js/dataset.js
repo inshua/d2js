@@ -471,7 +471,12 @@ d2js.DataTable.prototype.load = function(method, params, option){
 	this.rows = [];
 	this.fireEvent('willload');
 	var me = this;
-	this.search.params = q;
+	for(var k in this.search.params){	// params 被绑定了，不能设为新对象
+		delete this.search.params[k];
+	}
+	for(var k in q){		
+		this.search.params[k] = q[k];
+	}
 	this.search.params._m = method;
 	this.search.option = option;
 	
