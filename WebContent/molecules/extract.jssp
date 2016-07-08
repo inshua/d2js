@@ -78,6 +78,14 @@
 					var escapeTag = element.attr('escape-tag');
 					if(escapeTag) element.removeAttr('escape-tag');
 					
+					var css = '';
+					var styles = element.getElementsByTag("style");
+					if(styles){
+						for(var k = 0; k < styles.size(); k ++){
+							css += styles.get(k).html();
+						}
+					}
+					
 					var html = element.html();
 					var attributes = {};
 					var lsAttrs = element.attributes().asList();
@@ -96,6 +104,9 @@
 						def.script = n.html();
 					}
 					defines[module][name] = def;
+					if(css){
+						def.css = css;
+					}
 				}
 			} else {
 				sout +=  ("<h3>(empty)</h3>");
