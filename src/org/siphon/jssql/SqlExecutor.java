@@ -535,8 +535,8 @@ public class SqlExecutor {
 				String cname = rsm.getColumnName(i).toLowerCase();
 				item.put(cname, fieldValueToNativeObject(rsm.getColumnType(i), rs, cname));
 			}
-			NativeArray.push(narr, item.to(ScriptObject.class));
-			//arr.callMember("push", item);
+			//NativeArray.pushObject(narr, item.to(ScriptObject.class));
+			arr.callMember("push", item);
 		}
 		result.put("rows", arr);
 		return result;  // JSON.stringify(result)
@@ -551,8 +551,8 @@ public class SqlExecutor {
 			String cname = rsm.getColumnName(i).toLowerCase();
 			obj.put("name", cname);
 			obj.put("type", translateTypeName(rsm.getColumnType(i), rsm.getColumnTypeName(i)));
-			NativeArray.push(narr, obj.to(ScriptObject.class));
-			// arr.callMember("push", obj);
+			// NativeArray.pushObject(narr, obj.to(ScriptObject.class));
+			arr.callMember("push", obj);
 		}
 		return arr;
 	}
