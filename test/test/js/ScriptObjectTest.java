@@ -81,11 +81,11 @@ public class ScriptObjectTest extends ScriptObject{
 		return super.noSuchProperty(desc, request);
 	}
 	
-	@Override
-	protected Object invokeNoSuchProperty(String name, int programPoint) {
-		return super.invokeNoSuchProperty(name, programPoint);
-	}
-	
+//	@Override
+//	protected Object invokeNoSuchProperty(String name, int programPoint) {
+//		return super.invokeNoSuchProperty(name, programPoint);
+//	}
+//	
 	
 	
 	

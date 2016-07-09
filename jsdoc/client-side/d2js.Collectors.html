@@ -98,29 +98,19 @@
      
 
     
-        <h3 class="subsection-title">Namespaces</h3>
-
-        <dl>
-            <dt><a href="d2js.Collectors.Pipelines.html">Pipelines</a></dt>
-            <dd></dd>
-        </dl>
-    
 
     
         <h3 class="subsection-title">Members</h3>
 
         
             
-<h4 class="name" id=".oc"><span class="type-signature">(static) </span>oc<span class="type-signature"></span></h4>
+<h4 class="name" id=".c"><span class="type-signature">(static) </span>c<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>Object Column 值设置器<br>当 DataRow['field'] 为对象时，如果 element 绑定的是对象的属性，应当使用该收集器。<br>例如</p>
-<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;#table,rows,0,contact,email&quot;></code></pre><p>该表的 contact 字段为一JSON字段，表现在前端为一个对象，其中 email 是一个属性，此时应使用如下收集方式 </p>
-<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;#table,rows,0,contact,email&quot; collector=&quot;c|oc&quot;></code></pre><p>如使用</p>
-<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;#table,rows,0,contact,email&quot; collector=&quot;c|s&quot;></code></pre><p>则编辑时虽然值变化了，但行状态不会变化，将导致数据不提交。</p>
+    <p>常用 html 元素收集器管道函数。收集 html element 的 value 属性或 innerHTML 属性。<br>通常收集器写为 c|s 前者由控件获取内容，后者设置到对象，中间可插入其它管道，如 c|n|s</p>
 </div>
 
 
@@ -158,7 +148,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line275">line 275</a>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line101">line 101</a>
     </li></ul></dd>
     
 
@@ -176,17 +166,13 @@
 
         
             
-<h4 class="name" id=".repeater"><span class="type-signature">(static) </span>repeater<span class="type-signature"></span></h4>
+<h4 class="name" id=".check"><span class="type-signature">(static) </span>check<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>repeater 收集器。对 repeater 渲染器产生的元素进行收集。<br>usage:</p>
-<pre class="prettyprint source lang-html"><code>&lt;div data=&quot;#authors,rows&quot; renderer=&quot;repeater&quot; collector=&quot;repeater&quot;>
-        &lt;h2 repeater=&quot;true&quot;>&lt;span data=&quot;name&quot; renderer=&quot;std&quot;>&lt;/span>&lt;/h2>
-        &lt;h2 repeater-empty=&quot;true&quot;>no data found&lt;/h2>
-    &lt;/div></code></pre>
+    <p>复选框勾中状态收集器。单独使用时，勾中为 true, 未勾中为 false</p>
 </div>
 
 
@@ -224,7 +210,324 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line241">line 241</a>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line116">line 116</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".d"><span class="type-signature">(static) </span>d<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>日期转换管道。将值转为 Date 类型。用法 collector=&quot;c|d|s&quot;</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line159">line 159</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".dict"><span class="type-signature">(static) </span>dict<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>将词典收集为词典值</p>
+<p>用法：</p>
+<pre class="prettyprint source lang-html"><code>&lt;tag dict=&quot;gender&quot; data=&quot;xxx&quot; collector=&quot;c|dict({M : 'Male', F : 'Female'})|s&quot;></code></pre><p>或</p>
+<pre class="prettyprint source lang-html"><code>&lt;script>Dicts.gender = {M : 'Male', F : 'Female'};&lt;/script>
+&lt;tag dict=&quot;gender&quot; data=&quot;xxx&quot; collector=&quot;c|dict|s&quot;></code></pre>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_pipelines.js.html">d2js/pipelines.js</a>, <a href="d2js_pipelines.js.html#line161">line 161</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".m"><span class="type-signature">(static) </span>m<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>molecule收集器管道。<br>对支持 getValue 的 molecule 收集。<br>用法: colector=&quot;m|s&quot;</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line176">line 176</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".n"><span class="type-signature">(static) </span>n<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>数字转换管道。将值转为数字类型。用法 collector=&quot;c|n|s&quot;</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line144">line 144</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".oc"><span class="type-signature">(static) </span>oc<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>Object Column 值设置器<br>当 DataRow['field'] 为对象时，如果 element 绑定的是对象的属性，应当使用该收集器。<br>例如</p>
+<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;contact,email&quot;></code></pre><p>该表的 contact 字段为一JSON字段，表现在前端为一个对象，其中 email 是一个属性，此时应使用如下收集方式 </p>
+<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;contact,email&quot; collector=&quot;c|oc&quot;></code></pre><p>如使用</p>
+<pre class="prettyprint source lang-html"><code>&lt;input data=&quot;contact,email&quot; collector=&quot;c|s&quot;></code></pre><p>则编辑时虽然值变化了，行状态却不会变化，将导致数据不提交。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line217">line 217</a>
     </li></ul></dd>
     
 
@@ -286,7 +589,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line169">line 169</a>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line127">line 127</a>
     </li></ul></dd>
     
 
@@ -306,6 +609,93 @@
     
 
     
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".prop"><span class="type-signature">(static) </span>prop<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>从元素属性收集数据的收集器。<br>用法</p>
+<input type="date" collector="prop('valueAsDate')|s">
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_collector.js.html">d2js/collector.js</a>, <a href="d2js_collector.js.html#line190">line 190</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
 
     
 
@@ -320,13 +710,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Apr 15 2016 10:46:17 GMT+0800 (中国标准时间)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 09 2016 15:49:24 GMT+0800 (中国标准时间)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -103,9 +103,6 @@
         <dl>
             <dt><a href="d2js.Renderers.bootstrap.html">bootstrap</a></dt>
             <dd></dd>
-        
-            <dt><a href="d2js.Renderers.Pipelines.html">Pipelines</a></dt>
-            <dd></dd>
         </dl>
     
 
@@ -120,11 +117,11 @@
 
 
 <div class="description">
-    <p>表达式渲染器。适用于 innerHTML 中含有 {{... }} 表达式的渲染器<br>用法：</p>
-<pre class="prettyprint source lang-html"><code>    &lt;div data=&quot;#table,rows,0&quot; renderer=&quot;expr&quot;>
-        &lt;h1>{{title.toUpperCase()}}&lt;small>{{author}}&lt;/small>&lt;/h1>
-        &lt;p>{{content}}&lt;/p>
-    &lt;/div></code></pre>
+    <p>表达式渲染器。适用于正文或属性中含有 {{... }} 表达式的渲染器<br>用法：</p>
+<pre class="prettyprint source lang-html"><code>      &lt;div data=&quot;rows,0&quot; renderer=&quot;expr&quot;>
+          &lt;h1>{{title.toUpperCase()}}&lt;small>{{author}}&lt;/small>&lt;/h1>
+          &lt;p>{{content}}&lt;/p>
+      &lt;/div></code></pre>
 </div>
 
 
@@ -162,69 +159,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line86">line 86</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id=".flderr"><span class="type-signature">(static) </span>flderr<span class="type-signature"></span></h4>
-
-
-
-
-<div class="description">
-    <p>字段错误渲染器</p>
-</div>
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line85">line 85</a>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line101">line 101</a>
     </li></ul></dd>
     
 
@@ -304,14 +239,13 @@
 
         
             
-<h4 class="name" id=".molecule"><span class="type-signature">(static) </span>molecule<span class="type-signature"></span></h4>
+<h4 class="name" id=".flderr"><span class="type-signature">(static) </span>flderr<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>molecule 渲染器。对支持 setValue/getValue 的 molecule 渲染。<br>usage:</p>
-<pre class="prettyprint source lang-html"><code>&lt;div data=&quot;...&quot; molecule=&quot;Select&quot; renderer=&quot;molecule&quot;>&lt;/div></code></pre>
+    <p>字段错误渲染器</p>
 </div>
 
 
@@ -349,7 +283,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line345">line 345</a>
+        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line85">line 85</a>
     </li></ul></dd>
     
 
@@ -367,13 +301,14 @@
 
         
             
-<h4 class="name" id=".pagination"><span class="type-signature">(static) </span>pagination<span class="type-signature"></span></h4>
+<h4 class="name" id=".molecule"><span class="type-signature">(static) </span>molecule<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>分页组件。渲染 DataTable。</p>
+    <p>molecule 渲染器。对支持 setValue/getValue 的 molecule 渲染。<br>usage:</p>
+<pre class="prettyprint source lang-html"><code>  &lt;div data=&quot;...&quot; molecule=&quot;Select&quot; renderer=&quot;molecule&quot;>&lt;/div></code></pre>
 </div>
 
 
@@ -411,7 +346,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line5">line 5</a>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line395">line 395</a>
     </li></ul></dd>
     
 
@@ -495,6 +430,68 @@
 
         
             
+<h4 class="name" id=".pagination"><span class="type-signature">(static) </span>pagination<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>分页组件。渲染 DataTable。</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_semantic-renderers.js.html">d2js/semantic-renderers.js</a>, <a href="d2js_semantic-renderers.js.html#line5">line 5</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
 <h4 class="name" id=".std"><span class="type-signature">(static) </span>std<span class="type-signature"></span></h4>
 
 
@@ -539,7 +536,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line26">line 26</a>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -688,14 +685,14 @@
 
 <div class="description">
     <p>表格渲染器。<br>用法：</p>
-<pre class="prettyprint source lang-html"><code>&lt;table data=&quot;#table&quot; renderer=&quot;table&quot;>
+<pre class="prettyprint source lang-html"><code>&lt;table data=&quot;table or table,rows&quot; renderer=&quot;table&quot;>
         &lt;thead>
             &lt;tr>
-                &lt;td data-t=&quot;rows,N,name&quot; renderer=&quot;std&quot;>&lt;/td>  &lt;!-- 注意  data-t 和  N，是固定用法 -->
-                &lt;td data-t=&quot;rows,N,remarks&quot; renderer=&quot;input('text')&quot;>&lt;/td>
+                &lt;td data-t=&quot;name&quot; renderer=&quot;std&quot;>&lt;/td>  &lt;!-- 注意应写作  data-t，是固定用法 -->
+                &lt;td data-t=&quot;remarks&quot; renderer=&quot;input('text')&quot;>&lt;/td>
             &lt;/tr>
         &lt;/thead>
-&lt;/table></code></pre><p>这里 N 是固定写法，会被替换为行ID。<br>渲染表格也可以使用 repeater 渲染器。</p>
+&lt;/table></code></pre><p>data 也可直接使用 rows 数组<br>渲染表格也可以使用 repeater 渲染器。</p>
 </div>
 
 
@@ -733,7 +730,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line194">line 194</a>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line242">line 242</a>
     </li></ul></dd>
     
 
@@ -929,6 +926,267 @@
 
     
 
+    <h4 class="name" id=".date"><span class="type-signature">(static) </span>date<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>管道函数。格式化时间。<br>扩充了 html attribute <code>format</code>。<br>usage: </p>
+<pre class="prettyprint source lang-html"><code>&lt;input format=&quot;yyy-MM-dd&quot; renderer=&quot;date|std&quot;></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_pipelines.js.html">d2js/pipelines.js</a>, <a href="d2js_pipelines.js.html#line29">line 29</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".dict"><span class="type-signature">(static) </span>dict<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>管道函数。翻译词典值。<br>usage :</p>
+<pre class="prettyprint source lang-html"><code>        &lt;input data=&quot;xxx&quot; renderer=&quot;dict({N:'正常', S:'停用'})|std&quot;></code></pre><p>或</p>
+<pre class="prettyprint source lang-html"><code>        &lt;script>Dicts.gender = {M : 'Male', F : 'Female'};&lt;/script>
+        &lt;input dict=&quot;gender&quot; data=&quot;xxx&quot; renderer=&quot;dict|std&quot;></code></pre><p>词典也可以使用数组</p>
+<pre class="prettyprint source lang-html"><code>        &lt;input data=&quot;xxx&quot; renderer=&quot;dict(['正常','停用'])|std&quot;></code></pre><p>或</p>
+<pre class="prettyprint source lang-html"><code>        &lt;script>Dicts.gender = ['正常','停用'];&lt;/script>
+        &lt;input dict=&quot;gender&quot; data=&quot;xxx&quot; renderer=&quot;dict|std&quot;></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_pipelines.js.html">d2js/pipelines.js</a>, <a href="d2js_pipelines.js.html#line55">line 55</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".dictToList"><span class="type-signature">(static) </span>dictToList<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>管道函数。将词典翻译为列表。<br>usage : </p>
+<pre class="prettyprint source lang-html"><code> &lt;div data=&quot;#anything&quot; renderer=&quot;dictToList({N:'正常', S:'停用'})|options('name','id')&quot;>
+        &lt;select data=&quot;#bindTable,rows,N,status&quot; render=&quot;std&quot;>&lt;/select>
+ &lt;/div></code></pre><p> 或</p>
+<pre class="prettyprint source lang-html"><code>  &lt;script>Dicts.status = {N:'正常', S:'停用'}&lt;/script>   
+  &lt;div data=&quot;#anything&quot; dict=&quot;status&quot; renderer=&quot;dictToList|options('name','id')&quot;>
+        &lt;select data=&quot;#bindTable,rows,N,status&quot; render=&quot;std&quot;>&lt;/select>
+  &lt;/div></code></pre><p>anything 可以随意提供一个可绑定数据,并不用于实际渲染，例如 #dicts</p>
+<p>词典也可以是一个数组，用法同 dict 管道</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_pipelines.js.html">d2js/pipelines.js</a>, <a href="d2js_pipelines.js.html#line101">line 101</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".input"><span class="type-signature">(static) </span>input<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
@@ -981,7 +1239,110 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line252">line 252</a>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line299">line 299</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".lov"><span class="type-signature">(static) </span>lov<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>将词典表映射为含义</p>
+<p>用法：<br>设有表 gender, 字段为 id, desc, 有数据</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>desc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M</td>
+<td>Male</td>
+</tr>
+<tr>
+<td>F</td>
+<td>Female</td>
+</tr>
+</tbody>
+</table>
+<pre class="prettyprint source lang-html"><code>&lt;tag data=&quot;xxx&quot; renderer=&quot;lov('gender', 'id', 'desc)&quot;></code></pre><p>如数据不会轻易变动，或不依赖索引，直接提供数组也可以</p>
+<pre class="prettyprint source"><code>&lt;tag data=&quot;xxx&quot; renderer=&quot;lov(gender.rows, 'id', 'desc)&quot;></code></pre>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_pipelines.js.html">d2js/pipelines.js</a>, <a href="d2js_pipelines.js.html#line198">line 198</a>
     </li></ul></dd>
     
 
@@ -1020,9 +1381,9 @@
 
 <div class="description">
     <p>下拉列表框下拉项目渲染器。<br>用法：</p>
-<pre class="prettyprint source lang-html"><code>    &lt;div data=&quot;#listTable,rows&quot; renderer=&quot;options('name','id',true)&quot;>
-        &lt;select data=&quot;#bindTable,rows,N,type&quot;>&lt;/select>
- &lt;/div></code></pre>
+<pre class="prettyprint source lang-html"><code>      &lt;div data=&quot;listTable,rows&quot; renderer=&quot;options('name','id',true)&quot;>
+          &lt;select data=&quot;bindTable,rows,N,type&quot;>&lt;/select>
+   &lt;/div></code></pre>
 </div>
 
 
@@ -1066,7 +1427,90 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line134">line 134</a>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line182">line 182</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".prop"><span class="type-signature">(static) </span>prop<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>将元素的某项属性设为value。<br>用法</p>
+<input type="date" renderer="prop('valueAsDate')">
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line83">line 83</a>
     </li></ul></dd>
     
 
@@ -1105,10 +1549,10 @@
 
 <div class="description">
     <p>repeater 渲染器<br>usage:</p>
-<pre class="prettyprint source lang-html"><code>&lt;div data=&quot;#authors,rows&quot; renderer=&quot;repeater&quot;>
+<pre class="prettyprint source lang-html"><code>&lt;div data=&quot;authors,rows&quot; renderer=&quot;repeater&quot;>
         &lt;h2 repeater=&quot;true&quot;>&lt;span data=&quot;name&quot; renderer=&quot;std&quot;>&lt;/span>&lt;/h2>
         &lt;h2 repeater-empty=&quot;true&quot;>no data found&lt;/h2>
-  &lt;/div></code></pre>
+  &lt;/div></code></pre><p>repeater 渲染器产生的每个复制项都具有 repeater-copy=true 属性，并已绑定为 d2js.root。</p>
 </div>
 
 
@@ -1152,7 +1596,89 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line292">line 292</a>
+        <a href="d2js_renderers.js.html">d2js/renderers.js</a>, <a href="d2js_renderers.js.html#line340">line 340</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".uppercase"><span class="type-signature">(static) </span>uppercase<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>管道函数。转为大写。<br>测试用的，没有什么实际用途。</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_pipelines.js.html">d2js/pipelines.js</a>, <a href="d2js_pipelines.js.html#line137">line 137</a>
     </li></ul></dd>
     
 
@@ -1194,13 +1720,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Apr 15 2016 10:46:17 GMT+0800 (中国标准时间)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 09 2016 15:49:24 GMT+0800 (中国标准时间)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -53,61 +53,101 @@
 function d2js(){}
 
 /**
- * dataset全局对象。
- * dataset 是 DataTable, relation 及词典的容器。
- * @namespace d2js.dataset
+ * d2js 数据集
+ * 数据集是 DataTable, relation 的容器，也支持嵌套子数据集，此外，它也是 d2js.render, d2js.collect 的默认目标。
+ * @type d2js.Dataset
  */
-d2js.dataset = {}
+d2js.Dataset = function(){
+	/**
+	 * 数据关系定义为
+	 * ```js
+	 * {parent : 'masterTable', parentColumn : 'id',  child : 'detailTable', childColumn : 'parent_id'}
+	 * ```
+	 * 这里有意用表名字符串，不用 DataTable 对象，也不使用 
+	 * ```js
+	 * {masterTable : [from : 'id', detailTable : '', with : 'parent_id']}
+	 * ```
+	 * 后面这种表达不适合找父表
+	 * @memberof d2js.Dataset
+	 */
+	this.relations = [];
 
-/**
- * 数据关系定义为
- * ```js
- * {parent : 'masterTable', parentColumn : 'id',  child : 'detailTable', childColumn : 'parent_id'}
- * ```
- * 这里有意用表名字符串，不用 DataTable 对象，也不使用 
- * ```js
- * {masterTable : [from : 'id', detailTable : '', with : 'parent_id']}
- * ```
- * 后面这种表达不适合找父表
- * @instance
- */
-d2js.dataset.relations = [];
-
-/**
- * 所有词典数据
- * 用法如：
- * ```js
- * 	Dicts.gender = {M : 'Male', F : 'Female'}
- * ```
- * @memberof d2js.dataset
- * @alias Dicts
- */
-var Dicts = d2js.dataset.dicts = { isD2jsTerm : true, d2js: 'dicts'};  
-
-/**
- * 增加一个关系
- * @param parent {string} 主表表名
- * @param parantColumn {string} 主表列名，通常为主键字段
- * @param child {string} 从表表名
- * @param childColumn {string} 从表列名，通常为外键字段
- */
-d2js.dataset.addRelation = function(parent, parentColumn, child, childColumn){
-	 this.relations.push({parent : parent, parentColumn : parentColumn,  child : child, childColumn : childColumn});
-	 return this;
+	this.dicts = {};
+	
+	/**
+	 * 增加一个关系
+	 * @param parent {string} 主表表名
+	 * @param parantColumn {string} 主表列名，通常为主键字段
+	 * @param child {string} 从表表名
+	 * @param childColumn {string} 从表列名，通常为外键字段
+	 */
+	this.addRelation = function(parent, parentColumn, child, childColumn){
+		 this.relations.push({parent : parent, parentColumn : parentColumn,  child : child, childColumn : childColumn});
+		 return this;
+	}
+	
+	/**
+	 * 创建子数据集，用以切分命名空间
+	 * 用法：
+	 * ```js
+	 * 		var dataset = d2js.dataset.create('namespace');
+	 * 		var table = new DataTable('abcd', 'abcd.d2js', {dataset:dataset});
+	 * 		var table2 = dataset.addTable('ddd', 'ddd.d2js');
+	 * ```
+	 */
+	this.create = function(name){
+		var ds = new d2js.Dataset();
+		ds.name = name;
+		this[name] = ds;
+		return ds;
+	}
+	
+	/**
+	 * 创建数据表。new DataTable 的快捷方式。
+	 */
+	this.addTable = function(name, url, option){
+		option = option || {};
+		option.dataset = this;
+		return new d2js.DataTable(name, url, option);
+	}
+	
+	/**
+	 * 获取table。提供这个函数是因为引入subset概念后，以往很多 d2js.dataset[tableName] 的代码无法工作，这里提供一个门面，处理收到的 subset,tablename 形式的数据路径。
+	 */
+	this.getTable = function(path){
+		if(path.indexOf(',')!=-1){
+			var arr = path.split(',');
+			return d2js.dataset[arr[0].trim()][arr[1].trim()];
+		} else {
+			return d2js.dataset[path];
+		}
+	}
+	
+	/**
+	 * 释放子集
+	 */
+	this.release = function(name){
+		delete this[name];
+	}
 }
 
 /**
  * 查看数据，可用来观察所有表的数据
  * 该函数需要打开一个新窗口，请允许浏览器对本站弹出窗口。
  */
-d2js.dataset.inspect = function(){
-	var a = [];
-	for(var tb in this){
-		var t = this[tb];
+d2js.Dataset.prototype.inspect = function(output){
+	var a = output || [];
+	for(var tname in this){
+		var t = this[tname];
 		if(t instanceof d2js.DataTable){							
-			a.push(t.inspector(true))
+			a.push(t.inspect(true))
+		} else if (t instanceof d2js.Dataset){
+			a.push('&lt;h1>' + tname +'(subset)&lt;/h1>');
+			t.inspect(a);
 		}
 	}
+	
+	if(output) return;
 	
 	var w = window.open("about:blank");
 	if(w != null){
@@ -121,6 +161,29 @@ d2js.dataset.inspect = function(){
  * 主键字段，默认为 id，使用mongodb应调为 _id
  */
 d2js.PK = 'id';
+/**
+ * dataset全局对象。
+ * dataset 是 DataTable, relation 及词典的容器。
+ * @object d2js.dataset
+ */
+d2js.dataset = new d2js.Dataset();
+
+/**
+ * 别名，对于renderer,collector来说是全局数据对象的根对象（可类比 DOM 树的 document）
+ * @alias d2js.dataset
+ */
+d2js.root = d2js.dataset;
+
+/**
+ * 所有词典数据
+ * 用法如：
+ * ```js
+ * 	Dicts.gender = {M : 'Male', F : 'Female'}
+ * ```
+ * @memberof d2js.dataset
+ * @alias Dicts
+ */
+var Dicts = d2js.dataset.dicts;
 
 /**
  *数据表。与关系型数据库的表、视图、查询结果同构的一个内存镜像。主要包含 DataColumn, DataRow 集合。
@@ -134,7 +197,9 @@ d2js.PK = 'id';
  * 		silent : true|false 是否静默（不引发render）, 默认为为 true,
  * 		pageSize : 分页尺寸，默认为 d2js.DataTable.DEFAULT_PAGESIZE,
  * 		standalone : true|false 如果启用，则不加入到 dataset 中，默认为 false,
- * 		indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段
+ * 		dataset : 默认为 d2js.dataset，也可指定为局部的 dataset(使用 d2js.dataset.create() 创建)
+ * 		indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段,
+ * 		rowType : 数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交,
  * 		listeners : {
  * 			onload : function(error){},
  * 			onsubmit : function(error){},
@@ -152,8 +217,6 @@ d2js.DataTable = function (name, url, option){
 	
 	this.isSilent = option.silent != null ? option.silent : true;
 	this.name = name;
-	this.d2js = name;				// selector, for render and collect
-	this.isD2jsTerm = true;		// avoid extractData travel children
 	this.isDataTable = true;
 	
 	/**
@@ -169,7 +232,8 @@ d2js.DataTable = function (name, url, option){
 	this.setUrl(url);
 	
 	if(!option.standalone){
-		d2js.dataset[name] = this;
+		this.dataset = option.dataset || d2js.dataset;
+		this.dataset[name] = this;
 	}
 
 	/**
@@ -194,6 +258,20 @@ d2js.DataTable = function (name, url, option){
 	 * @type DataRow[]
 	 */
 	this.rows = [];	
+	
+	/**
+	 * 数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交。
+	 * 自定义方法如：
+	 * ```js
+	 * function MyRow(){
+	 * 		d2js.DataRow.apply(this, arguments);
+	 * }
+	 * MyRow.prototype = Object.create(d2js.DataRow.prototype);
+	 * MyRow.prototype.myFunc = function(){...}
+	 * ```
+	 * @type {function} 构造函数
+	 */
+	this.rowType = option.rowType || d2js.DataRow;
 	
 	/**
 	 * 查询参数。目前实际用到的直接成员有用于分页的 _page : {start:N, limit:N}, 用于排序的  _sorts : {column : 'asc'|'desc'}, 用于查询的 params : {参数}。
@@ -292,7 +370,7 @@ d2js.DataTable.prototype.setState = function(newState){
  * @return {DataRow} 新建的行 
  */
 d2js.DataTable.prototype.newRow = function(rowData){
-	var row = new d2js.DataRow(this, rowData);
+	var row = new this.rowType(this, rowData);
 	row._state = "new";
 	this.fireEvent('newrow', row);
 	return row;		
@@ -308,7 +386,7 @@ d2js.DataTable.prototype.addRow = function(rowData, raiseEvent){
 	if(rowData instanceof d2js.DataRow){
 		var row = rowData;
 	} else {
-		var row = new d2js.DataRow(this, rowData);
+		var row = new this.rowType(this, rowData);
 	}
 	row._state = "new";
 	this.rows.push(row);
@@ -418,7 +496,12 @@ d2js.DataTable.prototype.load = function(method, params, option){
 	this.rows = [];
 	this.fireEvent('willload');
 	var me = this;
-	this.search.params = q;
+	for(var k in this.search.params){	// params 被绑定了，不能设为新对象
+		delete this.search.params[k];
+	}
+	for(var k in q){		
+		this.search.params[k] = q[k];
+	}
 	this.search.params._m = method;
 	this.search.option = option;
 	
@@ -432,6 +515,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		success : onSuccess,
 		error : function (error){onError(new Error(error.responseText || 'cannot establish connection to server'));}
 	});
+	return this;
 	
 	function onSuccess(text, status){
 		var isJson = false;
@@ -443,25 +527,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		me.rows = [];
 		if(isJson){
 			if(!result.error){
-				if(result.total != null){
-					me.total = result.total;
-					me.pageIndex = result.start / me.pageSize;
-					me.pageCount = Math.ceil(result.total / me.pageSize);
-				}
-				
-				if(result.columns) {
-					me.initSchema(result.columns);
-				
-					var rows = result.rows;
-					for(var i=0; i&lt;rows.length; i++){
-						var row = new d2js.DataRow(me, rows[i]);
-						me.rows.push(row);
-					}
-				} else {
-					me.fill(result.rows, {raiseEvent : false, reinit: true});
-				}
-				if(me.indexedColumns) me.rebuildIndexes();
-				
+				fillTable(result, me);
 				if(option &amp;&amp; option.callback){
 					option.callback.call(me);
 				}
@@ -483,6 +549,41 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		if(option &amp;&amp; option.callback){
 			option.callback.call(me, error);
 		}
+	}
+	
+	function fillTable(result, table){
+		if(result.total != null){
+			table.total = result.total;
+			table.pageIndex = result.start / table.pageSize;
+			table.pageCount = Math.ceil(result.total / table.pageSize);
+		}
+		
+		if(result.columns) {
+			table.initSchema(result.columns);
+		
+			var rows = result.rows;
+			for(var i=0; i&lt;rows.length; i++){
+				var row = new table.rowType(table, rows[i]);
+				table.rows.push(row);
+			}
+		} else {
+			table.fill(result.rows, {raiseEvent : false, reinit: true});
+		}
+		if(table.indexedColumns) table.rebuildIndexes();
+		if(result.nested){
+			for(var tname in result.nested){if(result.nested.hasOwnProperty(tname)){
+				var data = result.nested[tname];
+				var childTable = me.dataset[tname];
+				if(childTable == null){
+					throw new Error('table ' + tname + ' not defined, but received in nested tables');
+				}
+				childTable.rows = [];
+				fillTable(data, childTable);
+				table.rows.forEach(function(row){
+					row[tname] = table.findChildRows(row, tname);
+				});
+			}}
+		}		
 	}
 }
 
@@ -530,7 +631,7 @@ d2js.DataTable.prototype.fill = function(rows, option){
 	
 	me.rows = [];
 	for(var i=0; i&lt;rows.length; i++){
-		var row = new d2js.DataRow(me, rows[i]);
+		var row = new me.rowType(me, rows[i]);
 		me.rows.push(row);
 	}
 	if(me.indexedColumns) me.rebuildIndexes();
@@ -615,7 +716,7 @@ d2js.DataTable.prototype.submit = function(option){
 			for(var tname in relations){ if(relations.hasOwnProperty(tname)){
 				result.rows.forEach(function (row){
 					relations[tname].forEach(function(relation){
-						row._children.push(collectAll(d2js.dataset[tname], row, relation));
+						row._children.push(collectAll(me.dataset[tname], row, relation));
 					});
 				});
 			}}
@@ -720,7 +821,7 @@ d2js.DataTable.prototype.submit = function(option){
 	function onError(error){
 		var table = me;
 		if(error.table){
-			table = d2js.dataset[error.table];
+			table = me.dataset[error.table];
 		}
 		table.error = error;
 		if(error.table &amp;&amp; error.idx != null){
@@ -825,7 +926,8 @@ d2js.DataTable.prototype.rebuildIndexes = function(){
  * @param childColumn {string} 子表关联字段名，外键字段
  */
 d2js.DataTable.prototype.addChild = function(column, child, childColumn){
-	 d2js.dataset.addRelation(this.name, column, child, childColumn);
+	if(this.dataset == null) throw new Error('this table dont belong to any dataset');
+	this.dataset.addRelation(this.name, column, child, childColumn);
 }
 
 /**
@@ -833,7 +935,8 @@ d2js.DataTable.prototype.addChild = function(column, child, childColumn){
  * @return {object} 结构为 {table name : [relations]}
  */
 d2js.DataTable.prototype.getChildTables = function(){
-	return d2js.dataset.relations.filter(function(relation){
+	if(this.dataset == null) return {};
+	return this.dataset.relations.filter(function(relation){
 				return relation.parent == this.name;
 			}, this).reduce(function(res, relation){
 				var arr = res[relation.child];
@@ -848,7 +951,8 @@ d2js.DataTable.prototype.getChildTables = function(){
  * @return {object} 结构为 {table name : [relations]}
  */
 d2js.DataTable.prototype.getParentTables = function(){
-	return d2js.dataset.relations.filter(function(relation){
+	if(this.dataset == null) return {};
+	return this.dataset.relations.filter(function(relation){
 		return relation.child == this.name;
 	}, this).reduce(function(res, relation){
 		var arr = res[relation.parent];
@@ -865,10 +969,11 @@ d2js.DataTable.prototype.getParentTables = function(){
  */
 d2js.DataTable.prototype.findChildRows = function(row, childTable){
 	var rows = [];
-	for(var i=0; i&lt;d2js.dataset.relations.length; i++){
-		var relation = d2js.dataset.relations[i];
+	if(this.dataset == null) return rows;
+	for(var i=0; i&lt;this.dataset.relations.length; i++){
+		var relation = this.dataset.relations[i];
 		if(relation.parent == this.name &amp;&amp; relation.child == childTable){
-			var ct = d2js.dataset[childTable];
+			var ct = this.dataset[childTable];
 			var v = row[relation.parentColumn];
 			rows = rows.concat(ct.rows.filter(function(crow){return crow[relation.childColumn] == v}));
 		}
@@ -884,10 +989,11 @@ d2js.DataTable.prototype.findChildRows = function(row, childTable){
  */
 d2js.DataTable.prototype.findParentRows = function(row, parentTable){
 	var rows = [];
-	for(var i=0; i&lt;d2js.dataset.relations.length; i++){
-		var relation = d2js.dataset.relations[i];
+	if(this.dataset == null) return rows;
+	for(var i=0; i&lt;this.dataset.relations.length; i++){
+		var relation = this.dataset.relations[i];
 		if(relation.child == this.name &amp;&amp; relation.parent == parentTable){
-			var pt = d2js.dataset[parentTable];
+			var pt = this.dataset[parentTable];
 			var v = row[relation.childColumn];
 			rows = rows.concat(ct.rows.filter(function(prow){return prow[relation.parentColumn] == v}));
 		}
@@ -927,6 +1033,14 @@ d2js.DataTable.prototype.inspect = function(returnHtml){
 	} else{
 		document.write(a.join(""));
 	}
+}
+
+/**
+ * 没有删除的行，常置于渲染路径
+ * @returns {DataRow[]} 没有删除的行数组
+ */
+d2js.DataTable.prototype.unremovedRows = function(){
+	return this.rows.filter(function(row){return row._state != 'remove'});
 }
 
 /**
@@ -1212,7 +1326,8 @@ d2js.DataRow = function(table, rowData){
 		var cname = table.columnNames[i];
 		this[cname] = rowData &amp;&amp; rowData[cname]; 	// JSON传来的数据已经去除了 '', undefined 之类似 null, 故不调用 processValue
 	}
-}</code></pre>
+}
+</code></pre>
         </article>
     </section>
 
@@ -1222,13 +1337,13 @@ d2js.DataRow = function(table, rowData){
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Apr 15 2016 10:46:17 GMT+0800 (中国标准时间)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 09 2016 15:49:24 GMT+0800 (中国标准时间)
 </footer>
 
 <script> prettyPrint(); </script>
