@@ -24,7 +24,7 @@
 ```html
 <p id="info" data="gender" renderer="dict({M:'男', F:'女'})|std">
 <script>
-	$('#info').render({name : 'mary', gender: 'F'}, true);
+	$('#info').bindRoot({name : 'mary', gender: 'F'}).render();
 </script>
 ```
 对于多次使用的词典，可以创建为 `d2js.dataset.dicts` 的成员，如：
@@ -35,7 +35,7 @@
 	// 或简写为 
 	Dicts.gender = {M : '男', F: '女'};
 	
-	$('#info').render({name : 'mary', gender: 'F'}, true);
+	$('#info').bindRoot({name : 'mary', gender: 'F'}).render();
 </script>
 ```
 
@@ -57,33 +57,35 @@
 对下拉列表提供数据，需要在外层嵌套一层 div 或其它元素。如前述`性别`词典，可以表述为：
 
 ```html
-	<div data="#dicts" dict="gender" renderer="dictToList|options">
+	<div id="info" data="this" dict="gender" renderer="dictToList|options">
 		<select data="gender" renderer="std"></select>
 	</div>
 	<script>
 		Dicts.gender = {M : '男', F: '女'};
 	
-		$('#info').render({name : 'mary', gender: 'F'}, true);
+		$('#info').bindRoot({name : 'mary', gender: 'F'}).render();
 	</script>
 ```
 
 以 DataTable 为数据来源的下拉列表框，可以表述为:
 
 ```html
-	<div data="#gender,rows" renderer="options('value', 'mean')">
-		<select data="gender" renderer="std"></select>
+	<div id="info">
+		<div d2js.root="gender" data="rows" renderer="options('value', 'mean')">
+			<select data="..gender" renderer="std"></select>
+		</div>
 	</div>
 	<script>
 		new d2js.DataTable('gender').fill([{value: 'M', mean: '男'}, {value: 'F', mean: '女'}]);
 		$('#info').render();
 	
-		$('#info').render({name : 'mary', gender: 'F'}, true);
+		$('#info').bindRoot({name : 'mary', gender: 'F'}).render();
 	</script>
 ```
 其中 `renderer="options('value', 'mean')"`，当值字段为 id，含义字段为 name 时，可以缩写为 
-
+```js
 	renderer="options"
-	
+```	
 ### 表达式渲染器 expr
 
 可以使用表达式渲染器渲染一些简单的内容，如：
@@ -94,12 +96,12 @@
 </div>
 ```
 
-表达式渲染器书写更美观，但是由于大量替换 innerHTML，效率较 std 渲染器低。
+表达式可用于html属性、文本正文，避免大量使用 span 。
 
 ### 重复项渲染器 repeater
 
 ```html
-<div data="#person,rows" renderer="repeater">
+<div data="person,rows" renderer="repeater">
 	<div repeater="true">
 		<div class="header" data="name" renderer="std"></div>
 	</div>
@@ -109,12 +111,13 @@
 </div>
 ```
 repeater渲染器对所提供的数组类型的数据进行循环，将 `repeater="true"` 的子元素视为模板，不断重复。
-重复得到的克隆体元素，其具有 repeater-copy="true"属性，并获得 jQuery 的 repeater-obj 数据，即可以通过 $('[repeater-copy]).data('repeater-obj')访问相应的实际数据。如本例中，即可访问 DataRow 对象。
+重复得到的克隆体元素，其具有 repeater-copy="true"属性，并获得展开的数据项作为 d2js.root，可以通过  $('[repeater-copy]).data('d2js.root')访问相应的实际数据。如本例中，即可访问 DataRow 对象。
+
 当数组为空时，子元素中 `repeater-empty="true"` 的子元素会被展示出来。
 
-模板子元素，也即`repeater="true"`的元素，可以存在多个，并使用 when 表达式决定是否应当对本条数据展示，如：
+模板子元素，也即`repeater="true"`的元素，可以按条件放置多个，并使用 when 表达式决定是否应当对本条数据展示，如：
 ```html
-<div data="#person,rows" renderer="repeater">
+<div data="person,rows" renderer="repeater">
 	<div repeater="true" when="gender='F'">
 		<div class="girl header" data="name" renderer="std"></div>
 		<div>女性促销信息</div>
@@ -127,9 +130,9 @@ repeater渲染器对所提供的数组类型的数据进行循环，将 `repeate
 	</div>
 </div>
 ```
-重复项渲染器中，可以使用 expr 渲染器。此时，expr 元素的数据路径可指定为 `this`：
+重复项渲染器中，当然也可以使用 expr 渲染器。此时，expr 元素的数据路径可指定为 `this`：
 ```html
-<div data="#person,rows" renderer="repeater">
+<div data="person,rows" renderer="repeater">
 	<div repeater="true" data="this" renderer="expr">
 		<div class="header">{{name}}</div>
 	</div>
@@ -139,7 +142,7 @@ repeater渲染器对所提供的数组类型的数据进行循环，将 `repeate
 </div>
 ```
 
-### 表格渲染器，页码渲染器及可以编辑单行的对话框
+### table 渲染器，分页渲染器及可以编辑单行的对话框
 
 请见所提供的 `d2js-test/4.html` 的示例及其源码。
 
@@ -174,7 +177,7 @@ d2js 提供 query, queryRow, querScalar, travel 等便捷的函数获取数据�
 
 当然，由于d2js不运行于数据库服务器，每次执行SQL都将产生网络开销，所以效率不能与真正的存储过程相提并论。
 
-但是在不考虑运行效率的场合，使用 d2js 的存储过程也有较大的优势：
+但在不考虑运行效率的场合，使用 d2js 的存储过程也有较大的优势：
 * 动态语言不需要 orm 就可以取用存储在数据库中的业务对象，对商业逻辑的表达能力更强
 * d2js 所依赖的 nashorn 引擎可以提供错误的堆栈信息，大部分数据库都没有错误堆栈
 * 日志与服务器日志合在一处，便于排查错误
@@ -204,9 +207,9 @@ d2js.create = function(rcd){
 其中渲染字段错误的代码如：
 
 ```html
-  <div class="form-group" data="#author,curr,_error_at,name" renderer="flderr" trace>
+  <div class="form-group" d2js.root="author,curr" data="_error_at,name" renderer="flderr" trace>
     <label>Name</label>
-    <input type="text" class="form-control" data="#author,curr,name" renderer="std" collector="c|s">
+    <input type="text" class="form-control" data="name" renderer="std" collector="c|s">
   </div>
 ```
 
@@ -223,7 +226,7 @@ d2js.modify = function(rcd){
 使用下面 html 可以渲染校验错误：
 
 ```html
-<div data="#author,curr,_error" renderer="stderr"></div>
+<div d2js.root="author" data="curr,_error" renderer="stderr"></div>
 ```
 ![d2js validation](images/d2js-validation2.png?raw=true)
 

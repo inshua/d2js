@@ -28,21 +28,20 @@ d2js.KNOWN_COLLECTORS = {};
 
 
 /**
- * 发起收集函数。收集总入口。设置好数据路径(html attribute `data`)和收集器(html attribute `collector`)后，调用该函数，绘制所有相关元素。
+ * 发起渲染函数。收集总入口。设置好数据路径(html attribute `data`)和渲染器(html attribute `renderer`)后，调用该函数，从所有相关元素收集录入信息到根数据。
  * 也可使用封装了该函数的 jQuery 函数:
  * ```js
- * $(htmlElement).collect(baseData, direct, customCollectors)
+ * $(htmlElement).collect(pattern, customCollectors)
  * ```
- * @param [htmlElement=document.body] {HTMLElement} html 元素，从该元素及其子元素收集。
- * @param [baseData=d2js.dataset} {object} 数据，要渲染的数据
- * @param [direct=false] {bool} true - 直接收集  false - 使用绝对数据路径收集
+ * @param [htmlElement=document.body] {HTMLElement} html 元素，收集该元素及其子元素。
+ * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生收集。
  * @param [customCollectors] {object} 自定义收集器（含管道）。如
  * ```js
  * {
- * 	myCollector : function(el, value){return $(el).height()}
+ * 	myCollector : function(el, value){return el.innerHTML}
  * }
  * ```
- * 对 htmlElement 及其子元素有指定 collector="myCollector|s"，该函数会被套用。
+ * 对 htmlElement 及其子元素有指定 collector="myCollector"，该函数会被应用。需要说明的是，在下次收集时不再需要提供 myCollector 函数。
  */
 d2js.collect = function(htmlElement, pattern, customCollectors){
 	
@@ -200,17 +199,17 @@ d2js.Collectors.prop = function(attr){
  * 当 DataRow['field'] 为对象时，如果 element 绑定的是对象的属性，应当使用该收集器。
  * 例如
  * ```html
- * <input data="#table,rows,0,contact,email">
+ * <input data="contact,email">
  * ```
  * 该表的 contact 字段为一JSON字段，表现在前端为一个对象，其中 email 是一个属性，此时应使用如下收集方式 
  * ```html
- * <input data="#table,rows,0,contact,email" collector="c|oc">
+ * <input data="contact,email" collector="c|oc">
  * ```
  * 如使用
  * ```html
- * <input data="#table,rows,0,contact,email" collector="c|s">
+ * <input data="contact,email" collector="c|s">
  * ```
- * 则编辑时虽然值变化了，但行状态不会变化，将导致数据不提交。
+ * 则编辑时虽然值变化了，行状态却不会变化，将导致数据不提交。
  * 
  * @param element
  * @param newValue

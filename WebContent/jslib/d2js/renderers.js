@@ -22,6 +22,7 @@
  * 标准渲染器。支持常用元素 html, input, select 的渲染。
  * @param element
  * @param value
+ * @return value
  */
 d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(e, v, columnName, row, index, rows, _1, table){
 	
@@ -88,14 +89,14 @@ d2js.Renderers.prop = function(attr){
 
 
 /**
- * 表达式渲染器。适用于 innerHTML 中含有 {{... }} 表达式的渲染器
+ * 表达式渲染器。适用于正文或属性中含有 {{... }} 表达式的渲染器
  * 用法：
  *```html
- * 	<div data="#table,rows,0" renderer="expr">
- * 		<h1>{{title.toUpperCase()}}<small>{{author}}</small></h1>
- * 		<p>{{content}}</p>
- * 	</div>
- *```
+  	<div data="rows,0" renderer="expr">
+  		<h1>{{title.toUpperCase()}}<small>{{author}}</small></h1>
+  		<p>{{content}}</p>
+  	</div>
+ ```
  */
 d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
 	// if(data instanceof d2js.DataTable) debugger;
@@ -173,10 +174,10 @@ d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
  *下拉列表框下拉项目渲染器。
  *用法：
  *```html
- * 	<div data="#listTable,rows" renderer="options('name','id',true)">
- * 		<select data="#bindTable,rows,N,type"></select>
- *  </div>
- *```
+  	<div data="listTable,rows" renderer="options('name','id',true)">
+  		<select data="bindTable,rows,N,type"></select>
+   </div>
+ ```
  */
 d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
 	var noBracket = false;
@@ -226,7 +227,7 @@ d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
  * 表格渲染器。
  * 用法：
  *```html
- * <table data="table" renderer="table">
+ * <table data="table or table,rows" renderer="table">
  * 		<thead>
  * 			<tr>
  * 				<td data-t="name" renderer="std"></td>  <!-- 注意应写作  data-t，是固定用法 -->
@@ -329,11 +330,12 @@ function withStmt(obj, varName){
  * repeater 渲染器
  * usage:
  *```html
- *<div data="#authors,rows" renderer="repeater">
+ *<div data="authors,rows" renderer="repeater">
 		<h2 repeater="true"><span data="name" renderer="std"></span></h2>
 		<h2 repeater-empty="true">no data found</h2>
   </div>
 ```
+repeater 渲染器产生的每个复制项都具有 repeater-copy=true 属性，并已绑定为 d2js.root。
  */
 d2js.Renderers.repeater = function(element, rows){
 	var repeater = element['repeater-tpl'];
@@ -387,8 +389,8 @@ d2js.Renderers.repeater = function(element, rows){
  *molecule 渲染器。对支持 setValue/getValue 的 molecule 渲染。
  *usage:
  *```html
- * <div data="..." molecule="Select" renderer="molecule"></div>
- *```
+  <div data="..." molecule="Select" renderer="molecule"></div>
+ ```
  */
 d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, value, columnName, row, index, rows, _1, table){
 	var m = Molecule.of(element);

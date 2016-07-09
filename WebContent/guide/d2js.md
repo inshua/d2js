@@ -2,7 +2,7 @@
 
 ![overview](images/overview.png?raw=true)
 
-d2js 是一套js数据前后端框架, 前端和后端可单独使用.
+d2js 是一套js数据前后端框架.
 
 * d2js 框架提出了独有的数据路径、渲染、收集概念，适合各类 js 对象与 html ui 之间交互
 * d2js 框架借鉴 ado.net 的 dataset-DataTable-DataRow 体系，可以轻松完成批量数据更新、主从表连带更新等特性
@@ -10,6 +10,7 @@ d2js 是一套js数据前后端框架, 前端和后端可单独使用.
 * d2js 前后端开发实践都是热插拔式开发，不写配置文件，不写 java 代码
 * d2js 框架允许网页设计与开发分离，先设计再开发
 * d2js 切割分明，依托于 html 技术，可以和其它 ui 框架如 bootstrap, semantic-ui 等，及 molecule 一同使用
+* d2js 框架前端和后端可单独使用
 
 ==================
 
@@ -60,8 +61,8 @@ mvc 是一种设计思想，很多人错误的把思想当做了程序架构，�
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl'};
-	d2js.render($('#info'), person, true);		// 将 person对象渲染到 #info 元素 
-	// 或使用 jQuery 形式: $('#info').render(person, true)
+	$('#info').bindRoot(person)		// 绑定数据根。 或 d2js.bindRoot(info, person)
+	$('#info').render();			// 渲染。 或 d2js.render(info)
 </script>
 ```
 
@@ -71,10 +72,8 @@ mvc 是一种设计思想，很多人错误的把思想当做了程序架构，�
 
 界面很朴素。d2js 是一个数据框架，依托于DOM，可以和各种流行的 css 框架结合。当页面披上 bootstrap, semantic-ui 等 css外衣后，何愁不美轮美奂。
 
-d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于声明页面元素的渲染、收集行为。
-渲染、收集过程采用声明式规则，对于不存在的对象属性，不发生渲染，对于存在的属性，调用 renderer 指定的函数序列进行渲染。
-数据与 ui 都是 d2js.render 函数的参数，当调用 d2js.render 时，数据才与 ui 元素发生联系，d2js.render 调用完后，联系即消失。
-
+d2js 主要扩充了 `d2js.root`, `data`, `renderer`, `collector` 4个 html 属性，用于声明页面元素的根数据、数据路径、渲染、收集行为。
+渲染、收集过程采用声明式规则，对于不存在的对象属性，不发生渲染收集，对于存在的属性，调用 renderer,collector 指定的函数序列进行渲染收集。
 
 ### 数据路径
 
@@ -88,10 +87,31 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl', fav:{movies:['earth','matrix'], songs:['lalala']};
-	d2js.render($('#info'), person, true);
+	$('#info').bindRoot(person).render();
 </script>
 ```
 `<p data="fav,movies,0" renderer="std" />` 中，数据路径有3个层次。很显然，每个 `,` 都带来一次层次推进。
+
+### 公用数据根
+
+除了使用 bindRoot，也可以使用公用数据根 `d2js.root`。使用方法如下：
+```html
+<section id="info" dj2s.root="person">
+	<p data="name" renderer="std" />
+	<p data="gender" renderer="std" />
+	<p data="fav,movies,0" renderer="std" />
+</section>
+<script>
+	var person = {name : 'mary', gender:'girl', fav:{movies:['earth','matrix'], songs:['lalala']};
+	d2js.root.person = person;		// 挂在 d2js.root 下
+	$('#info').render();
+</script>
+```
+上面, `dj2s.root="person"` 使用路径方式表示根数据，这种表示方式不需要再bindRoot，第一次渲染时会自动由全局变量 d2js.root 出发按路径推导，并自动发生 bindRoot。
+
+如后来 d2js.root.person 修改为其它对象，则需要手工调用 $e.bindRoot() 重新绑定根数据。
+
+数据路径总是从层次最近的具有根数据的容器元素出发。
 
 ### 渲染器
 
@@ -104,7 +124,7 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 例如，当`d2js.render`作用于 `<p data="name" renderer="std" />` 和 `person` 对象时，`std` 函数实参参数列表如下：
 
 ```js
-<p/>, 'mary', person, 'name', 'mary'
+<p/>, 'mary', 'name', person
 ```
 
 前 2 个实参固定为 `element` 和 `value`，后面的实参由数据路径的展开过程产生。
@@ -112,7 +132,7 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 当 `d2js.render`作用于`<p data="fav,movies,0" renderer="std" />`时，`std` 函数将收到如下参数：
 
 ```
-<p/>, 'earth', person, 'fav', person.fav, 'movies', person.fav.movies, 0, person.fav.movies[0] 即 'earth'
+<p/>, 'earth', 0, person.fav.movies, 'movies', person.fav, 'fav', person
 ```
 
 自定义的渲染器可以根据该特性实现更灵活的渲染行为。
@@ -131,7 +151,7 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 		element.innerHTML = '<font color="red">' + value + '</font>';
 	}
 	var person = {name : 'mary', gender:'girl'};
-	d2js.render($('#info'), person, true);
+	$('#info').bindRoot(person).render();
 </script>
 ```
 
@@ -146,7 +166,8 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl'};
-	d2js.render($('#info'), person, true, 
+	$('#info').bindRoot(person).render(
+		null, 
 		{red :  function(element, value){
 				element.innerHTML = '<font color=red>' + value + '</font>';
 			}
@@ -166,7 +187,7 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl'};
-	d2js.render($('#info'), person, true);
+	$('#info').bindRoot(person).render();
 </script>
 ```
 
@@ -182,7 +203,7 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl', lastLogon: new Date()};
-	d2js.render($('#info'), person, true);
+	$('#info').bindRoot(person).render();
 </script>
 ```
 
@@ -190,15 +211,17 @@ d2js 主要扩充了 `data`, `renderer`, `collector` 3个 html 属性，用于�
 
 这里，管道函数`date`将日期类型的`person.birth`翻译为一个指定格式的字符串，其中，`format` 是管道函数 date 所约定的自定义属性。
 
-管道函数接收的参数与渲染函数一样，只是它需要返回转换后的结果，且一般不应改变 element。
+管道函数接收的参数与渲染函数一样，只是它需要返回转换后的结果，且一般不应改变 element。大部分渲染函数都是管道函数，如 std 就是一个管道函数，其返回结果为传入的 value。
 
 管道函数可以串联拼接，例如，可以定义一个简单的管道函数
 ```js 
-d2js.Renderers.Pipelines.tomorrow = function(element, value){
+d2js.Renderers.tomorrow = function(element, value){
 	return new Date(value * 1 + 86400000);
 }
 ```
 使用 `tomorrow|date|std`可以先获取第二天的日期，再传入管道函数 date 转换为日期格式字符串。
+
+在使用 `$e.render(,自定义渲染器)` 时，自定义渲染器中也可以包含管道函数。
 
 ## 简单js对象的收集
 
@@ -211,9 +234,9 @@ d2js.Renderers.Pipelines.tomorrow = function(element, value){
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl'};
-	d2js.render($('#info'), person, true);
+	$('#info').bindRoot(person);
 	$('#info').on('input', function(){
-		d2js.collect($('#info'), person, true);
+		$('#info').collect();
 		console.log('person change to ', person);
 	});
 </script>
@@ -224,7 +247,7 @@ d2js.Renderers.Pipelines.tomorrow = function(element, value){
 收集器总是以管道组合形式出现。其中 `c` 是定义于 `collector.js`中的管道函数：
 
 ```js
-d2js.Collectors.Pipelines.c = function(element, value){
+d2js.Collectors.c = function(element, value){
 	var newValue = null;
 	if('value' in element){
 		newValue = element.value;
@@ -267,9 +290,9 @@ d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue){
 </section>
 <script>
 	var person = {name : 'mary', gender:'girl', birth: new Date()};
-	d2js.render($('#info'), person, true);
+	$('#info').bindRoot(person);
 	$('#info').on('input', function(){
-		d2js.collect($('#info'), person, true);	// 或 $('#info').collect(person, true);
+		$('#info').collect();
 		console.log('person change to ', person);
 	});
 </script>
@@ -282,29 +305,50 @@ d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue){
 
 类似渲染器，可以有两种方式自定义收集器：
 
-0. 对 d2js.Collectors 或 d2js.Collectors.Pipelines 插入函数
-0. 在调用 d2js.collect 函数时，提供第 4 个参数 customCollectors。
+0. 对 d2js.Collectors 插入函数
+0. 在调用 $el.collect 函数时，提供第 2 个参数 customCollectors。
 
-## 绝对数据路径
+## 数据根与数据路径的相对路径
 
-数据路径支持 `#` 开始的绝对数据路径。如
+如前所述，可使用 data 属性表示数据路径，数据路径在展开时总是从具有数据根的层次最近的容器元素开始（含数据路径所附元素本身）。
+
+数据路径支持使用 , 延续上一层含有数据路径的元素的数据路径。如：
 
 ```html
-<section id="info">
-	<p data="#person,name" renderer="std" />
-</section>
-<script>
-	var person = {d2js: 'person', name : 'mary', gender:'girl'};
-	// 锚定 name='mary'的 person 对象
-	d2js.render($('#info'), person, false);
-
-	var person = {name : 'jack', friend : {d2js: 'person', name : 'mary', gender:'girl'}};
-	// 自动下溯，依然锚定 name='mary'的 person 对象
-	d2js.render($('#info'), person, false);
-</script>
+<div d2js.root="person">
+	<div>
+		My Name: <span data="name" renderer="std"></span>
+	</div>
+	<div data=",friends"><!-- 数据路径含有 , -->
+		<p>
+			Friend Name: <span data=",0,name" renderer="std"></span>
+		</p>
+		<div>
+			My Email: <span data="email" renderer="std"></span>
+		</div>
+		<p>
+			Friend Name: <span data=",1,name" renderer="std"></span>
+		</p>
+	</div>
+</div>
 ```
 
-后面将看到，绝对数据路径在 d2js 是运用更广泛的方式。
+当数据根即要渲染的元素时，数据路径可指定为  this，如：
+```html
+<div>
+	My Phone: <span d2js.root="person" data="this" renderer="phone|std"></span>
+</div>
+```
+
+d2js.root使用字符串时，也相当于数据路径，同样可以使用 ,。 但 d2js.root 的相对路径总是从上一个d2js.root开始计算，而与data属性无关。
+
+除了用于延续的 , 还有一种相对路径： .. 。
+
+```
+.. 不论是用于 d2js.root 属性还是 data 属性，.. 总是引用上一级 d2js.root。
+```
+
+关于数据路径，可参考 `d2js-test/index.html` 中数据路径的示例。
 
 ## d2js 与 RDBMS
 
@@ -315,14 +359,14 @@ d2js 具有与关系型数据库同构的 `dataset-DataTable-DataColumn,DataRow`
 ### DataTable 及其渲染
 
 ```html
-<section id="persons" data="#person,rows" renderer="repeater">
+<section id="persons" d2js.root="person,rows" data="this" renderer="repeater">
 	<div repeater="true">
 		<p data="name" renderer="std" />
 		<p data="gender" renderer="std" />
 	</div>
 </section>
 <script>
-	var table = new d2js.DataTable('person');  // 定义一个表名为 person 的 DataTable 对象
+	var table = new d2js.DataTable('person');  // 定义一个表名为 person 的 DataTable 对象。这种方式创建的表默认属于 d2js.root。
 	table.fill([		// 填充数据
 			{name : 'tom', gender : 'male'},
 			{name : 'jack', gender : 'male'},
@@ -330,51 +374,31 @@ d2js 具有与关系型数据库同构的 `dataset-DataTable-DataColumn,DataRow`
 		]);
 	console.log('columns', table.columns);
 	console.log('rows', table.rows);
-	d2js.render($('#persons'), table);
+	$('#persons').render();
 </script>
 ```
 ![datatable 1](images/d2js-datatable-1.png?raw=true)
 
-DataTable 在创建时，总是加入到 `d2js.dataset` 对象。
+DataTable 在创建时，默认总是加入到 `d2js.dataset` 对象。但也支持独立表，子数据集，独立子数据集等特性。
+
+在 d2js 框架中，d2js.root 是  d2js.dataset 对象的别名。
 
 ```js
 	var table = new d2js.DataTable('person');
 	console.log(d2js.dataset.person == table);		// 输出 true
 ```
 
-DataTable 在创建时，总是生成属性 `d2js : tableName`， 绝对数据路径支持自动下溯特性，因此：
+d2js 可以支持对 html element 局部渲染，也支持与 DataTable 相关的元素的局部渲染。
 
+如同一页面有数个 DataTable，只想与 person 表有关的元素，可以传递 $el.render(目标数据) 参数。如：
 ```js
-	d2js.render($('#persons'), d2js.dataset);
-	相当于：
-	for(var tname in d2js.dataset){
-		if(d2js.dataset[k].isDataTable){
-			d2js.render($('#persons'), d2js.dataset[k]);
-		}
-	}
+	$('#persons').render(person);
 ```
-
-在实际开发中，常常需要将 dataset 中的数据全部更新到界面，后面一种写法更有普遍性。因此，`d2js.dataset` 被设计为 d2js.render 的默认参数。
-
-故 `d2js.render($('#persons'), d2js.dataset);` 可进一步简化为：
-```js
-	d2js.render($('#persons'), null);
-	或
-	d2js.render($('#persons'));
-```
-当需要更新网页所有元素时，可使用
-```js
-	d2js.render(null, null);
-	或
-	d2js.render();
-```
-
-综上，d2js 可以支持对 html element 局部渲染，也支持与 DataTable 相关的元素的局部渲染。
 
 ### DataTable 的收集
 
 ```html
-<section id="persons" data="#person,rows" renderer="repeater" collector="repeater">
+<section id="persons" d2js.root="person,rows" data="this" renderer="repeater">
 	<div repeater="true">
 		Name:<input data="name" renderer="std" collector="c|s">
 		Gender:<input data="gender" renderer="std" collector="c|s">
@@ -388,13 +412,13 @@ DataTable 在创建时，总是生成属性 `d2js : tableName`， 绝对数据�
 			{name : 'mary', gender : 'female'}
 		]);
 	$('#persons').on('input', function(){
-		d2js.collect($('#persons'));
+		$('#persons').collect()
 		console.log(table);
 	});
 </script>
 ```
 
-注意观察当数据有变化时，`DataRow._state` 会变为 `'edit'` 状态。这个状态指示该行数据发生了编辑。
+当数据有变化时，`DataRow._state` 会变为 `'edit'` 状态。这个状态指示该行数据发生了编辑。
 
 ### 使用 DataRow
 
@@ -420,11 +444,13 @@ DataRow 像普通的 js 对象一样，可以插拔自己的属性，也可以�
 
 数据库设计中字段名应尽量避免与 DataRow 的固有属性方法重名，DataRow 固有的属性方法总是以 `_` 开始，只要字段名不以 `_` 开始就不会发生冲突。
 
+DataTable 支持子类化 d2js.DataRow，关于如何子类化请参加 d2js-test 中的示例 3-1。
+
 ### DataTable 与 RDBMS
 
 d2js 框架不仅仅具有前端功能，也支持服务器端功能。
 
-目前，d2js 后端可部署于 jdk8 以上的 servlet3.0 容器，使用  jdbc 数据库连接 ，可较好的支持 oracle, postgresql 等数据库。
+目前，d2js 后端可部署于 jdk8 以上的 servlet3.0 容器，使用  jdbc 数据库连接 ，可较好的支持 oracle, postgresql 等数据库。并支持使用 mongo-java-driver 连接 mongodb。
 
 本示例中使用的是 `bookstore` 数据库，请见[Readme](../README.md)。
 
@@ -432,13 +458,16 @@ d2js 框架不仅仅具有前端功能，也支持服务器端功能。
 
 ```js
 d2js.fetch = function(params){
-	return this.query('select * from author order by name');
+	sql{.
+		select * from author order by name
+	.}
+	return this.query(sql);
 }
 ```
 前端可由该` author.d2js` 的 `fetch` 函数获取数据：
 
 ```html
-<section id="persons" data="#author,rows" renderer="repeater" collector="repeater">
+<section id="persons" d2js.root="author,rows" data="this" renderer="repeater">
 	<div repeater="true">
 		Name:<input data="name" renderer="std" collector="c|s">
 		Email:<input data="email" renderer="std" collector="c|s">
@@ -447,10 +476,10 @@ d2js.fetch = function(params){
 <script>
 	var table = new d2js.DataTable('author', 'author.d2js');  
 	table.load('fetch', function(){
-		$('#persons').render(table);
+		$('#persons').render();
 	});
 	$('#persons').on('input', function(){
-		d2js.collect($('#persons'));
+		$('#persons').collect;
 	});
 </script>
 ```
@@ -458,7 +487,7 @@ d2js.fetch = function(params){
 
 这样，通过 `table.load('fetch')`，数据库中的数据就被提取到了前端。
 
-显然，`load` 函数使用的是 ajax 方式提取的。可见，每个d2js都是一个可以通过ajax访问的服务。这种服务可以通过浏览器直接输入网址的形式观察到：
+显然，`load` 函数使用的是 ajax 方式提取的。可见，每个后端d2js文件都是一个可以通过ajax访问的服务。这种服务可以通过浏览器直接输入网址的形式观察到：
 
 在浏览器地址栏输入：
 
@@ -479,7 +508,7 @@ d2js 接口可以支持两种形式输入参数。
 
 	http://.../author.d2js?_m=fetch&params={"name":"mary"}
 	
-由于json可以传递若干常见数据类型，因此当使用 d2js 前端时，自动采用后面的做法。
+由于json可以传递若干常见数据类型，因此 d2js 前端向服务器请求时总是采取 params={JSON} 的做法。
 
 接口可以接收传入的查询参数：
 `author.d2js`
@@ -548,6 +577,8 @@ d2js.fetch = function(params){
 ```
 当SQL语句较为复杂时，使用SQL块可以给开发带来极大的便利。通常只需将SQL语句从可视化SQL编辑器粘贴到d2js文件，将若干参数变为 `:arg` 的形式，即可完成一个接口的编写。需要对SQL修改时，也只需将d2js中的代码粘贴到SQL编辑器，修改完后再粘贴回来即可。
 
+d2js 这样设计是遵从数据库为中心的思想，通过改进表达方式充分发挥关系运算理论的优势。
+
 在前端，可使用下面的编程方法注入查询参数。
 ```js
 	table.load('fetch', {name : 'ma'});
@@ -555,13 +586,13 @@ d2js.fetch = function(params){
 也可由用户在网页输入，此时可设置输入参数的控件的数据路径为 `table,search,params,arg`，并设置相应的收集器：
 
 ```html
-<section id="arguments">
+<section id="arguments" d2js.root="author,search,params">
 	<!-- 用户在该控件输入要查询的人名 -->
-	Name:<input data="#author,search,params,name" collector="c|s">
+	Name:<input data="name" collector="c|s">
 	<button onclick="search()">Search</button>
 </section>
 <hr>
-<section id="persons" data="#author,rows" renderer="repeater" collector="repeater">
+<section id="persons" d2js.root="author" data="rows" renderer="repeater">
 	<div repeater="true">
 		Name:<input data="name" renderer="std" collector="c|s">
 		Gender:<input data="gender" renderer="std" collector="c|s">
@@ -583,7 +614,7 @@ d2js.fetch = function(params){
 
 用户在前端页面进行的数据修改，经收集后，可以通过 `table.submit()` 一次性提交到服务器。
 
-在d2js观念中，数据变动的粒度是行级的，变动类型有3种，编辑、新增、删除。为此，d2js文件需要编写三个接口函数：
+在d2js观念中，数据变动的粒度是行级的，变动类型有3种，编辑、新增、删除。为此，author.d2js 文件需要编写三个接口函数：
 
 ```js
 d2js.create = function(rcd){
@@ -600,19 +631,19 @@ d2js.destroy = function(rcd){
 ```
 `create`对应`_state` 为 `new`状态的 DataRow，`modify`对应`edit`状态的 DataRow，`destroy`对应`remove`状态的 DataRow。
 
-在前端只需调用 `table.submit()`，服务器 `.d2js` 接口中的与行状态对应的函数将自动触发。该逻辑实现于 `base.js`中的`D2JS.prototype.update`函数。
+在前端只需调用 `table.submit()`，服务器 `author.d2js` 接口中的与行状态对应的函数将自动触发。该逻辑实现于 `base.js`中的`D2JS.prototype.update`函数。
 
 ```html
-<section id="arguments">
+<section id="arguments" d2js.root="author,search,params">
 	<!-- 用户在该控件输入要查询的人名 -->
-	<input data="#author,search,params,name" collector="c|s">
+	Name:<input data="name" collector="c|s">
 	<button onclick="search()">Search</button>
 </section>
 <hr>
-<section id="persons" data="#author,rows" renderer="repeater" collector="repeater">
+<section id="persons" d2js.root="author" data="rows" renderer="repeater">
 	<div repeater="true">
 		Name:<input data="name" renderer="std" collector="c|s">
-		Email:<input data="email" renderer="std" collector="c|s">
+		Gender:<input data="gender" renderer="std" collector="c|s">
 	</div>
 </section>
 <section>
@@ -623,13 +654,13 @@ d2js.destroy = function(rcd){
 	table.on('load', function(){$('#persons').render(this)});
 	table.load('fetch');
 	
-	table.on('submit', function(error){	// 提交成功后再次加载数据
+	table.on('submit', function(error){	
 		console.log('submit done', error);
-		table.load('fetch');
+		table.load('fetch');	// 提交成功后再次加载数据
 	});
 	
 	$('#persons').on('input', function(){
-		d2js.collect($('#persons'));
+		$('#persons').collect();
 	});
 	
 	function search(){

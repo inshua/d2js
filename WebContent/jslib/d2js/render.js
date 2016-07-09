@@ -23,11 +23,6 @@
  * @namespace 
  */
 d2js.Renderers = function(){}
-
-/**
- * 渲染器管道
- * @namespace
- */
 d2js.KNOWN_RENDERERS = {};
 
 d2js.Renderers.EmbedRenderers ={}
@@ -51,18 +46,17 @@ d2js.Renderers.EmbedRenderers.nextId = 1;
  * 发起渲染函数。渲染总入口。设置好数据路径(html attribute `data`)和渲染器(html attribute `renderer`)后，调用该函数，绘制所有相关元素。
  * 也可使用封装了该函数的 jQuery 函数:
  * ```js
- * $(htmlElement).render(baseData, direct, customRenderers)
+ * $(htmlElement).render(pattern, customRenders)
  * ```
  * @param [htmlElement=document.body] {HTMLElement} html 元素，渲染该元素及其子元素。
- * @param [baseData=d2js.dataset} {object} 数据，要渲染的数据
- * @param [direct=false] {bool} true - 直接渲染  false - 使用绝对数据路径渲染
+ * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生渲染。
  * @param [customRenders] {object} 自定义渲染器（含管道）。如
  * ```js
  * {
  * 	myRender : function(el, value){el.innerHTML = value}
  * }
  * ```
- * 对 htmlElement 及其子元素有指定 renderer="myRender"，该函数会被套用。
+ * 对 htmlElement 及其子元素有指定 renderer="myRender"，该函数会被应用。需要说明的是，在下次渲染时不再需要提供 myRender 函数。
  */
 d2js.render = function(htmlElement, pattern, customRenders){
 	d2js.travel(htmlElement, pattern, renderElement)
@@ -238,7 +232,19 @@ d2js.travel = function(htmlElement, pattern, processor){
 	}
 }
 
-//命中root，并存储 data('d2js.root') 及 crumb，返回命中的root数据、元素及root的面包屑
+/**
+ * 命中root，并存储 data('d2js.root') 及 crumb，返回命中的root数据、元素及root的面包屑
+ * 可使用该函数的jQuery形式：
+ * ```js
+ * 	var desc = $el.findRoot();
+ *  var data = desc.root;
+ *  var rootEle = desc.ele;
+ *  var crumb = desc.crumb;
+ * ```
+ * @param el {HTMLElement} 
+ * @param [suggestRootEle] {HTMLElement} 建议的Root元素 
+ * @return {object} {root: 所命中的根数据对象, crumb: 根数据的展开过程，数组, ele: 根数据所绑定的元素}
+ */
 d2js.findRoot = function(el, suggestRootEle){
 	var rootEle = suggestRootEle;
 	if(!rootEle){
@@ -386,7 +392,8 @@ d2js._store = function(e, bundle, key, fun){
  * 按 element 指定的 data 路径定位数据
  * 可使用 jQuery 函数：
  * ```js
- * $(element).locateData(baseData, direct)
+ * var crumb = $(element).locateData()
+ * var data = crumb[0]
  * ```
  * @param [element=document.body] {HTMLElement} 包含数据路径的 html 元素
  * @return {array} 数组，第一项为最终锚定的值，后面项为按数据路径展开的各项
@@ -433,7 +440,7 @@ d2js.locateData = function(element){
 
 /**
  * 从参数数组查找符合条件的参数
- * @param {Arguments} arguments。从 locateData, render 等得到的数据参数。
+ * @param args {Arguments} arguments。从 locateData, render 等得到的数据参数。
  * @param pattern {object} 类型字符串，允许的有（table, dataset, row, column），predicate函数，返回 true|false
  */
 d2js.findArg = function(args, pattern){
