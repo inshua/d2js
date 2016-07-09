@@ -170,7 +170,8 @@ var Dicts = d2js.dataset.dicts;
  * 		pageSize : 分页尺寸，默认为 d2js.DataTable.DEFAULT_PAGESIZE,
  * 		standalone : true|false 如果启用，则不加入到 dataset 中，默认为 false,
  * 		dataset : 默认为 d2js.dataset，也可指定为局部的 dataset(使用 d2js.dataset.create() 创建)
- * 		indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段
+ * 		indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段,
+ * 		rowType : 数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交,
  * 		listeners : {
  * 			onload : function(error){},
  * 			onsubmit : function(error){},
@@ -229,6 +230,20 @@ d2js.DataTable = function (name, url, option){
 	 * @type DataRow[]
 	 */
 	this.rows = [];	
+	
+	/**
+	 * 数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交。
+	 * 自定义方法如：
+	 * ```js
+	 * function MyRow(){
+	 * 		d2js.DataRow.apply(this, arguments);
+	 * }
+	 * MyRow.prototype = Object.create(d2js.DataRow.prototype);
+	 * MyRow.prototype.myFunc = function(){...}
+	 * ```
+	 * @type {function} 构造函数
+	 */
+	this.rowType = option.rowType || d2js.DataRow;
 	
 	/**
 	 * 查询参数。目前实际用到的直接成员有用于分页的 _page : {start:N, limit:N}, 用于排序的  _sorts : {column : 'asc'|'desc'}, 用于查询的 params : {参数}。
@@ -327,7 +342,7 @@ d2js.DataTable.prototype.setState = function(newState){
  * @return {DataRow} 新建的行 
  */
 d2js.DataTable.prototype.newRow = function(rowData){
-	var row = new d2js.DataRow(this, rowData);
+	var row = new this.rowType(this, rowData);
 	row._state = "new";
 	this.fireEvent('newrow', row);
 	return row;		
@@ -343,7 +358,7 @@ d2js.DataTable.prototype.addRow = function(rowData, raiseEvent){
 	if(rowData instanceof d2js.DataRow){
 		var row = rowData;
 	} else {
-		var row = new d2js.DataRow(this, rowData);
+		var row = new this.rowType(this, rowData);
 	}
 	row._state = "new";
 	this.rows.push(row);
@@ -520,7 +535,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		
 			var rows = result.rows;
 			for(var i=0; i<rows.length; i++){
-				var row = new d2js.DataRow(table, rows[i]);
+				var row = new table.rowType(table, rows[i]);
 				table.rows.push(row);
 			}
 		} else {
@@ -588,7 +603,7 @@ d2js.DataTable.prototype.fill = function(rows, option){
 	
 	me.rows = [];
 	for(var i=0; i<rows.length; i++){
-		var row = new d2js.DataRow(me, rows[i]);
+		var row = new me.rowType(me, rows[i]);
 		me.rows.push(row);
 	}
 	if(me.indexedColumns) me.rebuildIndexes();
