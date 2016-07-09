@@ -331,9 +331,10 @@ public class JsTypeUtil {
 	}
 
 	private static Object jsObjectToJava(NativeArray arg) throws UnsupportedConversionException {
-		List<Object> result = new ArrayList<>(getArrayLength(arg));
-		for (int i = 0; i < result.size(); i++) {
-			result.set(i, jsObjectToJava(arg.get(i)));
+		int size = getArrayLength(arg);
+		List<Object> result = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+			result.add(jsObjectToJava(arg.get(i)));
 		}
 		return result;
 	}
@@ -474,13 +475,13 @@ public class JsTypeUtil {
 			List objects = (List)object;
 			for (int i = 0; i < objects.size(); i++) {
 				// NativeArray.push(array, objects[i]);
-				arr.callMember("push", objects.get(i));
+				arr.callMember("push", javaObjectToJs(objects.get(i)));
 			}
 			return arr.to(Object.class);
 		} else if(object.getClass().isArray()){
 			ScriptObjectMirror arr = this.newArray();
 			for(int i=0; i<Array.getLength(object); i++){
-		        arr.callMember("push", Array.get(object, i));
+		        arr.callMember("push", javaObjectToJs(Array.get(object, i)));
 		    }
 			return arr.to(Object.class);
 		} else if(object instanceof Date){

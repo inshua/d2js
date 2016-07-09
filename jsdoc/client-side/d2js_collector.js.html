@@ -52,123 +52,81 @@
  */
 d2js.Collectors = function(){}
 
-/**
- * 所有收集器的管道函数
- * @namespace 
- */
-d2js.Collectors.Pipelines = function(){}
-
 d2js.KNOWN_COLLECTORS = {};
 
-d2js.KNOWN_COLLECT_PIPELINES = {};
 
 /**
- * 发起收集函数。收集总入口。设置好数据路径(html attribute `data`)和收集器(html attribute `collector`)后，调用该函数，绘制所有相关元素。
+ * 发起渲染函数。收集总入口。设置好数据路径(html attribute `data`)和渲染器(html attribute `renderer`)后，调用该函数，从所有相关元素收集录入信息到根数据。
  * 也可使用封装了该函数的 jQuery 函数:
  * ```js
- * $(htmlElement).collect(baseData, direct, customCollectors)
+ * $(htmlElement).collect(pattern, customCollectors)
  * ```
- * @param [htmlElement=document.body] {HTMLElement} html 元素，从该元素及其子元素收集。
- * @param [baseData=d2js.dataset} {object} 数据，要渲染的数据
- * @param [direct=false] {bool} true - 直接收集  false - 使用绝对数据路径收集
+ * @param [htmlElement=document.body] {HTMLElement} html 元素，收集该元素及其子元素。
+ * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生收集。
  * @param [customCollectors] {object} 自定义收集器（含管道）。如
  * ```js
  * {
- * 	myCollector : function(el, value){return $(el).height()}
+ * 	myCollector : function(el, value){return el.innerHTML}
  * }
  * ```
- * 对 htmlElement 及其子元素有指定 collector="myCollector|s"，该函数会被套用。
+ * 对 htmlElement 及其子元素有指定 collector="myCollector"，该函数会被应用。需要说明的是，在下次收集时不再需要提供 myCollector 函数。
  */
-d2js.collect = function(htmlElement, baseData, direct, customCollectors){
-	baseData = baseData || d2js.dataset;
-
-	var stk = [];
-	if(htmlElement) {
-		if(htmlElement.jquery){
-			stk = htmlElement.toArray();
-			if(stk.length == 0){
-				stk = [document.body];
-			}
-		} else {
-			stk = [htmlElement]
-		}
-	} else {
-		stk = [document.body];
-	}
-	while(stk.length){
-		var e = stk.pop();
-		var dataPath = e.getAttribute('data');
-		var collector = e.getAttribute('collector');
-		if(e.hasAttribute('no-collect')) continue;
+d2js.collect = function(htmlElement, pattern, customCollectors){
+	
+	d2js.travel(htmlElement, pattern, collectElement)
+	
+	function collectElement(e, crumb){
+		if(e.hasAttribute('no-collect')) return 'stop';
 		
-		if(dataPath &amp;&amp; collector){
+		var collector = e.getAttribute('collector');
+		if(collector){
 			if(e.hasAttribute('trace-collect')) debugger;
-			var data = [e]; 
-			var match = d2js.extractData(baseData, dataPath, data, direct);
-
-			if(match){
-				data.splice(1, 0, data[data.length - 1]);		// value 始终作为第二个参数
-				data.pop();
-				
-				var pipelined = (collector.indexOf('|') != -1);
-				if(pipelined){		// pipeline 函数仅翻译值，其有可能会加 html 效果
-					var parr = collector.split('|');
-					for(var i=0; i&lt;parr.length - 1; i++){
-						var fun = extractPipeline(parr[i].trim());
-						if(fun != null) {
-							var piped = fun.apply(null, data);
-							data[1] = piped;
-						}
-					}
-					collector = parr[parr.length -1];
-				} 
-				var fun = extractCollector(collector.trim());
-				if(fun){
-					fun.apply(null, data);
-					$(e).trigger('d2js.collected', data);
+			
+			
+			var arr = [e].concat(crumb);
+			var collectors = collector.split('|');
+			for(var i=0; i&lt;collectors.length; i++){
+				var fun = extractCollector(collectors[i].trim(), e);
+				if(fun != null) {
+					arr[1] = fun.apply(null, arr);
 				} else {
-					console.error(collector + ' not found');
+					console.error(collectors[i] + ' not found, when collect', e);
 				}
 			}
-		}
-		
-		if(e.children.length){
-			for(var i=e.children.length -1; i>=0; i--){
-				stk.push(e.children[i]);
-			}
+			$(e).trigger('d2js.collected', arr, collector);
 		}
 	}
 	
-	function extractCollector(desc){
+	function extractCollector(desc, e){
+		if($.hasData(e)){
+			var d = $.data(e)['d2js.collectors'];
+			var fun = d &amp;&amp; d[desc];
+			if(fun) return fun;
+		}
 		if(customCollectors){
 			var fun = customCollectors[desc];
+			d2js._store(e, 'd2js.collectors', desc, fun);
 			if(fun) return fun;
 		}
 		return d2js.extractCachedFunction(desc, d2js.Collectors, 'd2js.Collectors.', d2js.KNOWN_COLLECTORS);
 	}
 	
-	function extractPipeline(pipelineDesc){
-		if(customCollectors){
-			var fun = customCollectors[desc];
-			if(fun) return fun;
-		}
-		return d2js.extractCachedFunction(pipelineDesc, d2js.Collectors.Pipelines, 'd2js.Collectors.Pipelines.', d2js.KNOWN_COLLECT_PIPELINES);
-	}
-	
 };
 
 +(function ( $ ) {
-    $.fn.collect = function(baseData, direct, customCollectors) {
-    	return d2js.collect(this, baseData, direct, customCollectors);
+    $.fn.collect = function(pattern, customCollectors) {
+    	this.each(function(){
+    		d2js.collect(this, pattern, customCollectors);
+    	});
+    	return this;
     };
 }( jQuery ));
-
 
 /**
  * 常用 html 元素收集器管道函数。收集 html element 的 value 属性或 innerHTML 属性。
  * 通常收集器写为 c|s 前者由控件获取内容，后者设置到对象，中间可插入其它管道，如 c|n|s
  */
-d2js.Collectors.Pipelines.c = d2js.KNOWN_COLLECT_PIPELINES['c'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Collectors.c = d2js.KNOWN_COLLECTORS['c'] = function(element, value, columnName, row, index, rows, _1, table){
 	var newValue = null;
 	if('value' in element){
 		newValue = element.value;
@@ -183,7 +141,7 @@ d2js.Collectors.Pipelines.c = d2js.KNOWN_COLLECT_PIPELINES['c'] = function(eleme
 /**
  * 复选框勾中状态收集器。单独使用时，勾中为 true, 未勾中为 false
  */
-d2js.Collectors.Pipelines.check = d2js.KNOWN_COLLECT_PIPELINES['check'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Collectors.check = d2js.KNOWN_COLLECTORS['check'] = function(element, value, columnName, row, index, rows, _1, table){
 	return element.checked;
 }
 
@@ -194,9 +152,7 @@ d2js.Collectors.Pipelines.check = d2js.KNOWN_COLLECT_PIPELINES['check'] = functi
  * 该函数设置新值到数据对象。用法 collector="c|s"。遇到普通对象，则使用 obj[attr] = value, 遇到 d2js.DataRow，则调用 row._set('attr', value)。
  * @param newValue {object} 从前面的管道函数获得
  */
-d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, table, _1, rows, index, row, columnName){
-	var obj = arguments[arguments.length -2];
-	var attr = arguments[arguments.length -1];
+d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, attr, obj, index, rows, _1, table){
 	if(newValue === '') newValue = null;
 	if(obj != null){	// dont test attr in obj
 		if(obj.set){
@@ -213,7 +169,7 @@ d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, tab
  * 数字转换管道。将值转为数字类型。用法 collector="c|n|s"
  * @returns {number} 数字
  */
-d2js.Collectors.Pipelines.n = d2js.KNOWN_COLLECT_PIPELINES['n'] = function(element, newValue, table, _1, rows, index, row, columnName){
+d2js.Collectors.n = d2js.KNOWN_COLLECTORS['n'] = function(element, newValue, columnName, row, index, rows, _1, table){
 	if(newValue instanceof String) newValue = newValue.trim();
 	if(isNaN(newValue)){
 		return null;
@@ -228,7 +184,7 @@ d2js.Collectors.Pipelines.n = d2js.KNOWN_COLLECT_PIPELINES['n'] = function(eleme
  * @param newValue
  * @returns {Date}
  */
-d2js.Collectors.Pipelines.d = d2js.KNOWN_COLLECT_PIPELINES['d'] = function(element, newValue, table, _1, rows, index, row, columnName){
+d2js.Collectors.d = d2js.KNOWN_COLLECTORS['d'] = function(element, newValue, columnName, row, index, rows, _1, table){
 	if(newValue instanceof String) newValue = newValue.trim();
 	if(!newValue){
 		return null;
@@ -245,7 +201,7 @@ d2js.Collectors.Pipelines.d = d2js.KNOWN_COLLECT_PIPELINES['d'] = function(eleme
  * 对支持 getValue 的 molecule 收集。 
  * 用法: colector="m|s"
  */
-d2js.Collectors.Pipelines.m = d2js.KNOWN_COLLECT_PIPELINES['m'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Collectors.m = d2js.KNOWN_COLLECTORS['m'] = function(element, value, columnName, row, index, rows, _1, table){
 	var m = Molecule.of(element);
 	if(m == null || !m.getValue){
 		return;
@@ -254,29 +210,15 @@ d2js.Collectors.Pipelines.m = d2js.KNOWN_COLLECT_PIPELINES['m'] = function(eleme
 	}
 }
 
-
 /**
- * repeater 收集器。对 repeater 渲染器产生的元素进行收集。
- * usage:
- * ```html
- * &lt;div data="#authors,rows" renderer="repeater" collector="repeater">
-		&lt;h2 repeater="true">&lt;span data="name" renderer="std">&lt;/span>&lt;/h2>
-		&lt;h2 repeater-empty="true">no data found&lt;/h2>
-	&lt;/div>
-	```
- * @member
+ * 从元素属性收集数据的收集器。
+ * 用法
+ * &lt;input type="date" collector="prop('valueAsDate')|s">
  */
-d2js.Collectors.repeater = function(element, rows){
-	var e = $(element);
-	var copies = e.find('[repeater-copy]');
-	copies.each(function(idx, c){
-		if($(c).closest('[renderer=repeater]').is(e)){
-			c.removeAttribute('no-collect');
-			var row = $(c).data('repeater-obj');		
-			if(row) d2js.collect(c, row, true);
-			c.setAttribute('no-collect', true);
-		}
-	});
+d2js.Collectors.prop = function(attr){
+	return function(element, value, columnName, row, index, rows, _1, table){
+		return $.prop(element, attr);
+	}
 }
 
 
@@ -285,31 +227,31 @@ d2js.Collectors.repeater = function(element, rows){
  * 当 DataRow['field'] 为对象时，如果 element 绑定的是对象的属性，应当使用该收集器。
  * 例如
  * ```html
- * &lt;input data="#table,rows,0,contact,email">
+ * &lt;input data="contact,email">
  * ```
  * 该表的 contact 字段为一JSON字段，表现在前端为一个对象，其中 email 是一个属性，此时应使用如下收集方式 
  * ```html
- * &lt;input data="#table,rows,0,contact,email" collector="c|oc">
+ * &lt;input data="contact,email" collector="c|oc">
  * ```
  * 如使用
  * ```html
- * &lt;input data="#table,rows,0,contact,email" collector="c|s">
+ * &lt;input data="contact,email" collector="c|s">
  * ```
- * 则编辑时虽然值变化了，但行状态不会变化，将导致数据不提交。
+ * 则编辑时虽然值变化了，行状态却不会变化，将导致数据不提交。
  * 
  * @param element
  * @param newValue
  */
 d2js.Collectors.oc = d2js.KNOWN_COLLECTORS['oc'] = function(element, newValue){
 	var row = null;
-	for(var i=1; i&lt;arguments.length-1; i++){
-		var colname = arguments[i+1];
+	for(var i = arguments.length-1; i>1; i--){
+		var colname = arguments[i-1];
 		if(arguments[i] instanceof d2js.DataRow){
 			row = arguments[i];
-			for(i+=2; i&lt;arguments.length-1; i+=2){
+			for(i-=2; i>1; i-=2){
 				if(arguments[i] == null){
-					var attr = arguments[i-1];
-					arguments[i] = arguments[i-2][attr] = {};
+					var attr = arguments[i+1];
+					arguments[i] = arguments[i+2][attr] = {};
 				}
 			}
 			break;
@@ -345,13 +287,13 @@ d2js.Collectors.oc = d2js.KNOWN_COLLECTORS['oc'] = function(element, newValue){
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Apr 15 2016 10:46:17 GMT+0800 (中国标准时间)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 09 2016 15:49:24 GMT+0800 (中国标准时间)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h2>自定义渲染器<small>自定义渲染器都会存放到 data('d2js.renderers') 中</small></h2>
+		<div id="test">
+			Name: <span  data="name" renderer="std"></span>
+			<br>
+			Email: <span  data="email">
+					<renderer>
+						element.innerHTML = '<a href="mailto:' + value + '">' + value +'</a>'
+					</renderer>
+				</span>
+			<br>
+			Phone: <span  data="phone" renderer="phone|std"></span>
+			<br>
+			Gender: <span data="gender" renderer="gender"></span>
+		</div>
+	</div>
+</body>
+<script>
+	
+	var person  = {name:'Jack', email: 'jack@gmail.com', phone: '13722223333', gender: 'M'} 
+	
+	$('#test').bindRoot(person).render(null, {phone:function(e, phone){
+			if(phone) {
+				var arr = [];
+				for(var i=phone.length; i>=0; i-=4){
+					var s = phone.substring(Math.max(i-4,0), i);
+					arr.unshift(s);
+				}
+				return arr.join('-')
+			}
+		}, gender: function(e, v){
+			if(v == 'M'){
+				e.innerHTML = '<font color=blue>♂</font>';
+			} else {
+				e.innerHTML = '<font color=maroon>♀</font>';
+			}
+		}})
+	
+	setTimeout(function(){
+		person.name = 'Mary'
+		person.email = 'mary@yahoo.com'
+		person.phone = '18622226666'
+		person.gender = 'F'
+		$('#test').render()		// customer renderers stored in $e.data(d2js.renderers), so needn't re-set custom renderers again
+	}, 4000)
+	
+</script>
+</html>

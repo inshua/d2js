@@ -151,7 +151,9 @@
         silent : true|false 是否静默（不引发render）, 默认为为 true,
         pageSize : 分页尺寸，默认为 d2js.DataTable.DEFAULT_PAGESIZE,
         standalone : true|false 如果启用，则不加入到 dataset 中，默认为 false,
-        indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段
+        dataset : 默认为 d2js.dataset，也可指定为局部的 dataset(使用 d2js.dataset.create() 创建)
+        indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段,
+        rowType : 数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交,
         listeners : {
             onload : function(error){},
             onsubmit : function(error){},
@@ -210,7 +212,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line97">line 97</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line160">line 160</a>
     </li></ul></dd>
     
 
@@ -308,7 +310,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line224">line 224</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line302">line 302</a>
     </li></ul></dd>
     
 
@@ -380,7 +382,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line156">line 156</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line220">line 220</a>
     </li></ul></dd>
     
 
@@ -455,7 +457,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line162">line 162</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line226">line 226</a>
     </li></ul></dd>
     
 
@@ -527,7 +529,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line217">line 217</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line295">line 295</a>
     </li></ul></dd>
     
 
@@ -599,7 +601,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line180">line 180</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line258">line 258</a>
     </li></ul></dd>
     
 
@@ -671,7 +673,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line190">line 190</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line268">line 268</a>
     </li></ul></dd>
     
 
@@ -743,7 +745,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line185">line 185</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line263">line 263</a>
     </li></ul></dd>
     
 
@@ -815,7 +817,84 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line168">line 168</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line232">line 232</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="rowType"><span class="type-signature"></span>rowType<span class="type-signature"> :function</span></h4>
+
+
+
+
+<div class="description">
+    <p>数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交。<br>自定义方法如：</p>
+<pre class="prettyprint source lang-js"><code>function MyRow(){
+        d2js.DataRow.apply(this, arguments);
+}
+MyRow.prototype = Object.create(d2js.DataRow.prototype);
+MyRow.prototype.myFunc = function(){...}</code></pre>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">function</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line246">line 246</a>
     </li></ul></dd>
     
 
@@ -887,7 +966,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line174">line 174</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line252">line 252</a>
     </li></ul></dd>
     
 
@@ -959,7 +1038,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line151">line 151</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line215">line 215</a>
     </li></ul></dd>
     
 
@@ -1031,7 +1110,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line195">line 195</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line273">line 273</a>
     </li></ul></dd>
     
 
@@ -1109,7 +1188,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line294">line 294</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line372">line 372</a>
     </li></ul></dd>
     
 
@@ -1286,7 +1365,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line799">line 799</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line900">line 900</a>
     </li></ul></dd>
     
 
@@ -1460,7 +1539,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line342">line 342</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line420">line 420</a>
     </li></ul></dd>
     
 
@@ -1649,7 +1728,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line279">line 279</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line357">line 357</a>
     </li></ul></dd>
     
 
@@ -1813,7 +1892,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line556">line 556</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line657">line 657</a>
     </li></ul></dd>
     
 
@@ -1971,7 +2050,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line474">line 474</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line575">line 575</a>
     </li></ul></dd>
     
 
@@ -2131,7 +2210,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line757">line 757</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line858">line 858</a>
     </li></ul></dd>
     
 
@@ -2310,7 +2389,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line838">line 838</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line942">line 942</a>
     </li></ul></dd>
     
 
@@ -2486,7 +2565,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line857">line 857</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line962">line 962</a>
     </li></ul></dd>
     
 
@@ -2590,7 +2669,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line807">line 807</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line909">line 909</a>
     </li></ul></dd>
     
 
@@ -2694,7 +2773,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line822">line 822</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line925">line 925</a>
     </li></ul></dd>
     
 
@@ -2902,7 +2981,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line321">line 321</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line399">line 399</a>
     </li></ul></dd>
     
 
@@ -2984,7 +3063,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line874">line 874</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line980">line 980</a>
     </li></ul></dd>
     
 
@@ -3210,7 +3289,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line353">line 353</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line431">line 431</a>
     </li></ul></dd>
     
 
@@ -3341,7 +3420,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line521">line 521</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line622">line 622</a>
     </li></ul></dd>
     
 
@@ -3484,7 +3563,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line266">line 266</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line344">line 344</a>
     </li></ul></dd>
     
 
@@ -3588,7 +3667,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line772">line 772</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line873">line 873</a>
     </li></ul></dd>
     
 
@@ -3670,7 +3749,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line306">line 306</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line384">line 384</a>
     </li></ul></dd>
     
 
@@ -3752,7 +3831,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line530">line 530</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line631">line 631</a>
     </li></ul></dd>
     
 
@@ -3883,7 +3962,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line135">line 135</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line198">line 198</a>
     </li></ul></dd>
     
 
@@ -4017,7 +4096,7 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line564">line 564</a>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line665">line 665</a>
     </li></ul></dd>
     
 
@@ -4044,6 +4123,110 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
 
 
         
+            
+
+    
+
+    <h4 class="name" id="unremovedRows"><span class="type-signature"></span>unremovedRows<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Array.html">Array</a>.&lt;DataRow>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>没有删除的行，常置于渲染路径</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="d2js_dataset.js.html">d2js/dataset.js</a>, <a href="d2js_dataset.js.html#line1014">line 1014</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>没有删除的行数组</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Array.html">Array</a>.&lt;DataRow></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
     
 
     
@@ -4059,13 +4242,13 @@ table.find(function(row){return row.name == 'mary'})</code></pre><p>仅查找一
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Collectors.Pipelines.html">Pipelines</a></li><li><a href="d2js.dataset.html">dataset</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li><li><a href="d2js.Renderers.Pipelines.html">Pipelines</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="d2js.DataColumn.html">DataColumn</a></li><li><a href="d2js.DataRow.html">DataRow</a></li><li><a href="d2js.DataTable.html">DataTable</a></li><li><a href="EventDispatcher.html">EventDispatcher</a></li><li><a href="Molecule.html">Molecule</a></li></ul><h3>Namespaces</h3><ul><li><a href="d2js.html">d2js</a></li><li><a href="d2js.Collectors.html">Collectors</a></li><li><a href="d2js.Renderers.html">Renderers</a></li><li><a href="d2js.Renderers.bootstrap.html">bootstrap</a></li></ul><h3>Global</h3><ul><li><a href="global.html#parseDate">parseDate</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Apr 15 2016 10:46:17 GMT+0800 (中国标准时间)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 09 2016 15:49:24 GMT+0800 (中国标准时间)
 </footer>
 
 <script> prettyPrint(); </script>

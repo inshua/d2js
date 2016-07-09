@@ -2,12 +2,10 @@ d2js.fetch = function(params){
 	sql{.
 		select b.*, a.name author_name from book b, author a where b.author = a.id
 		code{. 
-			if(params.title){ 
-				sql{. and strpos(b.title, :title) > 0  .}
-			}
-			if(params.kind){
-				sql{. and b.kind = :kind  .}
-			}
+			sql{.?(params.title) and strpos(b.title, :title) > 0  .}
+		
+			sql{.?(params.kind) and b.kind = :kind  .}
+
 			if(params.author && params.author instanceof Array && params.author.length){
 				params.author = $ARRAY('int', params.author);
 				sql{. and b.author = ANY(:author) .}

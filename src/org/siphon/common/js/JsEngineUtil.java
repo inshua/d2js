@@ -290,8 +290,8 @@ public class JsEngineUtil {
 			importedFiles.put(srcFile, true);
 		}
 		ScriptObjectMirror stk = (ScriptObjectMirror) jsEngine.get("IMPORTS_PATH_STACK");
-		NativeArray.push(stk.to(NativeArray.class), srcFile);
-		// stk.callMember("push", srcFile);
+		// NativeArray.pushObject(stk.to(NativeArray.class), srcFile);
+		//stk.callMember("push", srcFile);
 
 		try {
 			String code = FileUtils.readFileToString(new File(srcFile), "utf-8");
@@ -319,8 +319,8 @@ public class JsEngineUtil {
 			importedFiles.put(srcFile, true);
 		}
 		ScriptObjectMirror stk = (ScriptObjectMirror) jsEngine.get("IMPORTS_PATH_STACK");
-		NativeArray.push(stk.to(NativeArray.class), srcFile);
-		// stk.callMember("push", srcFile);
+		//NativeArray.pushObject((Object)(stk.to(NativeArray.class)), (Object)srcFile);
+		stk.callMember("push", srcFile);
 
 		try {
 			return eval(jsEngine, aliasPath, script);

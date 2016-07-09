@@ -102,8 +102,8 @@ public class TestJsEngineException8 {
 		
 		//NativeArray arr = (NativeArray) ma.to(NativeArray.class);
 		
-		NativeArray.push(arr, "abcd");
-		NativeArray.push(arr, 1);
+		NativeArray.pushObject(arr, "abcd");
+		NativeArray.pushObject(arr, 1);
 
 		System.out.println(json.callMember("stringify", arr));
 		

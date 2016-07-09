@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+<script src="../jslib/date.js/Date.js"></script>
+
+</head>
+<body>
+	<div class="container" d2js.root="person">
+		<h1>子类化DataRow</h1>
+		<div data="error" renderer="stderr"></div>
+		<table class="table table-striped" data="this" renderer="table">
+			<thead>
+				<tr>
+					<th data-t="name" renderer="std">name</th>
+					<th data-t="birth" format="yyyy-MM-dd" renderer="date|std">birth</th>
+					<th data-t="age" renderer="std">age</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+			<tfoot></tfoot>
+		</table>
+
+	</div>
+	
+	
+</body>
+<script>
+
+	function Person(){
+		d2js.DataRow.apply(this, arguments);
+	}
+	Person.prototype = Object.create(d2js.DataRow.prototype);
+	
+	Person.prototype.age = function(){
+    	return new Date().getYear() - this.birth.getYear();
+    }
+	
+	var table = new d2js.DataTable('person', null, { rowType: Person, silent:false});
+	
+	table.fill([
+	        {name: 'Jack', gender: 'M', birth: new Date(2001, 3, 3)},
+	        {name: 'Mary', gender: 'F', birth: new Date(2002, 2, 5)},
+	        {name: 'Tom', gender: 'M', birth: new Date(1998, 6, 12)}])
+</script>
+</html>

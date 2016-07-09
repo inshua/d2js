@@ -22,9 +22,9 @@
  * 标准渲染器。支持常用元素 html, input, select 的渲染。
  * @param element
  * @param value
+ * @return value
  */
-d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, _1, rows, index, row, columnName){
-	var e = element, v = value;
+d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(e, v, columnName, row, index, rows, _1, table){
 	
 	if(e.tagName == "INPUT"){
 		if(e.type == 'radio'){
@@ -43,6 +43,7 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, 
 	} else{
 		tagRender(e,v);
 	}
+	return v;
 	
 	function inputRender(e, v){
 		if(v == null)
@@ -74,38 +75,71 @@ d2js.Renderers.std = d2js.KNOWN_RENDERERS.std = function(element, value, table, 
 	}
 }
 
-d2js.Renderers.attr = function(attr){
-	return function(element, value, table, _1, rows, index, row, columnName){
-		if('hasOwnProperty' in element){
-			if(element.hasOwnProperty(attr)){
-				element[attr] = value;
-			} else {
-				element.setAttribute(attr, value);
-			}
-		} else {
-			element.setAttribute(attr, value);
-		}
+/**
+ * 将元素的某项属性设为value。
+ * 用法
+ * <input type="date" renderer="prop('valueAsDate')">
+ */
+d2js.Renderers.prop = function(attr){
+	return function(element, value, columnName, row, index, rows, _1, table){
+		$.prop(element, attr, value);
+		return value;
 	}
 }
 
 
 /**
- * 表达式渲染器。适用于 innerHTML 中含有 {{... }} 表达式的渲染器
+ * 表达式渲染器。适用于正文或属性中含有 {{... }} 表达式的渲染器
  * 用法：
  *```html
- * 	<div data="#table,rows,0" renderer="expr">
- * 		<h1>{{title.toUpperCase()}}<small>{{author}}</small></h1>
- * 		<p>{{content}}</p>
- * 	</div>
- *```
+  	<div data="rows,0" renderer="expr">
+  		<h1>{{title.toUpperCase()}}<small>{{author}}</small></h1>
+  		<p>{{content}}</p>
+  	</div>
+ ```
  */
 d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
-	var $e = $(e)
-	if(e.innerHTML.indexOf('{{') != -1){		// 带有表达式 {{}},以参数 row 为出发路径
-		$e.data('render_expr', e.innerHTML);
+	// if(data instanceof d2js.DataTable) debugger;
+	
+	var dump = e['expr_dump']
+	if(dump == null){
+		e['expr_dump'] = dump = e.cloneNode(true);
 	}
-	if($e.data('render_expr')){
-		var s = $e.data('render_expr');
+	e.innerHTML = '';
+
+	for(var i=0; i<dump.childNodes.length; i++){
+		e.appendChild(process(dump.childNodes[i].cloneNode(true)));
+	}
+	
+	function process(node){
+		var newExpr = ('getAttribute' in node && node.getAttribute('renderer') == 'expr')	// 另一个表达式
+		switch(node.nodeType){
+		case Node.TEXT_NODE:
+			if(node.nodeValue.indexOf('{{') != -1){
+				node.nodeValue = processExpr(node.nodeValue);
+			}
+			break;
+		case Node.ELEMENT_NODE:
+			if(!newExpr){
+				for(var a=0; a<node.attributes.length; a++){
+					var attr = node.attributes[a];
+					if(attr.value.indexOf('{{') != -1){
+						attr.value = processExpr(attr.value);
+					}
+				}
+			}
+			break;
+		}
+		if(!newExpr && node.childNodes){
+			for(var i=0; i<node.childNodes.length; i++){
+				process(node.childNodes[i]);
+			}
+		}
+		return node;
+	}
+	
+	function processExpr(expr){
+		var s = expr;
 		var res = '';
 		var start = 0;
 		var withExpr = withStmt(data, 'this');
@@ -120,8 +154,7 @@ d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
 					res += (function(s){eval(withExpr); return eval(s)}).call(data, expr);
 				}catch(e){
 					res += e.message;
-					console.error('eval error, expr : ', expr);
-					console.log(e);
+					console.error('eval error, expr : ', expr, e, data);
 					console.log(data);
 				}
 				start = end + 2;
@@ -131,9 +164,7 @@ d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
 			}
 		}
 		if(start < s.length -1) res += s.substr(start);
-		e.innerHTML = res;
-	} else {
-		//nothing todo
+		return res;
 	}
 	
 }
@@ -143,10 +174,10 @@ d2js.Renderers.expr = d2js.KNOWN_RENDERERS['expr'] = function(e, data){
  *下拉列表框下拉项目渲染器。
  *用法：
  *```html
- * 	<div data="#listTable,rows" renderer="options('name','id',true)">
- * 		<select data="#bindTable,rows,N,type"></select>
- *  </div>
- *```
+  	<div data="listTable,rows" renderer="options('name','id',true)">
+  		<select data="bindTable,rows,N,type"></select>
+   </div>
+ ```
  */
 d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
 	var noBracket = false;
@@ -196,19 +227,19 @@ d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
  * 表格渲染器。
  * 用法：
  *```html
- * <table data="#table" renderer="table">
+ * <table data="table or table,rows" renderer="table">
  * 		<thead>
  * 			<tr>
- * 				<td data-t="rows,N,name" renderer="std"></td>  <!-- 注意  data-t 和  N，是固定用法 -->
- * 				<td data-t="rows,N,remarks" renderer="input('text')"></td>
+ * 				<td data-t="name" renderer="std"></td>  <!-- 注意应写作  data-t，是固定用法 -->
+ * 				<td data-t="remarks" renderer="input('text')"></td>
  * 			</tr>
  * 		</thead>
  * </table>
  *```
- * 这里 N 是固定写法，会被替换为行ID。
+ * data 也可直接使用 rows 数组
  * 渲染表格也可以使用 repeater 渲染器。
  */
-d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable,  value, table){
+d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 	var columnRenders = [];
 	var headRow = hTable.tHead.rows[0];
 	for(var i=0; i<headRow.cells.length; i++){
@@ -235,21 +266,18 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable,  value, 
 			tBody.rows[0].remove();
 		}
 	}
-	if(table.rows.length == 0){
+	var rows = (table && table.rows) || table || [];
+	if(rows.length == 0){
 		if(tBodyEmpty) tBodyEmpty.style.display = '';
 	} else {
 		if(tBodyEmpty) tBodyEmpty.style.display = 'none';
-		for(var i=0; i<table.rows.length; i++){
+		for(var i=0; i<rows.length; i++){
 			var tr = tBody.insertRow();
-			if(headRow.hasAttribute('data')){
-				tr.setAttribute('data', hTable.getAttribute('data') + ',' + headRow.getAttribute('data').replace(/,\s*N/, ',' + i));
-			}
+			$(tr).bindRoot(rows[i], hTable)
 			columnRenders.forEach(function(column){
 				var cell = document.createElement('td');
 				for(var attr in column){if(column.hasOwnProperty(attr)){
-					if(attr == 'data'){
-						$(cell).attr('data', hTable.getAttribute('data') + ',' + column.data.replace(/,\s*N\s*,/, ',' + i + ','));
-					} else if(attr == 'molecule-obj'){
+					if(attr == 'molecule-obj'){	
 						
 					} else {
 						$(cell).attr(attr, column[attr]);
@@ -269,11 +297,11 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable,  value, 
  *```
  */
 d2js.Renderers.input = function(inputType){
-	return function(element,  value, table, _1, rows, index, row, columnName){
+	return function(element,  value, columnName, row, index, rows, _1, table){
 		element.innerHTML = '';
 		var ele = document.createElement('input');
 		ele.type = inputType;
-		ele.setAttribute('data', element.getAttribute('data'));
+		ele.setAttribute('data', ',this');
 		var renderer = element.getAttribute('renderer-t');
 		if(renderer){
 			ele.setAttribute('renderer', renderer);
@@ -302,30 +330,38 @@ function withStmt(obj, varName){
  * repeater 渲染器
  * usage:
  *```html
- *<div data="#authors,rows" renderer="repeater">
+ *<div data="authors,rows" renderer="repeater">
 		<h2 repeater="true"><span data="name" renderer="std"></span></h2>
 		<h2 repeater-empty="true">no data found</h2>
   </div>
 ```
+repeater 渲染器产生的每个复制项都具有 repeater-copy=true 属性，并已绑定为 d2js.root。
  */
 d2js.Renderers.repeater = function(element, rows){
-	var e = $(element);
-	var copies = e.find('[repeater-copy]');
-	copies.each(function(idx, c){c.parentElement.removeChild(c)});
+	var repeater = element['repeater-tpl'];
+	if(element['repeater-tpl'] == null){
+		var arr = $(element).find('[repeater]').toArray().filter(function(r){
+			return $(r).closest('[renderer=repeater]').is(element);
+		});
+		if(arr.length == 0) return console.error('repeater child not found');
+		element['repeater-prev'] = arr[0].previousSibling; 		
+		
+		element['repeater-tpl'] = repeater = arr.map(function(n){return n.cloneNode(true)});
+		arr.forEach(function(n){
+			n.parentNode.removeChild(n);
+		});
+		
+		var $empty = $(element).find('[repeater-empty]');
+		element['repeater-empty'] = $empty.clone(true);
+		$empty.remove();
+	}
+	
+	$(element).find('[repeater-copy]').each(function(){this.parentElement.removeChild(this)});
 
-	var repeater = e.find('[repeater]');
-	repeater = repeater.toArray().filter(function(r){
-		return $(r).closest('[renderer=repeater]').is(e);
-	})
-	if(repeater.length == 0) return console.error('repeater child not found');
-	
-	repeater.forEach(function(e, idx){ $(e).hide().attr('no-collect', 'true'); });
-	
 	if(rows == null || rows.length == 0){
-		e.find('[repeater-empty]').show();
+		element['repeater-empty'].clone(true).appendTo(element);
 	} else {
-		e.find('[repeater-empty]').hide();
-		var prev = repeater[repeater.length-1];
+		var prev = element['repeater-prev'];
 		for(var rowIndex=0; rowIndex<rows.length; rowIndex++){
 			var row = rows[rowIndex];
 			var tpl = repeater.filter(function(item, idx){
@@ -342,26 +378,21 @@ d2js.Renderers.repeater = function(element, rows){
 				$(e).attr('molecule', $(e).attr('molecule-r')); 
 			});
 			r.attr('repeater-copy', true);
-			// r.attr('no-collect', false);	
 			
-			r.data('repeater-obj', row);
-			r.insertAfter(prev);
-			d2js.render(r[0], row, true);
-			r.show();
+			r.bindRoot(row, element).insertAfter(prev).show(); 
 			prev = r;
 		}
 	}
-	return 'break';
 }
 
 /**
  *molecule 渲染器。对支持 setValue/getValue 的 molecule 渲染。
  *usage:
  *```html
- * <div data="..." molecule="Select" renderer="molecule"></div>
- *```
+  <div data="..." molecule="Select" renderer="molecule"></div>
+ ```
  */
-d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, value, table, _1, rows, index, row, columnName){
+d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, value, columnName, row, index, rows, _1, table){
 	var m = Molecule.of(element);
 	if(m != null){
 		if(m.setValue){
@@ -374,6 +405,7 @@ d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, v
 			m.setValue && m.setValue(value);
 		})
 	}
+	return value;
 }
 
 

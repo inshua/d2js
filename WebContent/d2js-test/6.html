@@ -20,17 +20,22 @@
 
 </head>
 <body>
-	<div class="container">
+	<div class="container" d2js.root="author">
 		<h1>repeater</h1>
-		<div data="#author,error" renderer="stderr"></div>
+		<div data="error" renderer="stderr"></div>
 		
-		<div data="#author,rows" renderer="repeater">
+		<div data="rows" renderer="repeater">
 			<h2>author</h2>
 			<hr>
-			<h2 repeater="true"><span data=name renderer="std"></span><small data="email" renderer="std"></small></h2>
+			<div repeater="true">
+				<h2><span data=name renderer="std"></span><small data="email" renderer="std"></small></h2>
+				<div data="book" renderer="repeater">
+					<div data="title" repeater="true" renderer="std"></div>
+				</div>
+			</div>
 			
 			<nav>
-				<ul class="pagination" data="#author" renderer="pagination">
+				<ul class="pagination" data="this" renderer="pagination">
 				</ul>
 			</nav>
 		</div>
@@ -41,7 +46,10 @@
 </body>
 <script>
 	
-	var table = new d2js.DataTable('author', 'author.d2js', {pageSize : 3});
+	var table = new d2js.DataTable('author', 'author-nest.d2js', {pageSize : 3});
+	
+	var book = new d2js.DataTable('book', 'book.d2js');
+	d2js.dataset.addRelation('author', 'id', 'book', 'author');
 	
 	table.load({ _m : 'fetch'}, function(error){d2js.render(null, this);});
 </script>

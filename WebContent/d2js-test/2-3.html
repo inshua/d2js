@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1>各种常见控件</h1>
+		
+		<h2>主表下拉列表框</h2>
+		<div d2js.root="book,rows,0">
+			<div data="title" renderer="std"></div>
+			<div d2js.root="author" data="rows" renderer="options('name','id',true)">
+				<select data="..author" renderer="std" collector="c|n|s"></select>
+			</div>
+		</div>
+		
+		<h2>词典下拉列表框</h2>
+		<div d2js.root="author,rows,0">
+			<div data="name" renderer="std"></div>
+			<div data="this" dict="gender" renderer="dictToList|options('name','id')">
+				<select data="gender" renderer="std" collector="c|s"></select>
+			</div>
+		</div>
+		
+		<h2>日期</h2>
+		<div d2js.root="book,rows,0">
+			<div data="title" renderer="std"></div>
+			<div>
+				<input data="publish_date" type="date" renderer="prop('valueAsDate')" collector="prop('valueAsDate')|s">
+			</div>
+		</div>
+	</div>
+	
+</body>
+<script>
+	Dicts.gender = {M:'男', F:'女'}
+	
+	var table = new d2js.DataTable('author', 'author-nest.d2js', {pageSize : 5});
+	table.on('load',  function(error) {
+		d2js.render();
+	});
+	
+	var book = new d2js.DataTable('book', 'book.d2js');
+	d2js.dataset.addRelation('author', 'id', 'book', 'author');
+	
+	table.load();
+	
+</script>
+</html>

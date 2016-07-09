@@ -20,38 +20,38 @@
 
 </head>
 <body>
-	<div class="container">
+	<div class="container" d2js.root="author">
 		<h1>表格编辑</h1>
 		<div>
 			<form class="form-inline">
 			  <div class="form-group">
 			    <label>Name</label>
-			    <input type="text" class="form-control" placeholder="" data="#author,search,params,name" collector="c|s">
+			    <input type="text" class="form-control" placeholder="" data="search,params,name" collector="c|s">
 			  </div>
 			  <button type="button" class="btn btn-default" onclick="search($(this).parent('form'))">Search</button>
 			</form>
 		</div>
-		<div data="#author,error" renderer="stderr"></div>
-		<table class="table table-striped" data="#author" renderer="table">
+		<div data="error" renderer="stderr"></div>
+		<table class="table table-striped" data="this" renderer="table">
 			<thead>
 				<tr>
-					<th data-t="rows,N,id" renderer="std">
-						<a data="#author" renderer="sortLink('id', 'id')"/>
+					<th data-t="id" renderer="std">
+						<a data="this" renderer="sortLink('id', 'id')"/>
 					</th>
-					<th data-t="rows,N,name" renderer="std">
-						<a data="#author" renderer="sortLink('name', 'Name')"/>
+					<th data-t="name" renderer="std">
+						<a data="this" renderer="sortLink('name', 'Name')"/>
 					</th>
-					<th data-t="rows,N,email" renderer="std">
-						<a data="#author" renderer="sortLink('email', 'Email')"/>
+					<th data-t="email" renderer="std">
+						<a data="this" renderer="sortLink('email', 'Email')"/>
 					</th>
-					<th data-t="rows,N,id" renderer="editLink"></th>
+					<th data-t="id" renderer="editLink"></th>
  				</tr>
 			</thead>
 			<tfoot>
 				<tr>
-					<td width="*" align="center">
+					<td colspan="10000" align="center">
 						<nav>
-							<ul class="pagination" data="#author" renderer="pagination">
+							<ul class="pagination" data="this" renderer="pagination">
 							</ul>
 						</nav>
 					</td>
@@ -61,31 +61,31 @@
 
 		<!-- Modal -->
 		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-		  <div class="modal-dialog" role="document">
+		  <div class="modal-dialog" role="document" d2js.root=",curr">
 		    <div class="modal-content">
 		      <div class="modal-header">
 		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 		        <h4 class="modal-title" id="myModalLabel">Edit <span data="first_name" renderer="std"/></h4>
-		      	<div data="#author,curr,_error" renderer="stderr"></div>
+		      	<div data="_error" renderer="stderr"></div>
 		      </div>
 		      <div class="modal-body">
 		      	<form>
-		          <div class="form-group" data="#author,curr,_error_at,name" renderer="flderr" trace>
+		          <div class="form-group" data="_error_at,name" renderer="flderr" trace>
 				    <label>Name</label>
-				    <input type="text" class="form-control" data="#author,curr,name" renderer="std" collector="c|s">
+				    <input type="text" class="form-control" data="name" renderer="std" collector="c|s">
 				  </div>
-				  <div class="form-group" data="#author,curr,_error_at,email" renderer="flderr">
+				  <div class="form-group" data="_error_at,email" renderer="flderr">
 				    <label>Email</label>
-				    <input type="email" class="form-control" data="#author,curr,email" renderer="std" collector="c|s">
+				    <input type="email" class="form-control" data="email" renderer="std" collector="c|s">
 				  </div>
-				  <div class="form-group" data="#author,curr,_error_at,info,linkin" renderer="flderr">
+				  <div class="form-group" data="_error_at,info,linkin" renderer="flderr">
 				    <label>LinkIn</label>
-				    <input type="text" class="form-control" data="#author,curr,info,linkin" renderer="std" collector="c|oc">
+				    <input type="text" class="form-control" data="info,linkin" renderer="std" collector="c|oc">
 				  </div>
-				  <table class="table table-striped" data="#book" renderer="table">
+				  <table class="table table-striped" d2js.root="book" data="this" renderer="table">
 					<thead>
 						<tr>
-							<th data-t="rows,N,title" renderer="input('text')" renderer-t="std" collector-t="c|s">Title</th>
+							<th data-t="title" renderer="input('text')" renderer-t="std" collector-t="c|s">Title</th>
 		 				</tr>
 					</thead>
 				  </table>
@@ -103,7 +103,8 @@
 	</div>
 </body>
 <script>
-	d2js.Renderers.editLink = function(element, v, table){
+	d2js.Renderers.editLink = function(element, v){
+		var table = d2js.findArg(arguments, 'table')
 		var e = $(element);
 		e.html('');
 		var a = $(document.createElement('a')).appendTo(e);
@@ -111,7 +112,7 @@
 		a.attr('href', '###');
 		a.data('id', v);
 		a.on('click', function(){
-			editRow(table.find('id', $(this).data('id')));
+			editRow($(element).findRoot().root);
 		});
 	}
 	d2js.Renderers.sortLink = function(colName, text){
@@ -141,7 +142,8 @@
 	
 	function editRow(row){
 		table.curr = row;
-		d2js.render($('#myModal')[0], table);
+		
+		$('#myModal').bindRoot().render();
 		
 		book.load({ _m : 'fetch', author : row.id}, {callback : function(error) {
 			d2js.render(null, this);

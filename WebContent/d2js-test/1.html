@@ -16,108 +16,51 @@
 <script src="../jslib/d2js/pipelines.js"></script>
 <script src="../jslib/molecule.js"></script>
 
-<style>
-	renderer{
-		display: none;
-	}
-</style>
-
 </head>
 <body>
-
-	<h1>渲染任意对象<small>选择器为 #person </small></h1>
-	
-	Name : <div id="divForPerson" data="#person,name" renderer="std"> 
-	</div>
-	MailBox(自动命中子对象的选择器) : <span data="#mailbox,length" renderer="bootstrap.badge"> </span>
-	
-	<h1>直接渲染<small>不使用选择器</small></h1>
-	
-	<div id="divForPerson2"> 
-		<p>姓名： <span data="name" renderer="std"></span></p>
-		<p>性别： <span data="gender" renderer="dict({M:'男',F:'女'}) | std"></span></p>
-	</div>
-	
-	<h1>嵌入渲染器<small>使用 renderer 标签嵌入一个渲染器，如果还有其它渲染器，该渲染器将放在最后一个调用</small></h1>
-	
-	Name : <div id="divForPerson3" data="#person,name">
-		<renderer>element.innerHTML = '<b style="color:blue">' + value + '</b>'</renderer> 
-	</div>
-	
-	
-	<h1>临时自定义渲染器<small>在渲染时传入渲染器，这样做可以获得调用render时的闭包上下文</small></h1>
-	
-	Name : <div id="divForPerson4" data="name" renderer="red"></div>
-	
-	
-	<h1>渲染数据表<small>DataTable、 d2js.dataset 均可</small></h1>
-	
-	<div>
+	<div class="container">
+		<h1>本例需要运行9秒</h1>
+		<h2>渲染 d2js.root 出发的数据（d2js.root为字符串）</h2>
 		
-		<div data="#test,rows,0,name" renderer="bootstrap.label('default')"></div>
+		<div id="test1" d2js.root="person">
+			<div>Name:<span data="name" renderer="std"></span></div>
+			<div>Gender:<span data="gender" renderer="std"></span></div>
+		</div>
 	
-		<div data="#test,rows,1,name" renderer="bootstrap.label('primary')"></div>
-	
-		<div id="divPrompt"></div>
-	
-		<div data="#test2,rows,0,name" renderer="bootstrap.label('success')"></div>
+		<h2>渲染自绑定对象的数据（d2js.root为bindData附加的数据对象）</h2>
 		
-		<div data="#test,rows,0" renderer="expr">
-	  		<h1>{{name}}<small>{{email}}</small></h1>
-	  	</div>
-
+		<div id="test2">
+			<div>Name:<span data="name" renderer="std"></span></div>
+			<div>Gender:<span data="gender" renderer="std"></span></div>
+		</div>
 	</div>
-
-
 </body>
 <script>
 
-	d2js.Renderers.bootstrap.badge = d2js.KNOWN_RENDERERS['bootstrap.badge'] = function(element, value, table, _1, rows, index, row, columnName){
-		element.innerHTML = value + '';
-		element.className = 'badge';
-	}
-
-
-	// 渲染任意对象
-	var person = {d2js:'person', name : 'Jack'};		// 该 d2js 属性系为与选择器配对
-	d2js.render(null, person);
+	d2js.root.person = {name: 'Jack', gender: 'M'}
+	$('#test1').render();	// auto bind data, from d2js.root, string attribute mapped to $el.data('d2js.root')
 	
-	person = {name : 'Jack', mailbox : {d2js:'mailbox', length : 4}};				// 可嵌套于任意对象，只要能探索到 d2js==选择器，即可渲染
-	d2js.render(null, person);
+	$('#test2').render();	// wont work, wont error, since no d2js.root data bound to #test2
 	
-	// 定向渲染
-	d2js.render($('#divForPerson2'), { name : 'Tom', gender : 'M'}, true);		// 指定目标元素，不使用选择器, 适合快速渲染
-
-	// 自定义渲染器
-	d2js.render($('#divForPerson4'), {name :'Mary', gender:'F'}, true, {red : function(e, v){
-		e.innerHTML = '<font color=red>' + v + '</font>';
-	}});
+	var mary = {name:'Mary', gender: 'F'};
+	$('#test2').bindRoot(mary).render();
 	
-	// 渲染表
-	var table = new d2js.DataTable('test', 'author.d2js');
-	table.load({ _m : 'fetch'}, function(error) {
-			if(error){
-				divPrompt.innerText = error.message;
-				return;
-			}
-			divPrompt.innerText = 'success';
-			d2js.render(null, table);
+	setTimeout(function(){
+		d2js.root.person.name = 'Tom';
+		mary.name = 'Jene'
+		$('body').render();
+		
+		setTimeout(function(){
+			d2js.root.person = {name:'John', gender: 'M'}	// ui wont change, since $e.data('d2js.root') already bound to Tom
+			$('#test1').render();
 			
-			
-			// 渲染 dataset
-			table = d2js.dataset.test2 = new d2js.DataTable('test2', 'author.d2js');
-			table.load({ _m : 'fetch'}, function(){
-				if(error){
-					divPrompt.innerText = error.message;
-					return;
-				}
-				divPrompt.innerText = 'success';
-				d2js.render();
-			});
-		});
-	
-	
-
+			setTimeout(function(){
+				$('#test1').bindRoot().render();	// rebind root, $e.data('d2js.root') synced now
+				
+				$('h1').hide()
+			}, 3000);
+		}, 3000);
+	}, 3000);
 	
 </script>
 </html>

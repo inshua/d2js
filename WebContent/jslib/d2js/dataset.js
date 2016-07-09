@@ -44,7 +44,7 @@ d2js.Dataset = function(){
 	 */
 	this.relations = [];
 
-	this.dicts = { isD2jsTerm : true, d2js: 'dicts'};
+	this.dicts = {};
 	
 	/**
 	 * 增加一个关系
@@ -59,20 +59,6 @@ d2js.Dataset = function(){
 	}
 	
 	/**
-	 * 创建一个d2js终结对象，用于数据路径
-	 * ```js
-	 * 	var obj = d2js.dataset.createTerm('test');
-	 *  obj.attr = value;
-	 * ```
-	 * ```html
-	 * 	<div data="#test,attr"></div>
-	 * ```
-	 */
-	this.createTerm = function(termName){
-		return this[termName] = { isD2jsTerm : true, d2js: termName};
-	}
-	
-	/**
 	 * 创建子数据集，用以切分命名空间
 	 * 用法：
 	 * ```js
@@ -83,8 +69,6 @@ d2js.Dataset = function(){
 	 */
 	this.create = function(name){
 		var ds = new d2js.Dataset();
-		ds.isD2jsTerm = true;
-		ds.d2js = name;
 		ds.name = name;
 		this[name] = ds;
 		return ds;
@@ -152,9 +136,15 @@ d2js.PK = 'id';
 /**
  * dataset全局对象。
  * dataset 是 DataTable, relation 及词典的容器。
- * @namespace d2js.dataset
+ * @object d2js.dataset
  */
 d2js.dataset = new d2js.Dataset();
+
+/**
+ * 别名，对于renderer,collector来说是全局数据对象的根对象（可类比 DOM 树的 document）
+ * @alias d2js.dataset
+ */
+d2js.root = d2js.dataset;
 
 /**
  * 所有词典数据
@@ -180,7 +170,8 @@ var Dicts = d2js.dataset.dicts;
  * 		pageSize : 分页尺寸，默认为 d2js.DataTable.DEFAULT_PAGESIZE,
  * 		standalone : true|false 如果启用，则不加入到 dataset 中，默认为 false,
  * 		dataset : 默认为 d2js.dataset，也可指定为局部的 dataset(使用 d2js.dataset.create() 创建)
- * 		indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段
+ * 		indexedColumns : [], 索引字段，默认为 ['id'] 可以加入自己的字段,
+ * 		rowType : 数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交,
  * 		listeners : {
  * 			onload : function(error){},
  * 			onsubmit : function(error){},
@@ -198,8 +189,6 @@ d2js.DataTable = function (name, url, option){
 	
 	this.isSilent = option.silent != null ? option.silent : true;
 	this.name = name;
-	this.d2js = name;				// selector, for render and collect
-	this.isD2jsTerm = true;		// avoid extractData travel children
 	this.isDataTable = true;
 	
 	/**
@@ -241,6 +230,20 @@ d2js.DataTable = function (name, url, option){
 	 * @type DataRow[]
 	 */
 	this.rows = [];	
+	
+	/**
+	 * 数据行类型，默认为 d2js.DataRow，必须从 d2js.DataRow 派生，不然无法提交。
+	 * 自定义方法如：
+	 * ```js
+	 * function MyRow(){
+	 * 		d2js.DataRow.apply(this, arguments);
+	 * }
+	 * MyRow.prototype = Object.create(d2js.DataRow.prototype);
+	 * MyRow.prototype.myFunc = function(){...}
+	 * ```
+	 * @type {function} 构造函数
+	 */
+	this.rowType = option.rowType || d2js.DataRow;
 	
 	/**
 	 * 查询参数。目前实际用到的直接成员有用于分页的 _page : {start:N, limit:N}, 用于排序的  _sorts : {column : 'asc'|'desc'}, 用于查询的 params : {参数}。
@@ -339,7 +342,7 @@ d2js.DataTable.prototype.setState = function(newState){
  * @return {DataRow} 新建的行 
  */
 d2js.DataTable.prototype.newRow = function(rowData){
-	var row = new d2js.DataRow(this, rowData);
+	var row = new this.rowType(this, rowData);
 	row._state = "new";
 	this.fireEvent('newrow', row);
 	return row;		
@@ -355,7 +358,7 @@ d2js.DataTable.prototype.addRow = function(rowData, raiseEvent){
 	if(rowData instanceof d2js.DataRow){
 		var row = rowData;
 	} else {
-		var row = new d2js.DataRow(this, rowData);
+		var row = new this.rowType(this, rowData);
 	}
 	row._state = "new";
 	this.rows.push(row);
@@ -465,7 +468,12 @@ d2js.DataTable.prototype.load = function(method, params, option){
 	this.rows = [];
 	this.fireEvent('willload');
 	var me = this;
-	this.search.params = q;
+	for(var k in this.search.params){	// params 被绑定了，不能设为新对象
+		delete this.search.params[k];
+	}
+	for(var k in q){		
+		this.search.params[k] = q[k];
+	}
 	this.search.params._m = method;
 	this.search.option = option;
 	
@@ -479,6 +487,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		success : onSuccess,
 		error : function (error){onError(new Error(error.responseText || 'cannot establish connection to server'));}
 	});
+	return this;
 	
 	function onSuccess(text, status){
 		var isJson = false;
@@ -526,7 +535,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		
 			var rows = result.rows;
 			for(var i=0; i<rows.length; i++){
-				var row = new d2js.DataRow(table, rows[i]);
+				var row = new table.rowType(table, rows[i]);
 				table.rows.push(row);
 			}
 		} else {
@@ -594,7 +603,7 @@ d2js.DataTable.prototype.fill = function(rows, option){
 	
 	me.rows = [];
 	for(var i=0; i<rows.length; i++){
-		var row = new d2js.DataRow(me, rows[i]);
+		var row = new me.rowType(me, rows[i]);
 		me.rows.push(row);
 	}
 	if(me.indexedColumns) me.rebuildIndexes();
@@ -889,7 +898,8 @@ d2js.DataTable.prototype.rebuildIndexes = function(){
  * @param childColumn {string} 子表关联字段名，外键字段
  */
 d2js.DataTable.prototype.addChild = function(column, child, childColumn){
-	 this.dataset.addRelation(this.name, column, child, childColumn);
+	if(this.dataset == null) throw new Error('this table dont belong to any dataset');
+	this.dataset.addRelation(this.name, column, child, childColumn);
 }
 
 /**
@@ -897,6 +907,7 @@ d2js.DataTable.prototype.addChild = function(column, child, childColumn){
  * @return {object} 结构为 {table name : [relations]}
  */
 d2js.DataTable.prototype.getChildTables = function(){
+	if(this.dataset == null) return {};
 	return this.dataset.relations.filter(function(relation){
 				return relation.parent == this.name;
 			}, this).reduce(function(res, relation){
@@ -912,6 +923,7 @@ d2js.DataTable.prototype.getChildTables = function(){
  * @return {object} 结构为 {table name : [relations]}
  */
 d2js.DataTable.prototype.getParentTables = function(){
+	if(this.dataset == null) return {};
 	return this.dataset.relations.filter(function(relation){
 		return relation.child == this.name;
 	}, this).reduce(function(res, relation){
@@ -929,6 +941,7 @@ d2js.DataTable.prototype.getParentTables = function(){
  */
 d2js.DataTable.prototype.findChildRows = function(row, childTable){
 	var rows = [];
+	if(this.dataset == null) return rows;
 	for(var i=0; i<this.dataset.relations.length; i++){
 		var relation = this.dataset.relations[i];
 		if(relation.parent == this.name && relation.child == childTable){
@@ -948,6 +961,7 @@ d2js.DataTable.prototype.findChildRows = function(row, childTable){
  */
 d2js.DataTable.prototype.findParentRows = function(row, parentTable){
 	var rows = [];
+	if(this.dataset == null) return rows;
 	for(var i=0; i<this.dataset.relations.length; i++){
 		var relation = this.dataset.relations[i];
 		if(relation.child == this.name && relation.parent == parentTable){
@@ -991,6 +1005,14 @@ d2js.DataTable.prototype.inspect = function(returnHtml){
 	} else{
 		document.write(a.join(""));
 	}
+}
+
+/**
+ * 没有删除的行，常置于渲染路径
+ * @returns {DataRow[]} 没有删除的行数组
+ */
+d2js.DataTable.prototype.unremovedRows = function(){
+	return this.rows.filter(function(row){return row._state != 'remove'});
 }
 
 /**

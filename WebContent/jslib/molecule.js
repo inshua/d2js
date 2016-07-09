@@ -205,6 +205,9 @@ Molecule.scanDefines = function(){
 		ele.removeAttribute('molecule-def');
 		var escapeTag = e.attr('escape-tag');
 		if(escapeTag) ele.removeAttribute('escape-tag');
+		var styles = e.children('style').toArray().map(function(style){
+			return style.innerHTML;
+		}).join('\r\n');
 		
 		var r = Molecule.getModuleName(fullname);
 
@@ -219,7 +222,7 @@ Molecule.scanDefines = function(){
 			attributes[ele.attributes[i].name] = ele.getAttribute(ele.attributes[i].name); 
 		}
 		var def = {name : r.name, depends : depends && depends.split(','), appeared : true, 
-		           html : ele.innerHTML, attributes : attributes, escapeTag : escapeTag};
+		           html : ele.innerHTML, attributes : attributes, escapeTag : escapeTag, css: styles};
 		
 		var script = $(ele.nextElementSibling);
 		if(script.length && (script.attr('molecule-for') == fullname || script.attr('molecule-for') == r.name)){
@@ -384,6 +387,17 @@ Molecule.scanMolecules = function(starter, manual){
 		}
 		if(Molecule.debug) {
 			console.info('process ' + def.name + ',hierachy path ' + defs.map(function(def){return def.fullname}).join());
+		}
+		
+		for(var d = defs.length -1; d >=0; d--){	// 逐代加入样式
+			var def = defs[d];
+			if(!def.defined && def.css){
+				var styleElement = document.createElement("style");
+		        styleElement.type = "text/css";
+		        styleElement.innerHTML = def.css;
+		        // console.log('add molecule css ', def.name, def.css);
+		        document.head.appendChild(styleElement);
+			}
 		}
 		
 		for(var d = defs.length -1; d >=0; d--){	// 逐代设置属性
@@ -654,10 +668,11 @@ $(document).ready(function(){
 		if(target.tagName){		// 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
 			if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;		// 正在扫描父元素，早晚会扫到它
 			if(Molecule.debug) console.info('DOMNodeInserted ', e.target);
-			setTimeout(function(){ // 还不太确定为什么 DOMNodeInserted 时，节点不能访问它的子节点(通过 innerHTML = 'xxx'插入的子节点),该问题还有待研究，先使用 setTimeout 化解
-				if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;
-				Molecule.scanMolecules(target);
-			}, 10);	
+			//setTimeout(function(){ // 还不太确定为什么 DOMNodeInserted 时，节点不能访问它的子节点(通过 innerHTML = 'xxx'插入的子节点),该问题还有待研究，先使用 setTimeout 化解  
+			/// ！！！ 这个问题貌似并不存在！！！ 并且因为同步变异步会导致其它问题
+				//if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;
+			Molecule.scanMolecules(target);
+			//}, 10);	
 		}
 	});
 	

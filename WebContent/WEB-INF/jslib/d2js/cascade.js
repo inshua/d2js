@@ -48,27 +48,29 @@ D2JS.DataTable.prototype.nest = function(table, src, method, id){
  * @param params {*|array} 数组 - 参数列表，单值 - 单个参数
  */
 D2JS.prototype.callD2js = function(src, method, params){
-	var engineContext = d2jsRunner.getEngineContext(findResource(src), request, response);
-	if(engineContext == null) throw new Error(src + ' maybe not exist');
+	var context2 = d2jsRunner.getEngineContext(findResource(src), request, response);
+	if(context2 == null) throw new Error(src + ' maybe not exist');
 	try{
-		var another = engineContext.getHandler();	// ScriptObjectMirror
+		var another = context2.getHandler();	// ScriptObjectMirror
 		if(this.transactConnection){
-			another = engineContext.getEngineAsInvocable().invokeMethod(another, 'clone');	// ScriptObjectMirror
+			another = context2.getEngineAsInvocable().invokeMethod(another, 'clone');	// ScriptObjectMirror
 			another.transactConnection = this.transactConnection;
 		}
-		var engine2 = engineContext.getScriptEngine();
+		var engine2 = context2.getScriptEngine();
 		var bindings = engine2.getBindings(100);
-		bindings['__s'] = JSON.stringify(params instanceof Array ? params : [params]);		// 欲在两个引擎间传递对象，只能使用这种方法
-		var res = engine2.eval("d2js." + method + '.apply(d2js, JSON.parse(__s, parseDate))', bindings);
-		if(res != null && res instanceof ScriptObjectMirror) res = org.siphon.common.js.JsTypeUtil.getSealed(res);
-		d2jsRunner.completeTask(engineContext.getScriptEngine(), null);
+		var params = params instanceof Array ? params : [params]
+		bindings['__s'] = params.toJava();		// 欲在两个引擎间传递对象，先转为java容器
+		bindings['__another'] = another;
+		var res = engine2.eval("JsTypeUtil.jsObjectToJava(d2js." + method + '.apply(__another, Object.fromJava(__s)))', bindings);
+		if(res != null) res = Object.fromJava(res);
+		d2jsRunner.completeTask(context2.getScriptEngine(), null);
 		return res;
 	} catch(e){
-		d2jsRunner.completeTask(engineContext.getScriptEngine(), new ECMAException(e, null));
+		d2jsRunner.completeTask(context2.getScriptEngine(), new ECMAException(e, null));
 		throw e;
 	} finally {
-		if (engineContext != null)
-			engineContext.free();
+		if (context2 != null)
+			context2.free();
 	}
 }
 

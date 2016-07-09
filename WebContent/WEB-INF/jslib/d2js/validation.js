@@ -487,3 +487,10 @@ T.boolean = {
    			rcd[fld] = r;
          }
    }
+
+V.noSql = {
+           name : 'nosql',
+           check: function(v){
+        	   
+           }
+}
