@@ -44,7 +44,7 @@ d2js.Dataset = function(){
 	 */
 	this.relations = [];
 
-	this.dicts = { isD2jsTerm : true, d2js: 'dicts'};
+	this.dicts = {};
 	
 	/**
 	 * 增加一个关系
@@ -59,20 +59,6 @@ d2js.Dataset = function(){
 	}
 	
 	/**
-	 * 创建一个d2js终结对象，用于数据路径
-	 * ```js
-	 * 	var obj = d2js.dataset.createTerm('test');
-	 *  obj.attr = value;
-	 * ```
-	 * ```html
-	 * 	<div data="#test,attr"></div>
-	 * ```
-	 */
-	this.createTerm = function(termName){
-		return this[termName] = { isD2jsTerm : true, d2js: termName};
-	}
-	
-	/**
 	 * 创建子数据集，用以切分命名空间
 	 * 用法：
 	 * ```js
@@ -83,8 +69,6 @@ d2js.Dataset = function(){
 	 */
 	this.create = function(name){
 		var ds = new d2js.Dataset();
-		ds.isD2jsTerm = true;
-		ds.d2js = name;
 		ds.name = name;
 		this[name] = ds;
 		return ds;
@@ -204,8 +188,6 @@ d2js.DataTable = function (name, url, option){
 	
 	this.isSilent = option.silent != null ? option.silent : true;
 	this.name = name;
-	this.d2js = name;				// selector, for render and collect
-	this.isD2jsTerm = true;		// avoid extractData travel children
 	this.isDataTable = true;
 	
 	/**
