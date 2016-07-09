@@ -21,7 +21,7 @@
 </head>
 <body>
 	<div class="container" d2js.root="author">
-		<h1>表格编辑</h1>
+		<h1>表格渲染与编辑</h1>
 		<div data="error" renderer="stderr"></div>
 		<table class="table table-striped" data="this" renderer="table">
 			<thead>
@@ -49,8 +49,8 @@
 	</div>
 	
 	
-	<div class="container" d2js.root="ns_test,author">	<!-- 子数据集只需要加上子数据集名称 -->
-		<h1>表格编辑</h1>
+	<div class="container" d2js.root="ns_test,author">
+		<h1>子数据集下的表 </h1>
 		<div data="error" renderer="stderr"></div>
 		<table class="table table-striped" data="this" renderer="table">
 			<thead>
@@ -73,11 +73,65 @@
 		</table>
 
 		<p>
-			<button class="btn btn-primary" onclick="submit()">Submit</button>
+			<button class="btn btn-primary" onclick="var desc=$(this).findRoot();$(desc.ele).collect();desc.root.submit()">Submit</button>
 		</p>
+	</div>
+	
+	<div class="container" id="test3">
+		<h1>独立的 datatable</h1>
+		<div data="error" renderer="stderr"></div>
+		<table class="table table-striped" data="this" renderer="table">
+			<thead>
+				<tr>
+					<th data-t="name" renderer="std">name</th>
+					<th data-t="email" renderer="input('email')" renderer-t="std" collector-t="c|s">email</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+			<tfoot>
+				<tr>
+					<td colspan="10000" align="center">
+						<nav>
+							<ul class="pagination" data="this" renderer="pagination">
+							</ul>
+						</nav>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+
+		<p>
+			<button class="btn btn-primary" onclick="var desc=$(this).findRoot();$(desc.ele).collect();desc.root.submit()">Submit</button>
+		</p>
+	</div>
+	
+	
+	<div class="container" id="test4">
+		<h1>独立的 dataset</h1>
+		<div data="error" renderer="stderr"></div>
+		<table class="table table-striped" data="author" renderer="table">
+			<thead>
+				<tr>
+					<th data-t="name" renderer="std">name</th>
+					<th data-t="email" renderer="input('email')" renderer-t="std" collector-t="c|s">email</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+			<tfoot>
+				<tr>
+					<td colspan="10000" align="center">
+						<nav>
+							<ul class="pagination" data="author" renderer="pagination">
+							</ul>
+						</nav>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
 	</div>
 </body>
 <script>
+	// ------------------- sample 1 -------------------------------
 	// 渲染表
 	var table = new d2js.DataTable('author', 'author.d2js');
 	table.load({ _m : 'fetch'}, function(error) {
@@ -92,20 +146,28 @@
 		});
 	}
 	
-	
+	// ------------------- sample 2 -------------------------------
 	var subset = d2js.dataset.create('ns_test')
-	// 渲染表
 	var table2 = subset.addTable('author', 'author.d2js');
 	table2.load({ _m : 'fetch'}, function(error) {
 			d2js.render(null, table2);
 		});
+	table2.on('submit', function(){this.load()});
 
-	function submit() {
-		d2js.collect(null, table2);
-		table2.submit(function(error){
-			if(!error) alert('提交成功!');
-			d2js.render(null, table2);
-		});
-	}
+	// ------------------- sample 3 -------------------------------
+	// 独立的 datatable，脱离 dataset 使用
+	$('#test3').bindRoot(new d2js.DataTable('author', 'author.d2js', {standalone: true, silent:false})
+							.on('submit', function(){this.load()})
+							.load());
+	
+	// ------------------- sample 4 -------------------------------
+	// 独立的 dataset 
+	var ds = new d2js.Dataset();
+	ds.addTable('author', 'author.d2js')
+		.on('load', function(){$('#test4').render()})
+		.on('submit', function(){this.load()});
+	$('#test4').bindRoot(ds);
+	ds.author.load();
+
 </script>
 </html>

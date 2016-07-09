@@ -27,6 +27,12 @@
 			<div>Name:<span data="name" renderer="std"></span></div>
 			<div>Birth: <span data="birth" format="yyyy-MM-dd" renderer="date|std"></span></div>
 			<div>Age: <span data="age" renderer="std"></span></div>
+			
+			<label class="label label-default">使用 locateData,findRoot 访问绑定的数据</label>
+			<p></p>
+			<button class="btn btn-default" data="age" onclick="alert($(this).locateData()[0])">Show Age</button>
+			<button class="btn btn-default" onclick="alert(JSON.stringify($(this).findRoot().root))">Show Person</button>
+			<button class="btn btn-default" onclick="$(this).findRoot().root.name='Tom';$('#test1').render();">Change Name</button>
 		</div>	
 	</div>
 </body>
