@@ -490,6 +490,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		success : onSuccess,
 		error : function (error){onError(new Error(error.responseText || 'cannot establish connection to server'));}
 	});
+	return this;
 	
 	function onSuccess(text, status){
 		var isJson = false;
@@ -900,7 +901,8 @@ d2js.DataTable.prototype.rebuildIndexes = function(){
  * @param childColumn {string} 子表关联字段名，外键字段
  */
 d2js.DataTable.prototype.addChild = function(column, child, childColumn){
-	 this.dataset.addRelation(this.name, column, child, childColumn);
+	if(this.dataset == null) throw new Error('this table dont belong to any dataset');
+	this.dataset.addRelation(this.name, column, child, childColumn);
 }
 
 /**
@@ -908,6 +910,7 @@ d2js.DataTable.prototype.addChild = function(column, child, childColumn){
  * @return {object} 结构为 {table name : [relations]}
  */
 d2js.DataTable.prototype.getChildTables = function(){
+	if(this.dataset == null) return {};
 	return this.dataset.relations.filter(function(relation){
 				return relation.parent == this.name;
 			}, this).reduce(function(res, relation){
@@ -923,6 +926,7 @@ d2js.DataTable.prototype.getChildTables = function(){
  * @return {object} 结构为 {table name : [relations]}
  */
 d2js.DataTable.prototype.getParentTables = function(){
+	if(this.dataset == null) return {};
 	return this.dataset.relations.filter(function(relation){
 		return relation.child == this.name;
 	}, this).reduce(function(res, relation){
@@ -940,6 +944,7 @@ d2js.DataTable.prototype.getParentTables = function(){
  */
 d2js.DataTable.prototype.findChildRows = function(row, childTable){
 	var rows = [];
+	if(this.dataset == null) return rows;
 	for(var i=0; i<this.dataset.relations.length; i++){
 		var relation = this.dataset.relations[i];
 		if(relation.parent == this.name && relation.child == childTable){
@@ -959,6 +964,7 @@ d2js.DataTable.prototype.findChildRows = function(row, childTable){
  */
 d2js.DataTable.prototype.findParentRows = function(row, parentTable){
 	var rows = [];
+	if(this.dataset == null) return rows;
 	for(var i=0; i<this.dataset.relations.length; i++){
 		var relation = this.dataset.relations[i];
 		if(relation.child == this.name && relation.parent == parentTable){
