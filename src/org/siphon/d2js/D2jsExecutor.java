@@ -15,7 +15,7 @@ import org.siphon.d2js.jshttp.JsServlet;
 /**
  * 简单的执行器，可以直接执行 d2js 文件中的方法。可以用于 java 调用 d2js 中的函数，d2js中也可以使用该函数。
  * 用法:
- * SimpleExecutor.exec("abcd.d2js", "test", params);
+ * D2jsExecutor.exec("abcd.d2js", "test", params);
  * @author Inshua
  */
 public class D2jsExecutor extends JsServlet {
