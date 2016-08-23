@@ -28,3 +28,8 @@ d2js.destroy = function(rcd){
 	logger.info('delete book ' + JSON.stringify(rcd));
 	this.deleteRow('book', rcd)
 }
+
+d2js.exports.test =
+d2js.test =  function(){
+	return 'hello';
+}

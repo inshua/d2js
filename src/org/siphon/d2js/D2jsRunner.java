@@ -41,6 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.objects.NativeObject;
 import jdk.nashorn.internal.runtime.ScriptObject;
 
 import org.apache.catalina.Globals;
@@ -196,6 +197,11 @@ public class D2jsRunner {
 
 	public Object run(JsEngineHandlerContext engineContext, JsspRequest request, HttpServletResponse response, String method,
 			ScriptObjectMirror params) throws Exception {
+		ScriptObjectMirror d2js = engineContext.getHandler();
+		ScriptObjectMirror exports = (ScriptObjectMirror) d2js.get("exports");
+		if(exports != null && exports.containsKey(method) == false){
+			throw new Exception(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
+		}
 		Object res = engineContext.getEngineAsInvocable().invokeMethod(engineContext.getHandler(), method, params);
 		completeTask(engineContext.getScriptEngine(), null);
 		return res;
