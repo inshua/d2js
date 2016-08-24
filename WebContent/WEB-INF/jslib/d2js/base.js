@@ -932,6 +932,7 @@ function init(){
 	sqlExecutor.defaultJsonDbType = 'JSONB';
 	
 	d2js = handler = new D2JS(sqlExecutor);
+	d2js.exports = {fetch:1, create:1, modify:1, destroy:1, update:1, jssp:1};
 	engine.put('handler', handler);
 	engine.put('d2js', d2js);
 }
