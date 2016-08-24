@@ -173,14 +173,8 @@ public class JsTypeUtil {
 
 		if (obj instanceof Boolean) {
 			return (Boolean) obj;
-		} else if (obj instanceof Double) {
-			return (Double) obj == 0;
-		} else if (obj instanceof Integer) {
-			return (Integer) obj == 0;
-		} else if (obj instanceof Long) {
-			return (Long) obj == 0;
-		} else if (obj instanceof Byte) {
-			return (Byte) obj == 0;
+		} else if (obj instanceof Number) {
+			return ((Number) obj).intValue() != 0;
 		} else {
 			return true;
 		}
