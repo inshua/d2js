@@ -22,3 +22,9 @@ d2js.modify = function(row, columns){
 	return this.updateRow('author', row, columns);
 }
 
+// configure nashorn engine pool size for this page
+d2js.configurePagePool = function(config){
+	config.maxActive = 20000;
+}
+
+

@@ -30,14 +30,18 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.script.ScriptEngine;
 import javax.sql.DataSource;
 
 import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.pool.impl.GenericObjectPool.Config;
 import org.apache.log4j.Logger;
 import org.siphon.common.io.WatchDir;
 import org.siphon.d2js.D2jsUnitManager;
+
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 public abstract class ServerUnitManager {
 
@@ -62,19 +66,47 @@ public abstract class ServerUnitManager {
 			ctxt.setPool(pool);
 			return ctxt;
 		} else if ((file = new File(srcFile)).exists()) {
-			ObjectPool<JsEngineHandlerContext> enginePool;
+			
+			GenericObjectPool<JsEngineHandlerContext> enginePool;
 			BasePoolableObjectFactory<JsEngineHandlerContext> factory = new BasePoolableObjectFactory<JsEngineHandlerContext>() {
 
 				@Override
 				public JsEngineHandlerContext makeObject() throws Exception {
 					return createEngineContext(srcFile, aliasPath, params);
 				}
+				
 			};
 
 			enginePool = new GenericObjectPool<JsEngineHandlerContext>(factory);
 
 			JsEngineHandlerContext ctxt = enginePool.borrowObject();
 			ctxt.setPool(enginePool);
+			
+//			 * /*      */   public static final byte WHEN_EXHAUSTED_FAIL = 0;
+///*      */   public static final byte WHEN_EXHAUSTED_BLOCK = 1;
+///*      */   public static final byte WHEN_EXHAUSTED_GROW = 2;
+///*      */   public static final int DEFAULT_MAX_IDLE = 8;
+///*      */   public static final int DEFAULT_MIN_IDLE = 0;
+///*      */   public static final int DEFAULT_MAX_ACTIVE = 8;
+///*      */   public static final byte DEFAULT_WHEN_EXHAUSTED_ACTION = 1;
+///*      */   public static final boolean DEFAULT_LIFO = true;
+///*      */   public static final long DEFAULT_MAX_WAIT = -1L;
+///*      */   public static final boolean DEFAULT_TEST_ON_BORROW = false;
+///*      */   public static final boolean DEFAULT_TEST_ON_RETURN = false;
+///*      */   public static final boolean DEFAULT_TEST_WHILE_IDLE = false;
+///*      */   public static final long DEFAULT_TIME_BETWEEN_EVICTION_RUNS_MILLIS = -1L;
+///*      */   public static final int DEFAULT_NUM_TESTS_PER_EVICTION_RUN = 3;
+///*      */   public static final long DEFAULT_MIN_EVICTABLE_IDLE_TIME_MILLIS = 1800000L;
+///*      */   public static final long DEFAULT_SOFT_MIN_EVICTABLE_IDLE_TIME_MILLIS = -1L;
+			Config config = new Config();
+			config.maxActive = 2000;
+			config.maxIdle = 500;
+			config.minIdle = 10;
+			ScriptObjectMirror d2js = ctxt.getHandler();
+			if(d2js.containsKey("configurePagePool")){
+				d2js.callMember("configurePagePool", config);
+			}
+			enginePool.setConfig(config);
 
 			contextsPerFile.put(srcFile, enginePool);
 
