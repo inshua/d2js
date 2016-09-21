@@ -25,37 +25,46 @@ public class D2jsExecutor extends JsServlet {
 	private D2jsInitParams d2jsInitParams;
 
 	private static D2jsExecutor instance;
-	
+
 	@Override
 	public void init() throws ServletException {
 		super.init();
 		String path = this.getServletContext().getRealPath("");
-		
+
 		d2jsInitParams = new D2jsInitParams();
 		d2jsInitParams.setLibs(this.getJsLibs());
 		d2jsInitParams.setApplication(JsServlet.application);
 		d2jsInitParams.setPreloadJs(this.getPreloadJs());
-		
+
 		this.d2jsUnitManager = new D2jsUnitManager(path);
-		
+
 		instance = this;
 	}
-	
-	protected Object execute(String jsfile, String method, Object... params) throws Exception{
-		JsEngineHandlerContext engineContext = d2jsUnitManager.getEngineContext(this.getServletContext().getRealPath(jsfile), jsfile, d2jsInitParams);
-		for(int i=0; i< params.length; i++){
-			params[i] = engineContext.getJsTypeUtil().javaObjectToJs(params[i]);
+
+	protected Object execute(String jsfile, String method, Object... params) throws Exception {
+		JsEngineHandlerContext engineContext = d2jsUnitManager.getEngineContext(this.getServletContext().getRealPath(jsfile),
+				jsfile, d2jsInitParams);
+		try {
+			for (int i = 0; i < params.length; i++) {
+				params[i] = engineContext.getJsTypeUtil().javaObjectToJs(params[i]);
+			}
+			Object res = engineContext.getEngineAsInvocable().invokeMethod(engineContext.getHandler(), method, params);
+			return JsTypeUtil.jsObjectToJava(res);
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (engineContext != null)
+				engineContext.free();
 		}
-		Object res = engineContext.getEngineAsInvocable().invokeMethod(engineContext.getHandler(), method, params);
-		return JsTypeUtil.jsObjectToJava(res);
 	}
-	
-	public static Object exec(String jsfile, String method, Object... params) throws Exception{
+
+	public static Object exec(String jsfile, String method, Object... params) throws Exception {
 		return instance.execute(jsfile, method, params);
 	}
-	
+
 	@Override
 	protected void onFileChanged(WatchEvent<Path> ev, Path file) {
-		d2jsUnitManager.onFileChanged(ev, file);;
+		d2jsUnitManager.onFileChanged(ev, file);
+		;
 	}
 }
