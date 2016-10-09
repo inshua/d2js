@@ -44,12 +44,31 @@ init();
 var ConcurrentHashMap = Java.type('java.util.concurrent.ConcurrentHashMap');
 var allD2js = new ConcurrentHashMap();
 
-function processRequest(d2js, method, params, request, response, session, out, d2jsRunner){
+
+function HttpHandler(){}
+
+function processRequest(d2js, method, params, request, response, session, out, task){
 	var d = allD2js[d2js];
 	if(d.exports[method] == null){
 		throw new Error(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
 	}
-	var r = d[method].call(d, params, {request:request, response:response, session:session, out:out});
+//	var d=d.clone();
+//	d.request = request;
+//	d.response = response;
+//	d.out = out;
+//	d.session = session;
+//	d.task = task;
+//	d.d2js = d2js;
+	var h = new HttpHandler();
+	h.request = request;
+	h.response = response;
+	h.out = out;
+	h.session = session;
+	h.task = task;
+	h.d2js = d2js;
+	var r = d[method].call(d, params, h);
+	
+	var r = d[method].call(d, params);
 	if(r == null){
 		out.print('{"success":true}');
 	} else {

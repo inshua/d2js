@@ -108,19 +108,15 @@ public class D2jsRunner {
 	}
 
 
-	public void completeTask(ScriptEngine engine, Exception exception) throws Exception {
-		Task task = (Task) engine.get("jscurrtask");
-		if (task != null) {
-			ScriptObjectMirror cb = null;
-			if (exception == null) {
-				cb = (ScriptObjectMirror) task.end();
-			} else {
-				cb = (ScriptObjectMirror) task.end(exception, engine);
-			}
-			if (cb != null && cb.containsKey("callback")) {
-				((Invocable) engine).invokeMethod(cb, "callback", cb);
-			}
-			engine.put("jscurrtask", null);
+	public void completeTask(Task task, Exception exception) throws Exception {
+		ScriptObjectMirror cb = null;
+		if (exception == null) {
+			cb = (ScriptObjectMirror) task.end();
+		} else {
+			cb = (ScriptObjectMirror) task.end(exception, engine);
+		}
+		if (cb != null && cb.containsKey("callback")) {
+			((Invocable) engine).invokeMethod(cb, "callback", cb);
 		}
 	}
 
@@ -204,26 +200,22 @@ public class D2jsRunner {
 		} 
 		
 
-		watch.start();
 		formatter.writeHttpHeader(response);
-		watch.stop();
-		if(watch.getTime() > 10) logger.debug("writeHttpHeader exhaust " + watch.getNanoTime() / 1000000.0);
 		
 		JsspWriter out = null;
+		Task task = new Task();
 		try {
-			watch.reset();
-			watch.start();
 			out = new JsspWriter(response, engine);
 			JsspSession session = new JsspSession(request.getSession());
 			
-			((Invocable)engine).invokeFunction("processRequest", jsfile, method, params, jsspRequest, response, session, out);
+			((Invocable)engine).invokeFunction("processRequest", jsfile, method, params, jsspRequest, response, session, out, task);
 			
-			watch.stop();
-			if(watch.getTime() > 10) logger.debug("processRequest " + watch.getNanoTime() / 1000000.0);
-			watch.reset();
+			if(task.getCallbacker() != null){
+				this.completeTask(task, null);
+			}
 		} catch (Exception e) {
 			try {
-				this.completeTask(engine, e);
+				this.completeTask(task, e);
 			} catch (Exception e2) {
 				logger.error("", e2);
 			}
