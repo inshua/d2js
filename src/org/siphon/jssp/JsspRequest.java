@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -37,11 +38,11 @@ import jdk.nashorn.internal.runtime.JSType;
 public class JsspRequest extends HttpServletRequestWrapper implements Map<String, Object> {
 
 	private final Map<String, Object> map;
-	private final JsEngineHandlerContext jsEngineHandlerContext;
+	private final ScriptEngine engine;
 
-	public JsspRequest(HttpServletRequest request, JsEngineHandlerContext jsEngineHandlerContext) {
+	public JsspRequest(HttpServletRequest request, ScriptEngine engine) {
 		super(request);
-		this.jsEngineHandlerContext = jsEngineHandlerContext;
+		this.engine = engine;
 
 		this.map = (Map<String, Object>) (Object) request.getParameterMap();
 	}
@@ -78,7 +79,7 @@ public class JsspRequest extends HttpServletRequestWrapper implements Map<String
 			} else {
 				ScriptObjectMirror arr = null;
 				try {
-					arr = jsEngineHandlerContext.getJsTypeUtil().newArray();
+					arr = new JsTypeUtil(this.engine).newArray();
 				} catch (ScriptException e) {
 				}
 				for (String s : v) {

@@ -37,6 +37,7 @@ import java.nio.file.Watchable;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -64,7 +65,7 @@ import org.siphon.jssql.SqlExecutor;
 public class D2jsUnitManager extends ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
-
+	
 	public D2jsUnitManager(String srcFolder, D2jsInitParams initParams) {
 		super(srcFolder, initParams);
 	}
@@ -79,6 +80,7 @@ public class D2jsUnitManager extends ServerUnitManager {
 
 		engine.put("logger", logger);
 		engine.put("application", initParams.getApplication());
+		
 		// 由 js 根据业务需要创建，创建后由 java 关闭
 		if (initParams.getPreloadJs() != null) {
 			String[] preloadJs = initParams.getPreloadJs();		// [abs path, alias]
@@ -90,7 +92,7 @@ public class D2jsUnitManager extends ServerUnitManager {
 	}
 
 	@Override
-	protected JsEngineHandlerContext createEngineContext(ScriptEngine engine, String srcFile, String aliasPath) throws Exception {
+	protected ScriptObjectMirror createD2js(ScriptEngine engine, String srcFile, String aliasPath) throws Exception {
 		File src = new File(srcFile);
 		String code = FileUtils.readFileToString(src, "utf-8");
 		String covertedCode = this.convertCode(code, src);
@@ -99,18 +101,7 @@ public class D2jsUnitManager extends ServerUnitManager {
 		if (logger.isDebugEnabled())
 			logger.debug(srcFile + " converted as " + tmp.getAbsolutePath());
 
-		Object d2js = JsEngineUtil.eval(engine, srcFile, aliasPath, covertedCode, false, true);
-
-		JsEngineHandlerContext ctxt = new JsEngineHandlerContext();
-		ctxt.setScriptEngine(engine);
-		ctxt.setHandler((ScriptObjectMirror) d2js);
-		ctxt.setJson(new JSON(engine)); // jdk has a NativeJSON class inside but it's sealed
-		ctxt.setJsTypeUtil(new JsTypeUtil(engine));
-		ctxt.setEnginePool(this.enginePool);
-		Map allD2js = (Map) engine.get("allD2js");
-		allD2js.put(srcFile, d2js);
-
-		return ctxt;
+		return (ScriptObjectMirror) JsEngineUtil.eval(engine, srcFile, aliasPath, covertedCode, false, true);
 	}
 
 	protected String convertCode(String code, File src) throws Exception {

@@ -130,24 +130,24 @@ public class DispatchServlet extends JsServlet {
 //		d2jsRunner.run(request, response, StringUtils.defaultIfEmpty(request.getParameter("_m"), "fetch"));
 //	}
 
-	@Override
-	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.setCharacterEncoding("utf-8");
-		D2jsRunner d2jsRunner = this.getD2jsRunner();
-		d2jsRunner.run(req, resp, "delete");	
-	}
-
-	@Override
-	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.setCharacterEncoding("utf-8");
-		D2jsRunner d2jsRunner = this.getD2jsRunner();
-		d2jsRunner.run(req, resp, "modify");
-	}
-
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		request.setCharacterEncoding("utf-8");
-		D2jsRunner d2jsRunner = this.getD2jsRunner();
-		d2jsRunner.run(request, response, StringUtils.defaultIfEmpty(request.getParameter("_m"), "create"));
-	}
+//	@Override
+//	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+//		req.setCharacterEncoding("utf-8");
+//		D2jsRunner d2jsRunner = this.getD2jsRunner();
+//		d2jsRunner.run(req, resp, "delete");	
+//	}
+//
+//	@Override
+//	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+//		req.setCharacterEncoding("utf-8");
+//		D2jsRunner d2jsRunner = this.getD2jsRunner();
+//		d2jsRunner.run(req, resp, "modify");
+//	}
+//
+//	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//		request.setCharacterEncoding("utf-8");
+//		D2jsRunner d2jsRunner = this.getD2jsRunner();
+//		d2jsRunner.run(request, response, StringUtils.defaultIfEmpty(request.getParameter("_m"), "create"));
+//	}
 
 }

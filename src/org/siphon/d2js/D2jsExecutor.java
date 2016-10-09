@@ -3,6 +3,8 @@ package org.siphon.d2js;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
@@ -11,6 +13,8 @@ import org.siphon.common.js.JsTypeUtil;
 import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.JsServlet;
+
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
  * 简单的执行器，可以直接执行 d2js 文件中的方法。可以用于 java 调用 d2js 中的函数，d2js中也可以使用该函数。
@@ -41,13 +45,14 @@ public class D2jsExecutor extends JsServlet {
 	}
 
 	protected Object execute(String jsfile, String method, Object... params) throws Exception {
-		JsEngineHandlerContext engineContext = d2jsUnitManager.getEngineContext(this.getServletContext().getRealPath(jsfile),
-				jsfile);
+		ScriptObjectMirror d2js = d2jsUnitManager.getD2js(this.getServletContext().getRealPath(jsfile), jsfile);
 
+		ScriptEngine engine = d2jsUnitManager.getEngine();
+		JsTypeUtil jsTypeUtil = new JsTypeUtil(engine);
 		for (int i = 0; i < params.length; i++) {
-			params[i] = engineContext.getJsTypeUtil().javaObjectToJs(params[i]);
+			params[i] = jsTypeUtil.javaObjectToJs(params[i]);
 		}
-		Object res = engineContext.getEngineAsInvocable().invokeMethod(engineContext.getHandler(), method, params);
+		Object res = d2js.callMember(method, params);
 		return JsTypeUtil.jsObjectToJava(res);
 	}
 

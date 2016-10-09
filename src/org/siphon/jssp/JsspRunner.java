@@ -68,60 +68,52 @@ public class JsspRunner extends D2jsRunner{
 
 	private static Logger logger = Logger.getLogger(JsspRunner.class);
 
-	@Override
-	protected void initEngineContext(JsEngineHandlerContext engineContext, HttpServletRequest request,
-			HttpServletResponse response) throws IOException {
-		super.initEngineContext(engineContext, request, response);
-		ScriptEngine engine = engineContext.getScriptEngine();
-		engine.put("jsspRunner", this);
-	}
-	
-	@Override
-	public void run(HttpServletRequest request, HttpServletResponse response, String method)
-			throws ServletException, IOException {
-		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
-		if(!new File(jsfile).exists()){
-			response.setStatus(404);
-			PrintWriter out = response.getWriter();
-			out.print(request.getServletPath() + " not found");
-			out.flush();
-			return;
-		}
+//	@Override
+//	public void run(HttpServletRequest request, HttpServletResponse response, String method)
+//			throws ServletException, IOException {
+//		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
+//		if(!new File(jsfile).exists()){
+//			response.setStatus(404);
+//			PrintWriter out = response.getWriter();
+//			out.print(request.getServletPath() + " not found");
+//			out.flush();
+//			return;
+//		}
+//
+//		JsEngineHandlerContext engineContext = null;
+//		try {
+//			engineContext = d2jsManager.getD2js(jsfile, jsfile);
+//		} catch (Exception e3) {
+//			logger.error("", e3);
+//			throw new ServletException(e3);
+//		}
+//
+//		JsspRequest jsspRequest = new JsspRequest(request, engineContext);
+//		
+//		ScriptObjectMirror params = null;
+//		try {
+//			params = getParams(engineContext, jsspRequest);
+//		} catch (Exception e3) {
+//			response.setStatus(500);
+//			PrintWriter out = response.getWriter();
+//			out.print("params must be json");
+//			out.flush();
+//			return;
+//		}
+//
+//		try {
+//			//initEngineContext(engineContext, jsspRequest, response);
+//			Bindings bindings = createBindings(engineContext, jsspRequest, response);
+//			this.run(engineContext, bindings, jsspRequest, response, "jssp", params);
+//		} catch (Exception e) {
+//			throw new ServletException(e);
+//		}
+//		
+//	}
 
-		JsEngineHandlerContext engineContext = null;
-		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, jsfile);
-		} catch (Exception e3) {
-			logger.error("", e3);
-			throw new ServletException(e3);
-		}
-
-		JsspRequest jsspRequest = new JsspRequest(request, engineContext);
-		
-		ScriptObjectMirror params = null;
-		try {
-			params = getParams(engineContext, jsspRequest);
-		} catch (Exception e3) {
-			response.setStatus(500);
-			PrintWriter out = response.getWriter();
-			out.print("params must be json");
-			out.flush();
-			return;
-		}
-
-		try {
-			//initEngineContext(engineContext, jsspRequest, response);
-			Bindings bindings = createBindings(engineContext, jsspRequest, response);
-			this.run(engineContext, bindings, jsspRequest, response, "jssp", params);
-		} catch (Exception e) {
-			throw new ServletException(e);
-		}
-		
-	}
-
-	public void run(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		this.run(request, response, "jssp");
-	}
+//	public void run(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//		this.run(request, response, "jssp");
+//	}
 
 
 }

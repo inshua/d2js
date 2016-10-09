@@ -56,85 +56,68 @@ public abstract class ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
 	protected String srcFolder;
-	//protected ScriptEngine engine;
+	protected final ScriptEngine engine;
+	private final  ConcurrentHashMap<String, ScriptObjectMirror> allD2js;
 
-	protected final GenericObjectPool<ScriptEngine> enginePool;
-	//protected final ThreadLocal<ScriptEngine> engine;
-	
-	
-	public ServerUnitManager(final String srcFolder, D2jsInitParams initParams) {
-		this.srcFolder = srcFolder;
-
-		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
-		config.setMaxTotal(10000);
-		config.setMaxIdle(1000);
-		config.setMinIdle(10);
-		
-		enginePool = new GenericObjectPool<>(new BasePooledObjectFactory<ScriptEngine>() {
-
-			@Override
-			public ScriptEngine create() throws Exception {
-				return createEngine(initParams);
-			}
-
-			@Override
-			public PooledObject<ScriptEngine> wrap(ScriptEngine paramT) {
-				return new DefaultPooledObject<ScriptEngine>(paramT);
-			}
-
-			
-		}, config);
-		
+	public ScriptEngine getEngine() {
+		return engine;
 	}
 
-	public JsEngineHandlerContext getEngineContext(final String srcFile, final String aliasPath) throws Exception {
-		ScriptEngine engine = enginePool.borrowObject();
+	public ServerUnitManager(final String srcFolder, D2jsInitParams initParams) {
+		this.srcFolder = srcFolder;
+		try {
+			this.engine = createEngine(initParams);
+//			this.engine.put("allD2js", allD2js);
+			
+			allD2js = (ConcurrentHashMap<String, ScriptObjectMirror>) this.engine.get("allD2js");
+		} catch (Exception e) {
+			logger.error("", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	public ScriptObjectMirror getD2js(final String srcFile, final String aliasPath) throws Exception {
 		// ScriptEngine engine = this.engine.get();
-		Map<String, Object> contextsPerFile  = (Map<String, Object>) engine.get("allD2js");
-		ScriptObjectMirror existed = (ScriptObjectMirror) contextsPerFile.get(srcFile);
-		JsEngineHandlerContext result = new JsEngineHandlerContext();
-		result.setScriptEngine(engine);
-		result.setHandler(existed);
-		result.setJson(new JSON(engine));
-		result.setJsTypeUtil(new JsTypeUtil(engine));
-		result.setEnginePool(this.enginePool);;
+		ScriptObjectMirror existed = (ScriptObjectMirror) allD2js.get(srcFile);
 		if (existed == null) {
 			synchronized(this){
-				if(contextsPerFile.containsKey(srcFile)){
-					result.setHandler((ScriptObjectMirror) contextsPerFile.get(srcFile));
+				if(allD2js.containsKey(srcFile)){
+					return (ScriptObjectMirror) allD2js.get(srcFile);
 				} else {
 					if ((new File(srcFile)).exists()) {
-						result = this.createEngineContext(engine, srcFile, aliasPath);
+						ScriptObjectMirror d2js = this.createD2js(engine, srcFile, aliasPath);
+						allD2js.put(srcFile, d2js);
+						return d2js;
 					} else {
 						return null;
 					}
 				}
 			}
 		}
-		return result;
+		return existed;
 	}
 
-	protected abstract JsEngineHandlerContext createEngineContext(ScriptEngine engine, String srcFile, String aliasPath)
+	protected abstract ScriptObjectMirror createD2js(ScriptEngine engine, String srcFile, String aliasPath)
 			throws Exception;
 
 	public void onFileChanged(WatchEvent<Path> ev, Path file) {
-//		Kind<Path> kind = ev.kind();
-//		String filename = file.toString();
-//		if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-//			if (contextsPerFile.containsKey(filename)) {
-//				if (logger.isDebugEnabled()) {
-//					logger.debug(filename + " dropped");
-//				}
-//				contextsPerFile.remove(filename);
-//			}
-//		} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-//			if (contextsPerFile.containsKey(filename)) {
-//				if (logger.isDebugEnabled()) {
-//					logger.debug(filename + " changed");
-//				}
-//				contextsPerFile.remove(filename);
-//			}
-//		}
+		Kind<Path> kind = ev.kind();
+		String filename = file.toString();
+		if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+			if (allD2js.containsKey(filename)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(filename + " dropped");
+				}
+				allD2js.remove(filename);
+			}
+		} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+			if (allD2js.containsKey(filename)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(filename + " changed");
+				}
+				allD2js.remove(filename);
+			}
+		}
 	}
 
 	protected abstract ScriptEngine createEngine(D2jsInitParams initParams) throws Exception;

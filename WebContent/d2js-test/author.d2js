@@ -24,7 +24,11 @@ d2js.modify = function(row, columns){
 
 d2js.number = 1;
 
-d2js.exports.test = d2js.test = function(params){
+d2js.exports.test = d2js.test = function(params, web){
+	//logger.info(web.out);
+	//logger.info(web.request);
+	//logger.info(web.response);
+	//logger.info(d2jsRunner);
 	// Java.type('java.lang.Thread').sleep(200);
 	//logger.info(d2js.number);
 	// logger.debug('run on ' + Java.type('java.lang.Thread').currentThread().name);
