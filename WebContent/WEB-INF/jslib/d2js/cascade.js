@@ -37,7 +37,7 @@ D2JS.DataTable.prototype.nest = function(table, src, method, id){
 	id = id || 'id';
 	var ids = this.rows.map(function(row){return row[id]});
 	if(!this.nested) this.nested = {};
-	this.nested[table] = d2js.callD2js(src, method, [ids]);
+	this.nested[table] = d2js.callD2js(src, method, [ids, http], http);
 	return this;
 }
 
@@ -45,22 +45,30 @@ D2JS.DataTable.prototype.nest = function(table, src, method, id){
  * 调用另一个 d2js 文件的函数
  * @param src {string} 文件名
  * @param method {string} 函数名
- * @param params {*|array} 数组 - 参数列表，单值 - 单个参数
+ * @param args {*|array} 数组 - 参数列表，单值 - 单个参数
  */
-D2JS.prototype.callD2js = function(src, method, params){
-	var context2 = d2jsRunner.getEngineContext(findResource(src), request, response);
-	if(context2 == null) throw new Error(src + ' maybe not exist');
+HttpHandler.prototype.callD2js = function(src, method, args){
+	var another = d2jsRunner.getD2js(findResource(src), this.request, this.response);		//ScriptObjectMirror
+	if(another == null) throw new Error(src + ' maybe not exist');
 	try{
-		var another = context2.getHandler();	// ScriptObjectMirror
-		if(this.transactConnection){
-			another = context2.getEngineAsInvocable().invokeMethod(another, 'clone');	// ScriptObjectMirror
-			another.transactConnection = this.transactConnection;
+		another = another.clone();
+		if(this.d2js.transactConnection){
+			another.transactConnection = this.d2js.transactConnection;
 		}
-		var res = another[method].apply(another, params);		
-		d2jsRunner.completeTask(context2.getScriptEngine(), null);
+		if(Array.isArray(args) == false){
+			args = [args];
+		}
+		var h2 = new HttpHandler();
+		h2.merge(http);
+		h2.d2js = another;
+		if(this.task) h2.task = new org.siphon.d2js.jshttp.Task(); 
+		var res = another[method].apply(another, args);
+		if(h2 && h2.task) d2jsRunner.completeTask(h2.task, null);
 		return res;
 	} catch(e){
-		d2jsRunner.completeTask(context2.getScriptEngine(), new ECMAException(e, null));
+		if(h2 && h2.task){
+			d2jsRunner.completeTask(h2.task, new ECMAException(e, null));
+		}
 		throw e;
 	}
 }
@@ -77,41 +85,42 @@ D2JS.prototype.callD2js = function(src, method, params){
  *  }
  *  ```
  */
-D2JS.prototype.update = function(params){
-	this.updateTable(params.table, null, true);
+D2JS.prototype.update = function(params, http){
+	http.updateTable(params.table, null, true);
 }
 
-D2JS.prototype.updateTable = function(table, parentRow, isSelf){
-	var path = request.getServletContext().getContextPath();
+HttpHandler.prototype.updateTable = function(table, parentRow, isSelf){
+	var path = this.request.getServletContext().getContextPath();
 	var src = table.src.replace(path, '');
-	src = request.getServletContext().getRealPath(src);
-	this.doTransaction(function(){
+	src = this.request.getServletContext().getRealPath(src);
+	var http = this;
+	this.d2js.doTransaction(function(){
 		for(var i=0;i<table.rows.length; i++){
 			var row = table.rows[i];
 			try{
 				switch(row._state){
 				case 'new' : 
 					if(isSelf){
-						this.create(row, table.columns);
+						this.create(row, http, table.columns, parentRow);
 					} else {
-						this.callD2js(src, 'create', [row, table.columns]);
+						http.callD2js(src, 'create', [row, http, table.columns, parentRow]);
 					}
 					row._children && updateChildren.call(this, row);
 					break;
 				case 'edit' :
 					row._children && updateChildren.call(this, row);
 					if(isSelf){
-						this.modify(row, table.columns);
+						this.modify(row, http, table.columns, parentRow);
 					} else {
-						this.callD2js(src, 'modify', [row, table.columns]);
+						http.callD2js(src, 'modify', [row, http, table.columns, parentRow], http);
 					}
 					break;
 				case 'remove' : 
 					row._children && updateChildren.call(this, row);
 					if(isSelf){
-						this.destroy(row, table.columns);
+						this.destroy(row, http, table.columns, parentRow);
 					} else {
-						this.callD2js(src, 'destroy', [row, table.columns]);
+						http.callD2js(src, 'destroy', [row, http, table.columns, parentRow], http);
 					}
 					break;
 				case 'none' :
@@ -132,7 +141,7 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 	
 	function updateChildren(row){
 		for(var i=0;i<row._children.length; i++){
-			this.updateTable(row._children[i], row);
+			http.updateTable(row._children[i], row, false);
 		}
 	}
 }

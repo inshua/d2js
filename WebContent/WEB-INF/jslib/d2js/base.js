@@ -87,13 +87,16 @@ function $SQL(sql){
  * ```
  * @class D2JS
  */
-function D2JS(sqlExecutor){ this.executor = sqlExecutor;  }
+function D2JS(sqlExecutor){ 
+	this.executor = sqlExecutor;  
+	this.transactConnection = null;
+}
 
-D2JS.prototype = new Object();
+//D2JS.prototype = new Object();
+//
+//D2JS.prototype.constructor = D2JS;
 
-D2JS.prototype.constructor = D2JS;
-
-D2JS.prototype.transactConnection = null;	// for transaction;
+//D2JS.prototype.transactConnection = null;	// for transaction;
 
 D2JS.DataTable = function(){}
 
