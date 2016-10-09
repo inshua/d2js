@@ -38,10 +38,9 @@ import jdk.nashorn.internal.runtime.ScriptObject;
 public class D2jsFormatter extends Formatter {
 
 	@Override
-	public void formatQueryResult(Object queryResult, String message, JsEngineHandlerContext engineContext) throws Exception {
-		JsspWriter out = (JsspWriter) engineContext.getScriptEngine().get("out");
+	public void formatQueryResult(JsspWriter out, Object queryResult, String message, JsEngineHandlerContext engineContext) throws Exception {
 		if(!out.isDirty()){
-			if (engineContext.getJsTypeUtil().isNull(queryResult)){
+			if (JsTypeUtil.isNull(queryResult)){
 				out.print("{\"success\" : true}");
 			} else {
 				out.printJson(queryResult);
@@ -57,7 +56,7 @@ public class D2jsFormatter extends Formatter {
 	@Override
 	public String formatException(Object exception, JsEngineHandlerContext engineContext) throws Exception {
 		if (exception instanceof ScriptObjectMirror){
-			return formatException(engineContext.getJsTypeUtil().getSealed((ScriptObjectMirror) exception), engineContext);		
+			return formatException(JsTypeUtil.getSealed((ScriptObjectMirror) exception), engineContext);		
 		} else if( exception instanceof ScriptObject) {
 			//NativeError, NativeTypeError, NativeEvalError, ...
 			// 现在已找到方法能 JSON.stringify Error 对象，不再需要 hack instMessage

@@ -61,7 +61,7 @@ public class JsspServlet extends JsServlet {
 		args.setPreloadJs(this.getPreloadJs());
 		args.setGlobalLockObject(new Object());
 		
-		JsspRunner jsspRunner = new JsspRunner(args, new JsspUnitManager(path));
+		JsspRunner jsspRunner = new JsspRunner(new JsspUnitManager(path, args));
 		this.getServletContext().setAttribute("jsspRunner", jsspRunner);		
 	}
 

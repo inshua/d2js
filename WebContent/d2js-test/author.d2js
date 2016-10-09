@@ -22,9 +22,12 @@ d2js.modify = function(row, columns){
 	return this.updateRow('author', row, columns);
 }
 
-// configure nashorn engine pool size for this page
-d2js.configurePagePool = function(config){
-	config.maxActive = 20000;
-}
+d2js.number = 1;
 
+d2js.exports.test = d2js.test = function(params){
+	// Java.type('java.lang.Thread').sleep(200);
+	//logger.info(d2js.number);
+	// logger.debug('run on ' + Java.type('java.lang.Thread').currentThread().name);
+	return "hello " + (d2js.number ++);
+}
 

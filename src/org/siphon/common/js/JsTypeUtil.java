@@ -340,7 +340,8 @@ public class JsTypeUtil {
 	}
 
 	private static Object jsObjectToJava(ScriptFunction arg) throws UnsupportedConversionException {
-		throw new UnsupportedConversionException("cannot convert js function to java", null);
+		// throw new UnsupportedConversionException("cannot convert js function to java", null);
+		return null;
 	}
 
 	private static Object jsObjectToJava(NativeString arg) {

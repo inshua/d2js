@@ -42,3 +42,36 @@ imports("./d2js/validation.js");
 init();
 
 
+var LinkedBlockingQueue = Java.type('java.util.concurrent.LinkedBlockingQueue');
+var Executors = Java.type('java.util.concurrent.Executors');
+var ConcurrentHashMap = Java.type('java.util.concurrent.ConcurrentHashMap');
+var TimeUnit = Java.type('java.util.concurrent.TimeUnit');
+var ThreadPoolExecutor = Java.type('org.apache.tomcat.util.threads.ThreadPoolExecutor');
+var workQueue = new LinkedBlockingQueue();
+//var es = Executors.newWorkStealingPool();
+var es = new ThreadPoolExecutor(500, 1000, 10, TimeUnit.SECONDS, workQueue);
+var allD2js = new ConcurrentHashMap();
+function recvRequest(asyncContext, request, response, out, d2js, method){
+	var args = Array.prototype.slice(arguments, 6);
+	var d = allD2js[d2js];
+	var r = d[method].apply(d, args);
+	out.print(JSON.stringify(r));
+	asyncContext.complete();
+	//logger.info(java.lang.Thread.currentThread());
+	return;
+	
+	es.execute(new java.lang.Runnable(){
+		run: function(){
+			logger.info('getPriority() ' + java.lang.Thread.currentThread().getPriority());
+			var r = d[method].apply(d, args);
+			out.print(JSON.stringify(r));
+			asyncContext.complete();
+		} 
+	});
+}
+
+function processRequest(d2js, method, params){
+	var d = allD2js[d2js];
+	var r = d[method].call(d, params);
+	out.print(JSON.stringify(r));
+}

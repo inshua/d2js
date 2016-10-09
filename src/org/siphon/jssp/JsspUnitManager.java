@@ -45,6 +45,7 @@ import org.apache.log4j.Logger;
 import org.siphon.common.js.JsEngineUtil;
 import org.siphon.common.js.JsTypeUtil;
 import org.siphon.d2js.D2jsUnitManager;
+import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.ServerUnitManager;
 import org.siphon.jssql.SqlExecutor;
@@ -53,8 +54,8 @@ public class JsspUnitManager extends D2jsUnitManager {
 
 	private static Logger logger = Logger.getLogger(JsspUnitManager.class);
 
-	public JsspUnitManager(String srcFolder) {
-		super(srcFolder);
+	public JsspUnitManager(String srcFolder, D2jsInitParams initParams) {
+		super(srcFolder, initParams);
 	}
 
 	@Override

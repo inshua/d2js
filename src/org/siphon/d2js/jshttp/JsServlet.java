@@ -30,12 +30,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.rmi.PortableRemoteObject;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -48,11 +52,14 @@ import org.siphon.common.io.WatchDir;
 import org.siphon.jssp.JsspGlobal;
 import org.siphon.jssp.JsspSession;
 
+@WebServlet(asyncSupported = true)
 public abstract class JsServlet extends HttpServlet {
 
 	private static Logger logger = Logger.getLogger(JsServlet.class);
 
-	protected static Map<String, Object> application = new JsspGlobal();
+	protected static Map<String, Object> application = new JsspGlobal();	// should be ServletContext like jsp, but wrap ServletContext is .... 
+	
+//	protected static ExecutorService executorService = Executors.newFixedThreadPool(1000);
 
 	@Override
 	public void init() throws ServletException {

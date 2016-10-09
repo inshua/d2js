@@ -19,13 +19,15 @@
  *******************************************************************************/
 package org.siphon.d2js.jshttp;
 
+import javax.script.Bindings;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
-import org.apache.commons.pool.ObjectPool;
+import org.apache.commons.pool2.ObjectPool;
+import org.apache.commons.pool2.PooledObject;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JSON;
 import org.siphon.common.js.JsTypeUtil;
@@ -54,28 +56,16 @@ public class JsEngineHandlerContext {
 	}
 
 	private ScriptObjectMirror handler;
-	private ObjectPool<JsEngineHandlerContext> enginePool;
 	
 	
 	private JsTypeUtil jsTypeUtil;
 
 	private JSON json;
 
+	private ObjectPool<ScriptEngine> enginePool;
+
 	public Invocable getEngineAsInvocable() {
 		return (Invocable) this.scriptEngine;
-	}
-
-	public void setPool(ObjectPool<JsEngineHandlerContext> enginePool) {
-		this.enginePool = enginePool;
-	}
-	
-	
-	public void free(){
-		try {
-			this.enginePool.returnObject(this);
-		} catch (Exception e) {
-			logger.error("", e);
-		}
 	}
 
 	public void setJsTypeUtil(JsTypeUtil jsTypeUtil) {
@@ -94,8 +84,25 @@ public class JsEngineHandlerContext {
 		return json;
 	}
 	
-	public Object invokeMethod(String method, Object... params) throws NoSuchMethodException, ScriptException{
-		return this.getEngineAsInvocable().invokeMethod(this.getHandler(), method, params);
+	public Object invokeMethod(Bindings bindings, String method, Object... params) throws NoSuchMethodException, ScriptException{
+		bindings.put("params", params);
+		bindings.put("d2js", this.getHandler());
+		return this.scriptEngine.eval("d2js." + method + ".apply(d2js, params)", bindings);	// very fast, 0.0532ms
+		//return this.getEngineAsInvocable().invokeMethod(this.getHandler(), method, params);
+	}
+
+	public void setEnginePool(ObjectPool<ScriptEngine> enginePool) {
+		this.enginePool = enginePool;
+	}
+	
+	public void free(){
+		try {
+			if(enginePool != null){
+				this.enginePool.returnObject(this.scriptEngine);
+			}
+			
+		} catch (Exception e) {
+		}
 	}
 
 }

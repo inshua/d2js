@@ -23,16 +23,23 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Struct;
+import java.util.Currency;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.rmi.PortableRemoteObject;
+import javax.script.Bindings;
 import javax.script.Invocable;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -46,9 +53,10 @@ import jdk.nashorn.internal.runtime.ScriptObject;
 
 import org.apache.catalina.Globals;
 import org.apache.catalina.startup.EngineConfig;
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.siphon.common.js.JSON;
@@ -66,38 +74,37 @@ public class D2jsRunner {
 
 	private static Logger logger = Logger.getLogger(D2jsRunner.class);
 
-	protected ServerUnitManager d2jsManager = null;
-
-	private final static DataFormaterManager formaterManager = new DataFormaterManager();
+	protected final ServerUnitManager d2jsManager;
 
 	private final Formatter formatter = new D2jsFormatter();
 
-	private D2jsInitParams initParams;
-
-	public D2jsRunner(D2jsInitParams params, D2jsUnitManager d2jsManager) {
+	public D2jsRunner(D2jsUnitManager d2jsManager) {
 		this.d2jsManager = d2jsManager;
-		this.initParams = params;
 	}
 	
 	public void run(HttpServletRequest request, HttpServletResponse response, String method)
 			throws ServletException, IOException {
+		
+		StopWatch watch = new StopWatch();
 		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
-		if (!new File(jsfile).exists()) {
-			response.setStatus(404);
-			PrintWriter out = response.getWriter();
-			out.print(request.getServletPath() + " not found");
-			out.flush();
-			return;
-		}
-
+		watch.start();
 		JsEngineHandlerContext engineContext = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, getServletPath(request), this.initParams);
+			engineContext = d2jsManager.getEngineContext(jsfile, getServletPath(request));
+			if(engineContext == null){
+				response.setStatus(404);
+				PrintWriter out = response.getWriter();
+				out.print(request.getServletPath() + " not found");
+				out.flush();
+				return;
+			}
 		} catch (Exception e3) {
 			logger.error("", e3);
-			engineContext.free();
 			throw new ServletException(e3);
 		}
+		
+		if(watch.getTime() > 10) logger.debug("getEngineContext exhaust " + watch.getNanoTime() / 1000000.0);
+		watch.reset();
 
 		JsspRequest jsspRequest = new JsspRequest(request, engineContext);
 
@@ -109,23 +116,52 @@ public class D2jsRunner {
 			PrintWriter out = response.getWriter();
 			out.print("params must be json");
 			out.flush();
-			
-			engineContext.free();
 			return;
 		} 
+		
 
+		watch.start();
 		formatter.writeHttpHeader(response, engineContext);
+		if(watch.getTime() > 10) logger.debug("writeHttpHeader exhaust " + watch.getNanoTime() / 1000000.0);
+		watch.reset();
 		JsspWriter out = null;
 		try {
-
-			initEngineContext(engineContext, jsspRequest, response);
+			StopWatch watch2 = new StopWatch();
+			watch2.start();
+			// initEngineContext(engineContext, jsspRequest, response);
+//			Bindings bindings = createBindings(engineContext, jsspRequest, response);
+//			
+			out = new JsspWriter(response, engineContext);
+//			
+//			watch.start();
+//			
+//			ScriptObjectMirror d2js = engineContext.getHandler();
+//			
+//			ScriptObjectMirror exports = (ScriptObjectMirror) d2js.get("exports");
+//			if(exports != null && JsTypeUtil.isTrue(exports.getOrDefault(method, false)) == false){
+//				throw new Exception(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
+//			}
+//			if(watch.getTime() > 10) logger.debug("test exports exhaust " +watch.getNanoTime() / 1000000.0);
+//			watch.reset();
+//			
+//			watch.start();
+//			// Object res = engineContext.getEngineAsInvocable().invokeMethod(d2js, method, params);
+//			Object res = engineContext.invokeMethod(bindings, method, params);
+//			bindings.clear();
+//			//completeTask(engineContext.getScriptEngine(), null);
+//			//logger.debug("invoke exhaust " + watch.getNanoTime() / 1000000.0);
+//
+//			if(watch.getTime() > 10) logger.debug("run exhaust " + watch.getNanoTime() / 1000000.0);
+//			watch.reset();
+//				
+//			watch.start();
 			
-			out = (JsspWriter) engineContext.getScriptEngine().get("out");
-
-			Object res = run(engineContext, jsspRequest, response, method, params);
-
-			formatter.formatQueryResult(res, null, engineContext);
-
+			engineContext.getEngineAsInvocable().invokeFunction("recvRequest", request, response, out, jsfile, method, params);
+			
+//			formatter.formatQueryResult(out, res, null, engineContext);
+//			if(watch.getTime() > 10)logger.debug("formatQueryResult exhaust " + watch.getNanoTime() / 1000000.0);
+//			watch.reset();
+//			
 		} catch (Exception e) {
 			try {
 				this.completeTask(engineContext.getScriptEngine(), e);
@@ -160,16 +196,15 @@ public class D2jsRunner {
 				logger.error("", e1);
 			}
 		} finally {
-			if (engineContext != null)
-				engineContext.free();
-
-			out.flush();
+//			watch.start();
+//			out.flush();
+//			if(watch.getTime() > 10) logger.debug("out.flush exhaust " + watch.getNanoTime() / 1000000.0);
+//			watch.stop();
 		}
 	}
 
 	protected ScriptObjectMirror getParams(JsEngineHandlerContext engineContext, JsspRequest request) throws Exception {
 		JsTypeUtil jsTypeUtil = engineContext.getJsTypeUtil();
-
 		String s = request.getParameter("params");
 		if (s != null) {
 			return (ScriptObjectMirror) engineContext.getJson().parse(s);
@@ -191,19 +226,43 @@ public class D2jsRunner {
 		engine.put("session", JsServlet.getJsSesson(request.getSession()));
 		engine.put("d2jsRunner", this);
 
+//		JsspWriter out = new JsspWriter(response, engineContext);
+//		engine.put("out", out);
+	}
+	
+	protected Bindings createBindings(JsEngineHandlerContext engineContext, HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		ScriptEngine engine = engineContext.getScriptEngine();
+		Bindings b = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+		Bindings bindings = engine.createBindings();
+		bindings.put("request", request);
+		bindings.put("response", response);
+		bindings.put("session", JsServlet.getJsSesson(request.getSession()));
+		bindings.put("d2jsRunner", this);
+
 		JsspWriter out = new JsspWriter(response, engineContext);
-		engine.put("out", out);
+		bindings.put("out", out);
+		return bindings;
 	}
 
-	public Object run(JsEngineHandlerContext engineContext, JsspRequest request, HttpServletResponse response, String method,
+	public Object run(JsEngineHandlerContext engineContext, Bindings bindings, JsspRequest request, HttpServletResponse response, String method,
 			ScriptObjectMirror params) throws Exception {
 		ScriptObjectMirror d2js = engineContext.getHandler();
+		StopWatch watch = new StopWatch();
+		watch.start();
 		ScriptObjectMirror exports = (ScriptObjectMirror) d2js.get("exports");
 		if(exports != null && JsTypeUtil.isTrue(exports.getOrDefault(method, false)) == false){
 			throw new Exception(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
 		}
-		Object res = engineContext.getEngineAsInvocable().invokeMethod(engineContext.getHandler(), method, params);
-		completeTask(engineContext.getScriptEngine(), null);
+		logger.debug("test exports exhaust " +watch.getNanoTime() / 1000000.0);
+		watch.reset();
+		
+		watch.start();
+		// Object res = engineContext.getEngineAsInvocable().invokeMethod(d2js, method, params);
+		Object res = engineContext.invokeMethod(bindings, method, params);
+		bindings.clear();
+		//completeTask(engineContext.getScriptEngine(), null);
+		logger.debug("invoke exhaust " + watch.getNanoTime() / 1000000.0);
 		return res;
 	}
 
@@ -241,9 +300,9 @@ public class D2jsRunner {
 			throws Exception {
 		JsEngineHandlerContext engineContext = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, request.getContextPath(), this.initParams);
+			engineContext = d2jsManager.getEngineContext(jsfile, request.getContextPath());
 
-			initEngineContext(engineContext, request, response);
+			// initEngineContext(engineContext, request, response);
 
 			return engineContext;
 
@@ -252,14 +311,6 @@ public class D2jsRunner {
 		}
 	}
 
-	public D2jsInitParams getInitParams() {
-		return initParams;
-	}
-
-	public void setInitParams(D2jsInitParams initParams) {
-		this.initParams = initParams;
-	}
-	
 	public String getServletPath(HttpServletRequest request){
 		// FORWARD,  INCLUDE,  REQUEST,  ASYNC,  ERROR
 		if(request.getDispatcherType() == DispatcherType.REQUEST){
@@ -270,4 +321,240 @@ public class D2jsRunner {
 			return request.getServletPath();	// not sure
 		}
 	}
+
+	public void run(AsyncContext asyncContext, String method)
+			throws ServletException, IOException {
+		
+		HttpServletRequest request = (HttpServletRequest) asyncContext.getRequest();
+		HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
+		StopWatch watch = new StopWatch();
+		
+		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
+		watch.start();
+		JsEngineHandlerContext engineContext = null;
+		try {
+			engineContext = d2jsManager.getEngineContext(jsfile, getServletPath(request));
+			if(engineContext == null){
+				response.setStatus(404);
+				PrintWriter out = response.getWriter();
+				out.print(request.getServletPath() + " not found");
+				out.flush();
+				return;
+			}
+		} catch (Exception e3) {
+			logger.error("", e3);
+			throw new ServletException(e3);
+		}
+		
+		if(watch.getTime() > 10) logger.debug("getEngineContext exhaust " + watch.getNanoTime() / 1000000.0);
+		watch.reset();
+
+		JsspRequest jsspRequest = new JsspRequest(request, engineContext);
+
+		ScriptObjectMirror params;
+		try {
+			params = getParams(engineContext, jsspRequest);
+		} catch (Exception e3) {
+			response.setStatus(500);
+			PrintWriter out = response.getWriter();
+			out.print("params must be json");
+			out.flush();
+			return;
+		} 
+		
+
+		watch.start();
+		formatter.writeHttpHeader(response, engineContext);
+		if(watch.getTime() > 10) logger.debug("writeHttpHeader exhaust " + watch.getNanoTime() / 1000000.0);
+		watch.reset();
+		JsspWriter out = null;
+		try {
+			StopWatch watch2 = new StopWatch();
+			watch2.start();
+			out = new JsspWriter(response, engineContext);
+			initEngineContext(engineContext, jsspRequest, response);
+			ScriptEngine engine = engineContext.getScriptEngine();
+			engine.put("out", out);
+			
+			engineContext.getEngineAsInvocable().invokeFunction("processRequest", jsfile, method, params);
+			
+			
+			ScriptObjectMirror d2js = engineContext.getHandler();
+			
+//			ScriptObjectMirror exports = (ScriptObjectMirror) d2js.get("exports");
+//			if(exports != null && JsTypeUtil.isTrue(exports.getOrDefault(method, false)) == false){
+//				throw new Exception(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
+//			}
+//			if(watch.getTime() > 10) logger.debug("test exports exhaust " +watch.getNanoTime() / 1000000.0);
+			
+			
+		} catch (Exception e) {
+			try {
+				this.completeTask(engineContext.getScriptEngine(), e);
+			} catch (Exception e2) {
+				logger.error("", e2);
+			}
+
+			Object ex = JsEngineUtil.parseJsException(e);
+			if (ex instanceof Throwable == false) {
+				boolean ignore = false;
+				if (ex instanceof ScriptObjectMirror) {
+					ScriptObjectMirror mex = (ScriptObjectMirror) ex;
+					if (mex.containsKey("name") && "ValidationError".equals(mex.get("name"))) {
+						ignore = true;
+					}
+				} else if (ex instanceof ScriptObject) {
+					ScriptObject oex = (ScriptObject) ex;
+					if (oex.containsKey("name") && "ValidationError".equals(oex.get("name"))) {
+						ignore = true;
+					}
+				}
+				if (!ignore)
+					logger.error(engineContext.getJson().tryStringify(ex), e);
+			} else {
+				logger.error("", (Throwable) ex);
+			}
+
+			try {
+				out.print(formatter.formatException(ex, engineContext));
+				out.flush();
+			} catch (Exception e1) {
+				logger.error("", e1);
+			}
+		} finally {
+			asyncContext.complete();
+			if(engineContext != null) engineContext.free();
+//			watch.start();
+//			out.flush();
+//			if(watch.getTime() > 10) logger.debug("out.flush exhaust " + watch.getNanoTime() / 1000000.0);
+//			watch.stop();
+		}
+	}
+
+	
+	public void run_RecvRequest(AsyncContext asyncContext, String method)
+			throws ServletException, IOException {
+		
+		HttpServletRequest request = (HttpServletRequest) asyncContext.getRequest();
+		HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
+		StopWatch watch = new StopWatch();
+		
+		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
+		watch.start();
+		JsEngineHandlerContext engineContext = null;
+		try {
+			engineContext = d2jsManager.getEngineContext(jsfile, getServletPath(request));
+			if(engineContext == null){
+				response.setStatus(404);
+				PrintWriter out = response.getWriter();
+				out.print(request.getServletPath() + " not found");
+				out.flush();
+				return;
+			}
+		} catch (Exception e3) {
+			logger.error("", e3);
+			throw new ServletException(e3);
+		}
+		
+		if(watch.getTime() > 10) logger.debug("getEngineContext exhaust " + watch.getNanoTime() / 1000000.0);
+		watch.reset();
+
+		JsspRequest jsspRequest = new JsspRequest(request, engineContext);
+
+		ScriptObjectMirror params;
+		try {
+			params = getParams(engineContext, jsspRequest);
+		} catch (Exception e3) {
+			response.setStatus(500);
+			PrintWriter out = response.getWriter();
+			out.print("params must be json");
+			out.flush();
+			return;
+		} 
+		
+
+		watch.start();
+		formatter.writeHttpHeader(response, engineContext);
+		if(watch.getTime() > 10) logger.debug("writeHttpHeader exhaust " + watch.getNanoTime() / 1000000.0);
+		watch.reset();
+		JsspWriter out = null;
+		try {
+			StopWatch watch2 = new StopWatch();
+			watch2.start();
+			out = new JsspWriter(response, engineContext);
+			// initEngineContext(engineContext, jsspRequest, response);
+//			Bindings bindings = createBindings(engineContext, jsspRequest, response);
+//			
+//			out = (JsspWriter) bindings.get("out");
+//			
+//			watch.start();
+//			
+//			ScriptObjectMirror d2js = engineContext.getHandler();
+//			
+//			ScriptObjectMirror exports = (ScriptObjectMirror) d2js.get("exports");
+//			if(exports != null && JsTypeUtil.isTrue(exports.getOrDefault(method, false)) == false){
+//				throw new Exception(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
+//			}
+//			if(watch.getTime() > 10) logger.debug("test exports exhaust " +watch.getNanoTime() / 1000000.0);
+//			watch.reset();
+//			
+//			watch.start();
+//			// Object res = engineContext.getEngineAsInvocable().invokeMethod(d2js, method, params);
+//			Object res = engineContext.invokeMethod(bindings, method, params);
+//			bindings.clear();
+//			//completeTask(engineContext.getScriptEngine(), null);
+//			//logger.debug("invoke exhaust " + watch.getNanoTime() / 1000000.0);
+//
+//			if(watch.getTime() > 10) logger.debug("run exhaust " + watch.getNanoTime() / 1000000.0);
+//			watch.reset();
+//				
+//			watch.start();
+			
+			engineContext.getEngineAsInvocable().invokeFunction("recvRequest", asyncContext, request, response, out, jsfile, method, params);
+			
+//			formatter.formatQueryResult(out, res, null, engineContext);
+//			if(watch.getTime() > 10)logger.debug("formatQueryResult exhaust " + watch.getNanoTime() / 1000000.0);
+//			watch.reset();
+//			
+		} catch (Exception e) {
+			try {
+				this.completeTask(engineContext.getScriptEngine(), e);
+			} catch (Exception e2) {
+				logger.error("", e2);
+			}
+
+			Object ex = JsEngineUtil.parseJsException(e);
+			if (ex instanceof Throwable == false) {
+				boolean ignore = false;
+				if (ex instanceof ScriptObjectMirror) {
+					ScriptObjectMirror mex = (ScriptObjectMirror) ex;
+					if (mex.containsKey("name") && "ValidationError".equals(mex.get("name"))) {
+						ignore = true;
+					}
+				} else if (ex instanceof ScriptObject) {
+					ScriptObject oex = (ScriptObject) ex;
+					if (oex.containsKey("name") && "ValidationError".equals(oex.get("name"))) {
+						ignore = true;
+					}
+				}
+				if (!ignore)
+					logger.error(engineContext.getJson().tryStringify(ex), e);
+			} else {
+				logger.error("", (Throwable) ex);
+			}
+
+			try {
+				out.print(formatter.formatException(ex, engineContext));
+				out.flush();
+			} catch (Exception e1) {
+				logger.error("", e1);
+			}
+		} finally {
+//			watch.start();
+//			out.flush();
+//			if(watch.getTime() > 10) logger.debug("out.flush exhaust " + watch.getNanoTime() / 1000000.0);
+//			watch.stop();
+		}
+	}
+
 }

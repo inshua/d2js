@@ -16,13 +16,6 @@ import org.siphon.common.js.JSON;
 import org.siphon.common.js.JsEngineUtil;
 import org.siphon.common.js.JsTypeUtil;
 
-import sun.org.mozilla.javascript.internal.Context;
-import sun.org.mozilla.javascript.internal.NativeArray;
-import sun.org.mozilla.javascript.internal.NativeJavaObject;
-import sun.org.mozilla.javascript.internal.Scriptable;
-
-import com.sun.script.javascript.JSAdapter;
-
 public class TestJsEngine {
 
 	private static Logger logger = Logger.getLogger(TestJsEngine.class);

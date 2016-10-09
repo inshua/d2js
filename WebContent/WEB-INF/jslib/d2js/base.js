@@ -858,6 +858,7 @@ D2JS.prototype.clone = function(){
 	for(var k in this){
 		if(this.hasOwnProperty(k)) obj[k] = this[k];
 	}
+	obj.exports = {}.merge(this.exports);
 	return obj;
 };
 
@@ -925,7 +926,7 @@ function init(){
 		for(var k in datasourceConfig){
 			properties.setProperty(k, datasourceConfig[k] + '');
 		}
-		return Java.type('org.apache.commons.dbcp.BasicDataSourceFactory').createDataSource(properties);
+		return Java.type('org.apache.commons.dbcp2.BasicDataSourceFactory').createDataSource(properties);
 	}()));
 	
 	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine);

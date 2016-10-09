@@ -29,113 +29,114 @@ import java.nio.file.WatchEvent.Kind;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.script.ScriptEngine;
 import javax.sql.DataSource;
 
-import org.apache.commons.pool.BasePoolableObjectFactory;
-import org.apache.commons.pool.ObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPool.Config;
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.log4j.Logger;
 import org.siphon.common.io.WatchDir;
+import org.siphon.common.js.JSON;
+import org.siphon.common.js.JsTypeUtil;
 import org.siphon.d2js.D2jsUnitManager;
 
+
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import sun.font.Script;
 
 public abstract class ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
-	private Map<String, ObjectPool<JsEngineHandlerContext>> contextsPerFile = new ConcurrentHashMap<String, ObjectPool<JsEngineHandlerContext>>();
 	protected String srcFolder;
+	//protected ScriptEngine engine;
 
-	public ServerUnitManager() {
-		super();
-	}
-
-	public ServerUnitManager(final String srcFolder) {
+	protected final GenericObjectPool<ScriptEngine> enginePool;
+	//protected final ThreadLocal<ScriptEngine> engine;
+	
+	
+	public ServerUnitManager(final String srcFolder, D2jsInitParams initParams) {
 		this.srcFolder = srcFolder;
-	}
 
-	public JsEngineHandlerContext getEngineContext(final String srcFile, final String aliasPath, D2jsInitParams params) throws Exception {
+		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
+		config.setMaxTotal(10000);
+		config.setMaxIdle(1000);
+		config.setMinIdle(10);
+		
+		enginePool = new GenericObjectPool<>(new BasePooledObjectFactory<ScriptEngine>() {
 
-		File file = null;
-		if (contextsPerFile.containsKey(srcFile)) {
-			ObjectPool<JsEngineHandlerContext> pool = contextsPerFile.get(srcFile);
-			JsEngineHandlerContext ctxt = pool.borrowObject();
-			ctxt.setPool(pool);
-			return ctxt;
-		} else if ((file = new File(srcFile)).exists()) {
-			
-			GenericObjectPool<JsEngineHandlerContext> enginePool;
-			BasePoolableObjectFactory<JsEngineHandlerContext> factory = new BasePoolableObjectFactory<JsEngineHandlerContext>() {
-
-				@Override
-				public JsEngineHandlerContext makeObject() throws Exception {
-					return createEngineContext(srcFile, aliasPath, params);
-				}
-				
-			};
-
-			enginePool = new GenericObjectPool<JsEngineHandlerContext>(factory);
-
-			JsEngineHandlerContext ctxt = enginePool.borrowObject();
-			ctxt.setPool(enginePool);
-			
-//			 * /*      */   public static final byte WHEN_EXHAUSTED_FAIL = 0;
-///*      */   public static final byte WHEN_EXHAUSTED_BLOCK = 1;
-///*      */   public static final byte WHEN_EXHAUSTED_GROW = 2;
-///*      */   public static final int DEFAULT_MAX_IDLE = 8;
-///*      */   public static final int DEFAULT_MIN_IDLE = 0;
-///*      */   public static final int DEFAULT_MAX_ACTIVE = 8;
-///*      */   public static final byte DEFAULT_WHEN_EXHAUSTED_ACTION = 1;
-///*      */   public static final boolean DEFAULT_LIFO = true;
-///*      */   public static final long DEFAULT_MAX_WAIT = -1L;
-///*      */   public static final boolean DEFAULT_TEST_ON_BORROW = false;
-///*      */   public static final boolean DEFAULT_TEST_ON_RETURN = false;
-///*      */   public static final boolean DEFAULT_TEST_WHILE_IDLE = false;
-///*      */   public static final long DEFAULT_TIME_BETWEEN_EVICTION_RUNS_MILLIS = -1L;
-///*      */   public static final int DEFAULT_NUM_TESTS_PER_EVICTION_RUN = 3;
-///*      */   public static final long DEFAULT_MIN_EVICTABLE_IDLE_TIME_MILLIS = 1800000L;
-///*      */   public static final long DEFAULT_SOFT_MIN_EVICTABLE_IDLE_TIME_MILLIS = -1L;
-			Config config = new Config();
-			config.maxActive = 2000;
-			config.maxIdle = 500;
-			config.minIdle = 10;
-			ScriptObjectMirror d2js = ctxt.getHandler();
-			if(d2js.containsKey("configurePagePool")){
-				d2js.callMember("configurePagePool", config);
+			@Override
+			public ScriptEngine create() throws Exception {
+				return createEngine(initParams);
 			}
-			enginePool.setConfig(config);
 
-			contextsPerFile.put(srcFile, enginePool);
+			@Override
+			public PooledObject<ScriptEngine> wrap(ScriptEngine paramT) {
+				return new DefaultPooledObject<ScriptEngine>(paramT);
+			}
 
-			return ctxt;
-		} else {
-			throw new IOException("file not found " + srcFile);
-		}
+			
+		}, config);
+		
 	}
 
-	protected abstract JsEngineHandlerContext createEngineContext(String srcFile, String aliasPath, D2jsInitParams params) throws Exception;
+	public JsEngineHandlerContext getEngineContext(final String srcFile, final String aliasPath) throws Exception {
+		ScriptEngine engine = enginePool.borrowObject();
+		// ScriptEngine engine = this.engine.get();
+		Map<String, Object> contextsPerFile  = (Map<String, Object>) engine.get("allD2js");
+		ScriptObjectMirror existed = (ScriptObjectMirror) contextsPerFile.get(srcFile);
+		JsEngineHandlerContext result = new JsEngineHandlerContext();
+		result.setScriptEngine(engine);
+		result.setHandler(existed);
+		result.setJson(new JSON(engine));
+		result.setJsTypeUtil(new JsTypeUtil(engine));
+		result.setEnginePool(this.enginePool);;
+		if (existed == null) {
+			synchronized(this){
+				if(contextsPerFile.containsKey(srcFile)){
+					result.setHandler((ScriptObjectMirror) contextsPerFile.get(srcFile));
+				} else {
+					if ((new File(srcFile)).exists()) {
+						result = this.createEngineContext(engine, srcFile, aliasPath);
+					} else {
+						return null;
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	protected abstract JsEngineHandlerContext createEngineContext(ScriptEngine engine, String srcFile, String aliasPath)
+			throws Exception;
 
 	public void onFileChanged(WatchEvent<Path> ev, Path file) {
-		Kind<Path> kind = ev.kind();
-		String filename = file.toString();
-		if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-			if (contextsPerFile.containsKey(filename)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(filename + " dropped");
-				}
-				contextsPerFile.remove(filename);
-			}
-		} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-			if (contextsPerFile.containsKey(filename)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(filename + " changed");
-				}
-				contextsPerFile.remove(filename);
-			}
-		}
+//		Kind<Path> kind = ev.kind();
+//		String filename = file.toString();
+//		if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+//			if (contextsPerFile.containsKey(filename)) {
+//				if (logger.isDebugEnabled()) {
+//					logger.debug(filename + " dropped");
+//				}
+//				contextsPerFile.remove(filename);
+//			}
+//		} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+//			if (contextsPerFile.containsKey(filename)) {
+//				if (logger.isDebugEnabled()) {
+//					logger.debug(filename + " changed");
+//				}
+//				contextsPerFile.remove(filename);
+//			}
+//		}
 	}
+
+	protected abstract ScriptEngine createEngine(D2jsInitParams initParams) throws Exception;
 
 }

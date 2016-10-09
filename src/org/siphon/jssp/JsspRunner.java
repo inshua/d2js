@@ -61,8 +61,8 @@ public class JsspRunner extends D2jsRunner{
 
 	private JsspUnitManager jsspUnitManager;
 
-	public JsspRunner(D2jsInitParams params, JsspUnitManager jsspUnitManager) {
-		super(params, jsspUnitManager);
+	public JsspRunner(JsspUnitManager jsspUnitManager) {
+		super(jsspUnitManager);
 		this.jsspUnitManager = jsspUnitManager;
 	}
 
@@ -90,7 +90,7 @@ public class JsspRunner extends D2jsRunner{
 
 		JsEngineHandlerContext engineContext = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, jsfile, this.getInitParams());
+			engineContext = d2jsManager.getEngineContext(jsfile, jsfile);
 		} catch (Exception e3) {
 			logger.error("", e3);
 			throw new ServletException(e3);
@@ -110,15 +110,12 @@ public class JsspRunner extends D2jsRunner{
 		}
 
 		try {
-			initEngineContext(engineContext, jsspRequest, response);
-			
-			this.run(engineContext, jsspRequest, response, "jssp", params);
+			//initEngineContext(engineContext, jsspRequest, response);
+			Bindings bindings = createBindings(engineContext, jsspRequest, response);
+			this.run(engineContext, bindings, jsspRequest, response, "jssp", params);
 		} catch (Exception e) {
 			throw new ServletException(e);
-		} finally {
-			if (engineContext != null)
-				engineContext.free();
-		}	
+		}
 		
 	}
 

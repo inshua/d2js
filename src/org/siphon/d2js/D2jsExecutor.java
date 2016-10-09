@@ -22,7 +22,6 @@ public class D2jsExecutor extends JsServlet {
 
 	private static final long serialVersionUID = 7360192607248134346L;
 	private D2jsUnitManager d2jsUnitManager;
-	private D2jsInitParams d2jsInitParams;
 
 	private static D2jsExecutor instance;
 
@@ -31,31 +30,25 @@ public class D2jsExecutor extends JsServlet {
 		super.init();
 		String path = this.getServletContext().getRealPath("");
 
-		d2jsInitParams = new D2jsInitParams();
+		D2jsInitParams d2jsInitParams = new D2jsInitParams();
 		d2jsInitParams.setLibs(this.getJsLibs());
 		d2jsInitParams.setApplication(JsServlet.application);
 		d2jsInitParams.setPreloadJs(this.getPreloadJs());
 
-		this.d2jsUnitManager = new D2jsUnitManager(path);
+		this.d2jsUnitManager = new D2jsUnitManager(path, d2jsInitParams);
 
 		instance = this;
 	}
 
 	protected Object execute(String jsfile, String method, Object... params) throws Exception {
 		JsEngineHandlerContext engineContext = d2jsUnitManager.getEngineContext(this.getServletContext().getRealPath(jsfile),
-				jsfile, d2jsInitParams);
-		try {
-			for (int i = 0; i < params.length; i++) {
-				params[i] = engineContext.getJsTypeUtil().javaObjectToJs(params[i]);
-			}
-			Object res = engineContext.getEngineAsInvocable().invokeMethod(engineContext.getHandler(), method, params);
-			return JsTypeUtil.jsObjectToJava(res);
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			if (engineContext != null)
-				engineContext.free();
+				jsfile);
+
+		for (int i = 0; i < params.length; i++) {
+			params[i] = engineContext.getJsTypeUtil().javaObjectToJs(params[i]);
 		}
+		Object res = engineContext.getEngineAsInvocable().invokeMethod(engineContext.getHandler(), method, params);
+		return JsTypeUtil.jsObjectToJava(res);
 	}
 
 	public static Object exec(String jsfile, String method, Object... params) throws Exception {
@@ -65,6 +58,5 @@ public class D2jsExecutor extends JsServlet {
 	@Override
 	protected void onFileChanged(WatchEvent<Path> ev, Path file) {
 		d2jsUnitManager.onFileChanged(ev, file);
-		;
 	}
 }

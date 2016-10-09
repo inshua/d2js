@@ -22,11 +22,20 @@ package org.siphon.d2js;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.Watchable;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.script.Invocable;
@@ -39,6 +48,8 @@ import javax.sql.DataSource;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JSON;
@@ -54,12 +65,12 @@ public class D2jsUnitManager extends ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
 
-	public D2jsUnitManager(String srcFolder) {
-		super(srcFolder);
+	public D2jsUnitManager(String srcFolder, D2jsInitParams initParams) {
+		super(srcFolder, initParams);
 	}
-
+	
 	@Override
-	protected JsEngineHandlerContext createEngineContext(String srcFile, String aliasPath, D2jsInitParams initParams) throws Exception {
+	protected ScriptEngine createEngine(D2jsInitParams initParams) throws Exception {
 		ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
 
 		JsEngineUtil.initEngine(engine, initParams.getLibs());
@@ -75,6 +86,11 @@ public class D2jsUnitManager extends ServerUnitManager {
 			JsEngineUtil.eval(engine, preloadJs[0], preloadJs[1], FileUtils.readFileToString(new File(preloadJs[0]), "utf-8"), true, false);
 		}
 
+		return engine;
+	}
+
+	@Override
+	protected JsEngineHandlerContext createEngineContext(ScriptEngine engine, String srcFile, String aliasPath) throws Exception {
 		File src = new File(srcFile);
 		String code = FileUtils.readFileToString(src, "utf-8");
 		String covertedCode = this.convertCode(code, src);
@@ -83,19 +99,34 @@ public class D2jsUnitManager extends ServerUnitManager {
 		if (logger.isDebugEnabled())
 			logger.debug(srcFile + " converted as " + tmp.getAbsolutePath());
 
-		JsEngineUtil.eval(engine, srcFile, aliasPath, covertedCode, false, true);
+		Object d2js = JsEngineUtil.eval(engine, srcFile, aliasPath, covertedCode, false, true);
 
 		JsEngineHandlerContext ctxt = new JsEngineHandlerContext();
 		ctxt.setScriptEngine(engine);
-		ctxt.setHandler((ScriptObjectMirror) engine.eval("d2js"));
+		ctxt.setHandler((ScriptObjectMirror) d2js);
 		ctxt.setJson(new JSON(engine)); // jdk has a NativeJSON class inside but it's sealed
 		ctxt.setJsTypeUtil(new JsTypeUtil(engine));
+		ctxt.setEnginePool(this.enginePool);
+		Map allD2js = (Map) engine.get("allD2js");
+		allD2js.put(srcFile, d2js);
 
 		return ctxt;
 	}
 
 	protected String convertCode(String code, File src) throws Exception {
-		return new EmbedSqlTranslator().translate(code);
+		return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + "; return d2js;})(d2js.clone());";
 	}
+
+//	public void scanD2jsUnits() {
+//		File dir = new File(this.srcFolder);
+//		Collection<File> files = FileUtils.listFiles(dir, FileFilterUtils.suffixFileFilter(".d2js"), DirectoryFileFilter.DIRECTORY);
+//		for(File file : files){
+//			try {
+//				this.createEngineContext(this.engine, file.getAbsolutePath(), file.getAbsolutePath());
+//			} catch (Exception e) {
+//				logger.warn("load d2js failed " + file, e);
+//			}
+//		}
+//	}
 
 }

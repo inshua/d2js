@@ -56,21 +56,12 @@ D2JS.prototype.callD2js = function(src, method, params){
 			another = context2.getEngineAsInvocable().invokeMethod(another, 'clone');	// ScriptObjectMirror
 			another.transactConnection = this.transactConnection;
 		}
-		var engine2 = context2.getScriptEngine();
-		var bindings = engine2.getBindings(100);
-		var params = params instanceof Array ? params : [params]
-		bindings['__s'] = params.toJava();		// 欲在两个引擎间传递对象，先转为java容器
-		bindings['__another'] = another;
-		var res = engine2.eval("JsTypeUtil.jsObjectToJava(d2js." + method + '.apply(__another, Object.fromJava(__s)))', bindings);
-		if(res != null) res = Object.fromJava(res);
+		var res = another[method].apply(another, params);		
 		d2jsRunner.completeTask(context2.getScriptEngine(), null);
 		return res;
 	} catch(e){
 		d2jsRunner.completeTask(context2.getScriptEngine(), new ECMAException(e, null));
 		throw e;
-	} finally {
-		if (context2 != null)
-			context2.free();
 	}
 }
 
