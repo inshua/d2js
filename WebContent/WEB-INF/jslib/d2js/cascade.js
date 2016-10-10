@@ -72,7 +72,6 @@ D2JS.prototype.callD2js = function(src, method, args){
 		if(!Array.isArray(args)) args = [args];
 		var res = another[method].apply(another, args);
 		if(another.task) d2jsRunner.completeTask(another.task, null);
-		logger.info('callD2js return : ' + JSON.stringify(res));
 		return res;
 	} catch(e){
 		if(another.task) d2jsRunner.completeTask(another.task, new ECMAException(e, null));

@@ -43,7 +43,7 @@ function V(d2js, rcd, validators){
 			for(var i=0; i<vs.length; i++){
 				var validator = vs[i];
 				if(validator.check){
-					var msg = validator.check(value, fld, rcd, this);
+					var msg = validator.check(value, fld, rcd, d2js);
 					if(msg != null){
 						throw new ValidationError(fld, validator.name, msg);
 					}
@@ -139,7 +139,7 @@ V.unique = function(table, tableField, primaryDesc, ignoreCase){
 				}
 			}
 			
-			if(executor.isOracle()){
+			if(d2js.executor.isOracle()){
 				var sql = 'select 1 from ' + table + ' where ' + (tableField || fld) + ' = ? and rownum=1';
 				if(ignoreCase){
 					sql = 'select 1 from ' + table + ' where upper(' + (tableField || fld) + ') = ? and rownum=1';
@@ -148,7 +148,7 @@ V.unique = function(table, tableField, primaryDesc, ignoreCase){
 				if(primaryDesc[pk] != null){
 					sql += ' and ' + pk + ' <> ?';
 				}
-			} else if(executor.isPostgreSQL()){
+			} else if(d2js.executor.isPostgreSQL()){
 				var sql = 'select 1 from ' + table + ' where ' + (tableField || fld) + ' = ?';
 				if(ignoreCase){
 					sql = 'select 1 from ' + table + ' where upper(' + (tableField || fld) + ') = ?';
@@ -165,7 +165,7 @@ V.unique = function(table, tableField, primaryDesc, ignoreCase){
 					d2js.query(sql, [v, primaryDesc[pk]]);
 					
 			if(r.rows.length){
-				return '取值为' + v + '已经的记录存在';
+				return '取值为' + v + '的记录已经存在';
 			}
 		}
 	};
