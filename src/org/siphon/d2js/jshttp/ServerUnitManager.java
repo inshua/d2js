@@ -20,37 +20,18 @@
 package org.siphon.d2js.jshttp;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.script.ScriptEngine;
-import javax.sql.DataSource;
 
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.log4j.Logger;
-import org.siphon.common.io.WatchDir;
-import org.siphon.common.js.JSON;
-import org.siphon.common.js.JsTypeUtil;
 import org.siphon.d2js.D2jsUnitManager;
 
-
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import sun.font.Script;
 
 public abstract class ServerUnitManager {
 

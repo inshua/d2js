@@ -22,7 +22,7 @@
  * 
  *使用方法:
  *```js
- * $V(rcd,{ 
+ * $V(this, rcd,{ 
  * 			name  : [V.notNull, V.shortest(5), V.unique('table')],
  * 			qq	  : V.notNull,
  * 			email : [V.notNull, V.email],
@@ -31,7 +31,7 @@
  * @class V
  * @alias Validation
  */
-function V(rcd, validators){
+function V(d2js, rcd, validators){
 	for(var fld in validators){
 		if(validators.hasOwnProperty(fld)){
 			var value = rcd[fld];
@@ -43,7 +43,7 @@ function V(rcd, validators){
 			for(var i=0; i<vs.length; i++){
 				var validator = vs[i];
 				if(validator.check){
-					var msg = validator.check(value, fld, rcd);
+					var msg = validator.check(value, fld, rcd, this);
 					if(msg != null){
 						throw new ValidationError(fld, validator.name, msg);
 					}
@@ -125,7 +125,7 @@ V.reg = function(reg, desc){
 V.unique = function(table, tableField, primaryDesc, ignoreCase){	
 	return {
 		name : 'unique',	
-		check : function(v, fld, rcd){
+		check : function(v, fld, rcd, d2js){
 			if(v==null||v=='') return;
 			var pk = 'id';
 			if(primaryDesc == null){
@@ -301,7 +301,7 @@ V.inside = function(dict, msg){
  * 对象属性名称范围检查器。JSON类型的对象，其属性必须位于所给的数组范围
  * usage:
  * 
- * $V(rcd, {json_fld: V.attrs(['email', 'tel'])});
+ * $V(this, rcd, {json_fld: V.attrs(['email', 'tel'])});
  * @param dict 属性名称列表
  */
 V.attrs = function(dict){
@@ -323,7 +323,7 @@ V.attrs = function(dict){
  * 
  * 使用方法:
  * ```js
- * $V(rcd,{ 
+ * $V(this, rcd,{ 
  * 			name  : [T.string, V.notNull, V.shortest(5), V.unique('table')],
  * 			qq	  : T.number(20),
  * 			email : [V.notNull, V.email],

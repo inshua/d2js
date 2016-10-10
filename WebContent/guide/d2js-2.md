@@ -223,7 +223,7 @@ d2js 可以编写服务器校验逻辑，对输入的数据进行校验。如：
 
 ```js
 d2js.create = function(rcd){
-	$V(rcd, {
+	$V(this, rcd, {
 		name : [V.notNull, V.shortest(5)],
 		gender : [V.inside(['M', 'F'])]
 	});
@@ -283,7 +283,7 @@ d2js.modify = function(rcd){
 	}
 	
 	d2js.create = function(rcd){
-		$V(rcd, {
+		$V(this, rcd, {
 			name : [V.notNull, V.shortest(5), myValidator],
 			gender : [V.inside(['M', 'F'])]
 		});
@@ -292,7 +292,7 @@ d2js.modify = function(rcd){
 	}
 	
 	d2js.modify = function(rcd){
-		$V(rcd, {
+		$V(this, rcd, {
 			name : [V.notNull, V.shortest(5), myValidator],
 			gender : [V.inside(['M', 'F'])]
 		});
@@ -305,7 +305,7 @@ d2js.modify = function(rcd){
 
 ```js
 	d2js.create = function(rcd){
-		$V(rcd, {
+		$V(this, rcd, {
 			name : [V.notNull, V.shortest(5), {
 						name : 'my validator',
 						check : function(v, fld){
@@ -372,7 +372,7 @@ d2js 数据校验方面，使用如下表达：
 
 ```js
 d2js.create = function(rcd){
-	$V(rcd, {
+	$V(this, rcd, {
 		name : [V.notNull, V.shortest(5)],
 		gender : [V.inside(['M', 'F'])],
 		info : [V.attrs(['linkin'])],	// 防止用户注入其它属性
