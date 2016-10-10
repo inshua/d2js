@@ -47,7 +47,7 @@ var allD2js = new ConcurrentHashMap();
 function HttpHandler(){}
 
 // 处理 d2js 请求，发现比用 java 的方式处理快
-function processRequest(d2js, method, params, request, response, session, out, task){
+function processRequest(d2js, method, params, request, response, session, out, taskDocker){
 	var d = allD2js[d2js];
 	if(d.exports[method] == null){
 		if(d[method] == null)
@@ -68,7 +68,7 @@ function processRequest(d2js, method, params, request, response, session, out, t
 	clone.response = response;
 	clone.out = out;
 	clone.session = session;
-	clone.task = task;
+	clone.taskDocker = taskDocker;
 	var r = clone[method].call(clone, params);
 	
 	if(!out.isDirty()){
@@ -77,5 +77,5 @@ function processRequest(d2js, method, params, request, response, session, out, t
 		} else {
 			out.print(JSON.stringify(r));
 		}
-	}
+	}	
 }

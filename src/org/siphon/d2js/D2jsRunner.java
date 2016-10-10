@@ -56,6 +56,7 @@ import org.apache.catalina.startup.EngineConfig;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -183,13 +184,14 @@ public class D2jsRunner {
 		formatter.writeHttpHeader(response);
 		
 		JsspWriter out = null;
-		Task task = new Task();
+		//Task task = null;
+		MutableObject<Task> taskDocker = new MutableObject<>();
 		try {
 			out = new JsspWriter(response, engine);
 			JsspSession session = new JsspSession(request.getSession());
 			
 			// 可能由于 native 已经编译为 JO 之类，导致使用 ScrpiteObjectMirror 方式访问反而效率更低
-			((Invocable)engine).invokeFunction("processRequest", jsfile, method, params, jsspRequest, response, session, out, task);
+			((Invocable)engine).invokeFunction("processRequest", jsfile, method, params, jsspRequest, response, session, out, taskDocker);
 //			d2js = (ScriptObjectMirror) d2js.callMember("clone");
 //			d2js.put("request", jsspRequest);
 //			d2js.put("response", response);
@@ -197,19 +199,22 @@ public class D2jsRunner {
 //			d2js.put("out", out);
 //			d2js.put("task", task);
 //			Object result = d2js.callMember(method, params);
-//
-//			if(task.getCallbacker() != null){
-//				this.completeTask(task, null);
-//			}
-//			
 //			if(JsTypeUtil.isNull(result)){
 //				out.print("{\"success\":true}");
 //			} else {
 //				out.print(this.json.stringify(result));
 //			}
+//
+			Task task = taskDocker.getValue();
+			if(task != null && task.getCallbacker() != null){
+				this.completeTask(taskDocker.getValue(), null);
+			}
 		} catch (Exception e) {
 			try {
-				this.completeTask(task, e);
+				Task task = taskDocker.getValue();
+				if(task != null && task.getCallbacker() != null){
+					this.completeTask(taskDocker.getValue(), e);
+				}
 			} catch (Exception e2) {
 				logger.error("", e2);
 			}

@@ -70,7 +70,6 @@ D2JS.prototype.callD2js = function(src, method, args){
 		another.session = this.session;
 		
 		if(!Array.isArray(args)) args = [args];
-		if(this.task) another.task = new org.siphon.d2js.jshttp.Task(); 
 		var res = another[method].apply(another, args);
 		if(another.task) d2jsRunner.completeTask(another.task, null);
 		logger.info('callD2js return : ' + JSON.stringify(res));

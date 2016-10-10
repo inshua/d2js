@@ -21,11 +21,18 @@ package org.siphon.d2js;
 
 import java.io.Serializable;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 public class D2jsExecutorBean implements Serializable {
 
 	private static final long serialVersionUID = -3037206868728913407L;
 
 	public Object exec(String jsfile, String method, Object... params) throws Exception{
 		return org.siphon.d2js.D2jsExecutor.exec(jsfile, method, params);
+	}
+	
+	public Object exec(HttpServletRequest request, HttpServletResponse response, String jsfile, String method, Object... params) throws Exception{
+		return org.siphon.d2js.D2jsExecutor.exec(request, response, jsfile, method, params);
 	}
 }

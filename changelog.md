@@ -16,5 +16,11 @@
 * D2JS.DataTable.nest(...) 改为 nest(d2js,...) 
 * 不再支持在 jssp 中使用 [% console.log() %]
 * $V(rcd, validators) 改为 $V(d2js, rcd, validators), 校验器规格随之调整，check 函数由 function(v, fld, rcd) 扩充为 function(v, fld, rcd, d2js)
+*  ```D2jsExecutor.execute(String jsfile, String method, Object... params) 
+
+如果需要 request, response, session, 应使用新的版本：
+
+D2jsExecutor.execute(HttpServletRequest request, HttpServletResponse response, String jsfile, String method, Object... params)
+```
 
 本轮优化后，d2js 性能大致接近 jsp 的 50% - 90%。
