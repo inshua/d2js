@@ -9,7 +9,7 @@
 </form>
 
 [% 
-	var r = this.callD2js('authors.d2js', 'fetch', {name : request.name, _sort : [{property : 'id', direction : 'asc'}]}, null, null);
+	var r = this.callD2js('authors.d2js', 'fetch', {name : request.name, _sort : [{property : 'id', direction : 'asc'}]});
 	logger.info(JSON.stringify(r));
 %]
 	
@@ -24,7 +24,7 @@
 [%	r.rows.forEach(function(row){ %]
 <tr>
 	[%	r.columns.forEach(function(col){ %]
-		<td>[%= row[col.name] %]</td>
+		<td>[%~ row[col.name] %]</td>
 	[%	}); %]
 </tr>				
 	

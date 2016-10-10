@@ -162,7 +162,7 @@ a.jssp
 <html>
 <body>
 	<h1>内容来自 body.jssp<h2>
-	[% includeJssp('body.jssp') %]
+	[% this.includeJssp('body.jssp') %]
 </body>
 </html>
 ```
@@ -175,8 +175,8 @@ body.jssp
 `includeJssp` 函数实现于 `WEB-INF/jslib/jssp.js`。该函数实现仅有一行：
 
 ```js
-function includeJssp(jsspFile, params){
-	d2js.callD2js(jsspFile, 'jssp', params);
+D2JS.prototype.includeJssp(jsspFile, params){
+	this.callD2js(jsspFile, 'jssp', params);
 }
 ```
 

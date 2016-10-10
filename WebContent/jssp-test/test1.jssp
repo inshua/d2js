@@ -10,14 +10,10 @@
 	[%- a %] <br>
 	[%~ a %] <br>
 	
-	[% console.log('hello world'); %]
 <body>
 
 [% var o = {name : '张良'}; %]
 <script>
-	
-	[% console.log(o, true); %]
-	
 	var o = [%~ o %];
 	alert(o.name);
 </script>

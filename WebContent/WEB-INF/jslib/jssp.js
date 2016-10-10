@@ -25,6 +25,25 @@ imports("../config/website.js");
 
 include('d2js.js');
 
+function processJsspRequest(d2js, params, request, response, session, out){
+	var d = allD2js[d2js];
+	
+	var clone = new D2JS(d.executor);
+	for(var k in d){
+		if(d.hasOwnProperty(k)) {
+			clone[k] = d[k];
+		} else {
+			break;
+		}
+	}
+	clone.request = request;
+	clone.response = response;
+	clone.out = out;
+	clone.session = session;
+	clone.jssp(params);
+}
+
+
 /**
  * 包含另一个 jssp 文件。文件路径搜索按当前文件路径、WebContent 路径搜索确定。
  * 该页面将包含入宿主页面，浏览器并未对其发出请求，故其 reqeust 对象即宿主页面的 reqeust 对象, 因此不支持查询字符串如 includeJssp('a.jssp?arg1=v1')，
@@ -33,33 +52,9 @@ include('d2js.js');
  * @param jsspFile {string} jssp 文件名，可使用相对路径
  * @param params {object} 传入参数
  */
-function includeJssp(jsspFile, params){
-	d2js.callD2js(jsspFile, 'jssp', params);
+D2JS.prototype.includeJssp = function(jsspFile, params){
+	this.callD2js(jsspFile, 'jssp', params);
 }
-
-/**
- * @class console
- */
-function console(){}
-
-/**
- * 向客户端输出 console.log() 代码, 用于打印调试信息
- * @param s
- * @param inScriptBlock 客户代码是否处于 script 块中
- */
-console.log = function(s, inScriptBlock){
-	if(typeof(s) == 'object'){
-		s = JSON.stringify(s);
-	}
-	if(!inScriptBlock){
-		out.print('<script>');
-		out.print('console.log(\"'); out.printJs(s); out.print('");');
-		out.print('</script>');
-	} else {
-		out.print('console.log(\"'); out.printJs(s); out.print('");');
-	}
-};
-
 
 /**
  * 选择分支，当条件满足时，执行后面的代码。

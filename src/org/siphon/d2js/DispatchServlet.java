@@ -101,53 +101,51 @@ public class DispatchServlet extends JsServlet {
 		AsyncContext asyncContext = request.startAsync(request, response);
 		D2jsRunner d2jsRunner = this.getD2jsRunner();
 		String method = StringUtils.defaultIfEmpty(request.getParameter("_m"), "fetch");
-		d2jsRunner.run(asyncContext, method);
+		
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), method);
+		} finally{
+			asyncContext.complete();
+		}
 	}
 
-//	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//		request.setCharacterEncoding("utf-8");
-//		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
-//		AsyncContext asyncContext = request.startAsync(request, response);
-//		D2jsRunner d2jsRunner = this.getD2jsRunner();
-//		String method = StringUtils.defaultIfEmpty(request.getParameter("_m"), "fetch");
-//		this.executorService.execute(new Runnable() {
-//			@Override
-//			public void run() {
-//				try {
-//					ServletRequest req = asyncContext.getRequest();
-//					ServletResponse resp = asyncContext.getResponse();
-//					d2jsRunner.run((HttpServletRequest)req, (HttpServletResponse)resp, method);
-//					asyncContext.complete();
-//				} catch (ServletException | IOException e) {
-//					
-//				}
-//			}
-//		});
-//	}
-//	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//		request.setCharacterEncoding("utf-8");
-//		D2jsRunner d2jsRunner = this.getD2jsRunner();
-//		d2jsRunner.run(request, response, StringUtils.defaultIfEmpty(request.getParameter("_m"), "fetch"));
-//	}
+	@Override
+	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setCharacterEncoding("utf-8");
+		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
+		AsyncContext asyncContext = request.startAsync(request, response);
+		D2jsRunner d2jsRunner = this.getD2jsRunner();
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), "delete");
+		} finally{
+			asyncContext.complete();
+		}
+	}
 
-//	@Override
-//	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//		req.setCharacterEncoding("utf-8");
-//		D2jsRunner d2jsRunner = this.getD2jsRunner();
-//		d2jsRunner.run(req, resp, "delete");	
-//	}
-//
-//	@Override
-//	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//		req.setCharacterEncoding("utf-8");
-//		D2jsRunner d2jsRunner = this.getD2jsRunner();
-//		d2jsRunner.run(req, resp, "modify");
-//	}
-//
-//	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//		request.setCharacterEncoding("utf-8");
-//		D2jsRunner d2jsRunner = this.getD2jsRunner();
-//		d2jsRunner.run(request, response, StringUtils.defaultIfEmpty(request.getParameter("_m"), "create"));
-//	}
+	@Override
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setCharacterEncoding("utf-8");
+		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
+		AsyncContext asyncContext = request.startAsync(request, response);
+		D2jsRunner d2jsRunner = this.getD2jsRunner();
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), "modify");
+		} finally{
+			asyncContext.complete();
+		}
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setCharacterEncoding("utf-8");
+		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
+		AsyncContext asyncContext = request.startAsync(request, response);
+		D2jsRunner d2jsRunner = this.getD2jsRunner();
+		String method = StringUtils.defaultIfEmpty(request.getParameter("_m"), "create");
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), method);
+		} finally{
+			asyncContext.complete();
+		}
+	}
 
 }

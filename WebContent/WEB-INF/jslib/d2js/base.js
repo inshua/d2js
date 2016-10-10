@@ -90,13 +90,8 @@ function $SQL(sql){
 function D2JS(sqlExecutor){ 
 	this.executor = sqlExecutor;  
 	this.transactConnection = null;
+	this.exports = {fetch:1, create:1, modify:1, destroy:1, update:1, jssp:1};
 }
-
-//D2JS.prototype = new Object();
-//
-//D2JS.prototype.constructor = D2JS;
-
-//D2JS.prototype.transactConnection = null;	// for transaction;
 
 D2JS.DataTable = function(){}
 
@@ -861,7 +856,6 @@ D2JS.prototype.clone = function(){
 	for(var k in this){
 		if(this.hasOwnProperty(k)) obj[k] = this[k];
 	}
-	obj.exports = {}.merge(this.exports);
 	return obj;
 };
 
@@ -936,7 +930,6 @@ function init(){
 	sqlExecutor.defaultJsonDbType = 'JSONB';
 	
 	d2js = handler = new D2JS(sqlExecutor);
-	d2js.exports = {fetch:1, create:1, modify:1, destroy:1, update:1, jssp:1};
 	engine.put('handler', handler);
 	engine.put('d2js', d2js);
 }

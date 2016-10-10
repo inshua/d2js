@@ -8,10 +8,10 @@
 </div>
 <div>
 	<div style="float: left; display: inline-block; width: 20%; background-color: gray; min-height: 200px;">
-		[% includeJssp('menu.jssp'); %]
+		[% this.includeJssp('menu.jssp'); %]
 	</div>
 	<div style="width: 80%; min-height: 200px">
-		[% includeJssp('content.jssp'); %]
+		[% this.includeJssp('content.jssp'); %]
 	</div>
 </div>
 </html>

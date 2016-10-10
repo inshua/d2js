@@ -44,9 +44,9 @@ init();
 var ConcurrentHashMap = Java.type('java.util.concurrent.ConcurrentHashMap');
 var allD2js = new ConcurrentHashMap();
 
-
 function HttpHandler(){}
 
+// 处理 d2js 请求，发现比用 java 的方式处理快
 function processRequest(d2js, method, params, request, response, session, out, task){
 	var d = allD2js[d2js];
 	if(d.exports[method] == null){
@@ -56,65 +56,26 @@ function processRequest(d2js, method, params, request, response, session, out, t
 			throw new Error(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
 	}
 
+	var clone = new D2JS(d.executor);
 	for(var k in d){
-		logger.info("prop " + k + " " + d.hasOwnProperty(k));
-	}
-	
-	var start = new Date();
-	var times = 100000;
-	for(var i=0; i<times; i++){
-		var obj = new D2JS(d.executor);
-		for(var k in d){
-			if(d.hasOwnProperty(k)) {
-				obj[k] = d[k];
-			} else {
-				break;
-			}
+		if(d.hasOwnProperty(k)) {
+			clone[k] = d[k];
+		} else {
+			break;
 		}
-		obj.request = request;
-		obj.response = response;
-		obj.out = out;
-		obj.session = session;
-		obj.task = task;
-		
-		var r = obj[method].call(obj, params);
-//		for(var k in obj){
-//			if(obj.hasOwnProperty(k)) delete obj[k];
-//		}
 	}
-	var l = new Date() - start;
-	logger.info("clone d2js exhaust " + l / times);
-	java.lang.Thread.sleep(10000);
+	clone.request = request;
+	clone.response = response;
+	clone.out = out;
+	clone.session = session;
+	clone.task = task;
+	var r = clone[method].call(clone, params);
 	
-//	
-//	var r = d[method].call(d, params);
-//	d.task = null;
-//	d = null;
-
-	var start = new Date();
-	for(var i=0; i< times; i++){
-		var h = new HttpHandler();
-		h.request = request;
-		h.response = response;
-		h.out = out;
-		h.session = session;
-		h.task = task;
-		h.d2js = d2js;
-		var r = d[method].call(d, params, h);
-		h.d2js = null;
-		h = null;
-	}
-	var l = new Date() - start;
-	logger.info("new HttpHandler exhaust " + l / times);
-//	
-//	2016-10-09 16:24:06  (/WEB-INF/jslib/d2js.js:86)  INFO - clone d2js exhaust 0.02916
-//	2016-10-09 16:24:16  (/WEB-INF/jslib/d2js.js:108)  INFO - new HttpHandler exhaust 0.00245
-	
-	// 创建新的 D2JS 对象，要比创建 HttpHandler 开销大 10 倍
-	
-	if(r == null){
-		out.print('{"success":true}');
-	} else {
-		out.print(JSON.stringify(r));
+	if(!out.isDirty()){
+		if(r == null){
+			out.print('{"success":true}');
+		} else {
+			out.print(JSON.stringify(r));
+		}
 	}
 }

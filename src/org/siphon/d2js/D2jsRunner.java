@@ -79,11 +79,11 @@ public class D2jsRunner {
 
 	private final Formatter formatter = new D2jsFormatter();
 
-	private final ScriptEngine engine;
+	protected final ScriptEngine engine;
 
 	private final JsTypeUtil jsTypeUtil;
 
-	private final JSON json;
+	protected final JSON json;
 
 	public D2jsRunner(D2jsUnitManager d2jsManager) {
 		this.d2jsManager = d2jsManager;
@@ -126,23 +126,12 @@ public class D2jsRunner {
 
 	/**
 	 * 为 d2js 中隔离调用另一个 d2js 提供支持
-	 * @param jsfile
-	 * @param request
-	 * @param response
-	 * @param method
-	 * @return 
-	 * @return
-	 * @throws Exception
 	 */
-	public ScriptObjectMirror getD2js(String jsfile, JsspRequest request, HttpServletResponse response)
-			throws Exception {
-		ScriptObjectMirror engineContext = null;
+	public boolean ensureD2jsLoaded(String jsfile, JsspRequest request) {
 		try {
-			engineContext = d2jsManager.getD2js(jsfile, request.getContextPath());
-			return engineContext;
-
+			return d2jsManager.getD2js(jsfile, request.getContextPath()) != null;
 		} catch (Exception e3) {
-			throw new ServletException(e3);
+			return false;
 		}
 	}
 
@@ -157,15 +146,11 @@ public class D2jsRunner {
 		}
 	}
 
-	public void run(AsyncContext asyncContext, String method)
+	public void run(HttpServletRequest request, HttpServletResponse response, String method)
 			throws ServletException, IOException {
 		
-		HttpServletRequest request = (HttpServletRequest) asyncContext.getRequest();
-		HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
-		StopWatch watch = new StopWatch();
 		
 		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
-		watch.start();
 		ScriptObjectMirror d2js = null;
 		try {
 			d2js = d2jsManager.getD2js(jsfile, getServletPath(request));
@@ -174,7 +159,6 @@ public class D2jsRunner {
 				PrintWriter out = response.getWriter();
 				out.print(request.getServletPath() + " not found");
 				out.flush();
-				asyncContext.complete();
 				return;
 			}
 		} catch (Exception e3) {
@@ -182,9 +166,6 @@ public class D2jsRunner {
 			throw new ServletException(e3);
 		}
 		
-		if(watch.getTime() > 10) logger.debug("getEngineContext exhaust " + watch.getNanoTime() / 1000000.0);
-		watch.reset();
-
 		JsspRequest jsspRequest = new JsspRequest(request, engine);
 
 		ScriptObjectMirror params;
@@ -195,7 +176,6 @@ public class D2jsRunner {
 			PrintWriter out = response.getWriter();
 			out.print("params must be json");
 			out.flush();
-			asyncContext.complete();
 			return;
 		} 
 		
@@ -208,11 +188,25 @@ public class D2jsRunner {
 			out = new JsspWriter(response, engine);
 			JsspSession session = new JsspSession(request.getSession());
 			
+			// 可能由于 native 已经编译为 JO 之类，导致使用 ScrpiteObjectMirror 方式访问反而效率更低
 			((Invocable)engine).invokeFunction("processRequest", jsfile, method, params, jsspRequest, response, session, out, task);
-			
-			if(task.getCallbacker() != null){
-				this.completeTask(task, null);
-			}
+//			d2js = (ScriptObjectMirror) d2js.callMember("clone");
+//			d2js.put("request", jsspRequest);
+//			d2js.put("response", response);
+//			d2js.put("session", session);
+//			d2js.put("out", out);
+//			d2js.put("task", task);
+//			Object result = d2js.callMember(method, params);
+//
+//			if(task.getCallbacker() != null){
+//				this.completeTask(task, null);
+//			}
+//			
+//			if(JsTypeUtil.isNull(result)){
+//				out.print("{\"success\":true}");
+//			} else {
+//				out.print(this.json.stringify(result));
+//			}
 		} catch (Exception e) {
 			try {
 				this.completeTask(task, e);
@@ -241,15 +235,16 @@ public class D2jsRunner {
 			}
 
 			try {
-				out.print(formatter.formatException(ex, null));
+				out.print(formatter.formatException(ex, this.engine));
 				out.flush();
 			} catch (Exception e1) {
 				logger.error("", e1);
 			}
 		} finally {
-			asyncContext.complete();
+			out.flush();
 		}
 	}
+
 
 	
 

@@ -13,5 +13,7 @@ hello [%= session.getId() %], your info is  [%~ application.info %]
 	<input type="submit">
 </form>
 
+* 使用隐身窗口打开本页面。虽然隐身窗口与本页面 session 不同，但能看到本 session 登记的信息。
+
 </body>
 </html>
