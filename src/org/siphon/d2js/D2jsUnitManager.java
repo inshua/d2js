@@ -101,11 +101,14 @@ public class D2jsUnitManager extends ServerUnitManager {
 		if (logger.isDebugEnabled())
 			logger.debug(srcFile + " converted as " + tmp.getAbsolutePath());
 
-		return (ScriptObjectMirror) JsEngineUtil.eval(engine, srcFile, aliasPath, covertedCode, false, true);
+		ScriptObjectMirror d2js = (ScriptObjectMirror) JsEngineUtil.eval(engine, srcFile, aliasPath, covertedCode, false, true);
+		d2js.put("srcFile", srcFile);
+		return d2js;
 	}
 
 	protected String convertCode(String code, File src) throws Exception {
-		return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + "; return d2js;})(d2js.clone());";
+		//return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + "; d2js.cloner = function(){}; d2js.cloner.prototype=d2js; return d2js;})(d2js.clone());";
+		return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + ";return d2js;})(d2js.clone());";
 	}
 
 //	public void scanD2jsUnits() {

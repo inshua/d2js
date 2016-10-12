@@ -50,13 +50,13 @@ D2JS.DataTable.prototype.nest = function(d2js, table, src, method, id){
  * @param args {*|array} 数组 - 参数列表，单值 - 单个参数
  */
 D2JS.prototype.callD2js = function(src, method, args){
-	src = findResource(src);
-	var another = allD2js[src];
+	var path = this.findResource(src);
+	var another = allD2js[path];
 	if(another == null){
-		if(d2jsRunner.ensureD2jsLoaded(src, this.request) == false){
+		if(d2jsRunner.ensureD2jsLoaded(path, this.request) == false){
 			throw new Error(src + ' maybe not exist');
 		} else {
-			another = allD2js[src]
+			another = allD2js[path]
 		}
 	}
 	try{

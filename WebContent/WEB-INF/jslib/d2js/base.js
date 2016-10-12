@@ -89,8 +89,9 @@ function $SQL(sql){
  */
 function D2JS(sqlExecutor){ 
 	this.executor = sqlExecutor;  
-	this.transactConnection = null;
+	//this.transactConnection = null;
 	this.exports = {fetch:1, create:1, modify:1, destroy:1, update:1, jssp:1};
+	//this.response = this.request = this.session = this.out = this.task = this.out = null;
 }
 
 D2JS.DataTable = function(){}
@@ -910,6 +911,27 @@ D2JS.prototype.release = function(){
 D2JS.prototype.getConnection = function(){
 	return this.executor.getConnection();
 };
+
+/**
+ * 适用于单引擎的 findResource
+ * @param filename
+ */
+D2JS.prototype.findResource = function(filename){
+	var abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+	if(new java.io.File(abspath).exists()){
+		return abspath;
+	} else {
+		var defaults = DEFAULT_IMPORTS_PATHS;
+		for(var i=0; i<defaults.length; i++){
+			var file = new java.io.File(defaults[i]);
+			abspath = new java.io.File(file, filename).getCanonicalPath();
+			if(new java.io.File(abspath).exists()){
+				return abspath;
+			}
+		}
+	}
+}
+
 
 
 // ================ entrance ===========================

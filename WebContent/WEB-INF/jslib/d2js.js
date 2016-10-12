@@ -44,7 +44,6 @@ init();
 var ConcurrentHashMap = Java.type('java.util.concurrent.ConcurrentHashMap');
 var allD2js = new ConcurrentHashMap();
 
-function HttpHandler(){}
 
 // 处理 d2js 请求，发现比用 java 的方式处理快
 function processRequest(d2js, method, params, request, response, session, out, taskDocker){
@@ -56,6 +55,7 @@ function processRequest(d2js, method, params, request, response, session, out, t
 			throw new Error(method + " is invisible, you can export it in this way: d2js.exports." + method + " = d2js." + method + " = function()...");
 	}
 
+	//var clone = new d.cloner(); // 考虑 prototype 的实现方式进行 clone，可以使用内部 function 但是运行效率更低
 	var clone = new D2JS(d.executor);
 	for(var k in d){
 		if(d.hasOwnProperty(k)) {
