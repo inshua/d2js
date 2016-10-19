@@ -1,12 +1,12 @@
-d2js.fetch = function(params){
-	return this.callD2js('./another.d2js', 'fetch', params);
+d2js.fetch = function(params, http){
+	return this.callD2js('./another.d2js', 'fetch', [params, http], http);
 }
 
-d2js.testUpdate = function(record){
+d2js.testUpdate = function(record, http){
 	record.id = record.id * 1;
 	this.doTransaction(function(){
 		this.updateRow('authors', record, ['id', 'last_name']);
-		this.callD2js('./another.d2js', 'testTransaction', record);
+		this.callD2js('./another.d2js', 'testTransaction', [record, http], http);
 	});
 }
 

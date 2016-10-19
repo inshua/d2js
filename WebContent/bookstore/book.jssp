@@ -10,7 +10,7 @@
 </head>
 <body>
 
-[% var r = this.callD2js('book.d2js', 'fetch', params); %]
+[% var r = this.callD2js('book.d2js', 'fetch', params, http); %]
 
 <div class="container">
 	<table class="table table-striped">

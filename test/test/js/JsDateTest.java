@@ -3,18 +3,18 @@ package test.js;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
-import org.siphon.common.js.JsDateUtil;
 import org.siphon.common.js.JsEngineUtil;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeDate;
+import org.siphon.common.js.JsTypeUtil;
 
 public class JsDateTest {
 	public static void main(String[] args) throws ScriptException {
 		ScriptEngine engine = JsEngineUtil.newEngine();
 		Object date = engine.eval("new Date()");
-		JsDateUtil t = new JsDateUtil(engine);
+		JsTypeUtil t = new JsTypeUtil(engine);
 		System.out.println(t.isNativeDate(date));
 		
 		System.out.println(t.getTime((ScriptObjectMirror) date));

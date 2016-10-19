@@ -6,11 +6,11 @@ d2js.fetch = function(params){
 		.}
 	.}
 	return this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page)
-			.nest('book', 'book-nest.d2js', 'fetchByAuthors');
+			.nest(this, 'book', 'book-nest.d2js', 'fetchByAuthors');
 }
 
 d2js.modify = function(row, columns){
-	$V(row, {
+	$V(this, row, {
 		name : V.notNull,
 		email : V.email,
 		info : V.attrs(['linkin']),

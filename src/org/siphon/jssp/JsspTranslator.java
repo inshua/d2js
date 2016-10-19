@@ -32,7 +32,7 @@ public class JsspTranslator {
 
 	public String translate() {
 		StringBuffer result = new StringBuffer();
-		result.append("d2js.jssp = function(params){");
+		result.append("d2js.jssp = function(params){var request = this.request;var response = this.response; var out = this.out;var session = this.session;");
 		result.append("response.setContentType('text/html; charset=utf-8'); ");
 
 		StringBuffer line = new StringBuffer();

@@ -4,7 +4,7 @@ d2js.fetch = function(params){
 }
 
 d2js.create = function(row, columns){
-	$V(row, {
+	$V(this, row, {
 		name : V.notNull,
 		email : V.email,
 		info : V.attrs(['linkin']),
@@ -16,7 +16,7 @@ d2js.create = function(row, columns){
 
 d2js.modify = function(row, columns){
 	
-	$V(row, {
+	$V(this, row, {
 		name : V.notNull,
 		email : V.email,
 		info : V.attrs(['linkin']),

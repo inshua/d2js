@@ -58,7 +58,7 @@ import jdk.nashorn.internal.runtime.ConsString;
 import jdk.nashorn.internal.runtime.ScriptFunction;
 import jdk.nashorn.internal.runtime.ScriptObject;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.postgresql.util.PGobject;
@@ -120,7 +120,7 @@ public class SqlExecutor {
 		jsTypeUtil = new JsTypeUtil(jsEngine);
 		this.JSON = new org.siphon.common.js.JSON(jsEngine);
 
-		if (this.dataSource instanceof org.apache.commons.dbcp.BasicDataSource) {
+		if (this.dataSource instanceof org.apache.commons.dbcp2.BasicDataSource) {
 			BasicDataSource bds = (BasicDataSource) this.dataSource;
 
 			this.driverClass = bds.getDriverClassName();

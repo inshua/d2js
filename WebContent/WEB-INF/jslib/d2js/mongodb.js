@@ -167,6 +167,7 @@ D2JS.prototype.clone = function(){
 	for(var k in this){
 		if(this.hasOwnProperty(k)) obj[k] = this[k];
 	}
+	obj.exports = {}.merge(this.exports);
 	return obj;
 };
 

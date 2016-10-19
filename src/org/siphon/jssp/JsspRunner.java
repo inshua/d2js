@@ -36,6 +36,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -45,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JsEngineUtil;
 import org.siphon.d2js.D2jsRunner;
@@ -53,54 +55,45 @@ import org.siphon.d2js.jshttp.D2jsInitParams;
 import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.JsServlet;
 import org.siphon.d2js.jshttp.ServerUnitManager;
+import org.siphon.d2js.jshttp.Task;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
 
-public class JsspRunner extends D2jsRunner{
+public class JsspRunner extends D2jsRunner {
 
 	private JsspUnitManager jsspUnitManager;
 
-	public JsspRunner(D2jsInitParams params, JsspUnitManager jsspUnitManager) {
-		super(params, jsspUnitManager);
+	public JsspRunner(JsspUnitManager jsspUnitManager) {
+		super(jsspUnitManager);
 		this.jsspUnitManager = jsspUnitManager;
 	}
 
 	private static Logger logger = Logger.getLogger(JsspRunner.class);
 
-	@Override
-	protected void initEngineContext(JsEngineHandlerContext engineContext, HttpServletRequest request,
-			HttpServletResponse response) throws IOException {
-		super.initEngineContext(engineContext, request, response);
-		ScriptEngine engine = engineContext.getScriptEngine();
-		engine.put("jsspRunner", this);
-	}
-	
-	@Override
-	public void run(HttpServletRequest request, HttpServletResponse response, String method)
-			throws ServletException, IOException {
-		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
-		if(!new File(jsfile).exists()){
-			response.setStatus(404);
-			PrintWriter out = response.getWriter();
-			out.print(request.getServletPath() + " not found");
-			out.flush();
-			return;
-		}
+	public void run(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 
-		JsEngineHandlerContext engineContext = null;
+		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
+		ScriptObjectMirror d2js = null;
 		try {
-			engineContext = d2jsManager.getEngineContext(jsfile, jsfile, this.getInitParams());
+			d2js = d2jsManager.getD2js(jsfile, getServletPath(request));
+			if (d2js == null) {
+				response.setStatus(404);
+				PrintWriter out = response.getWriter();
+				out.print(request.getServletPath() + " not found");
+				out.flush();
+				return;
+			}
 		} catch (Exception e3) {
 			logger.error("", e3);
 			throw new ServletException(e3);
 		}
 
-		JsspRequest jsspRequest = new JsspRequest(request, engineContext);
-		
-		ScriptObjectMirror params = null;
+		JsspRequest jsspRequest = new JsspRequest(request, engine);
+
+		ScriptObjectMirror params;
 		try {
-			params = getParams(engineContext, jsspRequest);
+			params = getParams(jsspRequest);
 		} catch (Exception e3) {
 			response.setStatus(500);
 			PrintWriter out = response.getWriter();
@@ -109,22 +102,15 @@ public class JsspRunner extends D2jsRunner{
 			return;
 		}
 
+		JsspWriter out = null;
+		out = new JsspWriter(response, engine);
+		JsspSession session = new JsspSession(request.getSession());
+
 		try {
-			initEngineContext(engineContext, jsspRequest, response);
-			
-			this.run(engineContext, jsspRequest, response, "jssp", params);
-		} catch (Exception e) {
+			((Invocable)engine).invokeFunction("processJsspRequest", jsfile, params, jsspRequest, response, session, out);
+		} catch (NoSuchMethodException | ScriptException e) {
 			throw new ServletException(e);
-		} finally {
-			if (engineContext != null)
-				engineContext.free();
-		}	
-		
+		}
 	}
-
-	public void run(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		this.run(request, response, "jssp");
-	}
-
 
 }

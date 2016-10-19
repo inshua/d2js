@@ -24,10 +24,12 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import javax.script.ScriptEngine;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.siphon.common.js.JSON;
 import org.siphon.common.js.UnsupportedConversionException;
 import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 
@@ -38,13 +40,13 @@ public class JsspWriter {
 	private final HttpServletResponse response;
 	private PrintWriter writer;
 	private ServletOutputStream outputStream;
-	private final JsEngineHandlerContext jsEngineHandlerContext;
 	
 	private boolean dirty = false;
+	private final ScriptEngine engine;
 	
-	public JsspWriter(HttpServletResponse response, JsEngineHandlerContext jsEngineHandlerContext) {
+	public JsspWriter(HttpServletResponse response, ScriptEngine engine) {
 		this.response = response;
-		this.jsEngineHandlerContext = jsEngineHandlerContext;
+		this.engine = engine;
 	}
 	
 
@@ -92,7 +94,7 @@ public class JsspWriter {
 	}
 	
 	public void printJson(Object o) throws IOException{
-		this.print(jsEngineHandlerContext.getJson().tryStringify(o));
+		this.print(new JSON(engine).tryStringify(o));
 	}
 
 

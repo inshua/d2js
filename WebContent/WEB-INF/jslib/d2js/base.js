@@ -87,13 +87,12 @@ function $SQL(sql){
  * ```
  * @class D2JS
  */
-function D2JS(sqlExecutor){ this.executor = sqlExecutor;  }
-
-D2JS.prototype = new Object();
-
-D2JS.prototype.constructor = D2JS;
-
-D2JS.prototype.transactConnection = null;	// for transaction;
+function D2JS(sqlExecutor){ 
+	this.executor = sqlExecutor;  
+	//this.transactConnection = null;
+	this.exports = {fetch:1, create:1, modify:1, destroy:1, update:1, jssp:1};
+	//this.response = this.request = this.session = this.out = this.task = this.out = null;
+}
 
 D2JS.DataTable = function(){}
 
@@ -913,6 +912,27 @@ D2JS.prototype.getConnection = function(){
 	return this.executor.getConnection();
 };
 
+/**
+ * 适用于单引擎的 findResource
+ * @param filename
+ */
+D2JS.prototype.findResource = function(filename){
+	var abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+	if(new java.io.File(abspath).exists()){
+		return abspath;
+	} else {
+		var defaults = DEFAULT_IMPORTS_PATHS;
+		for(var i=0; i<defaults.length; i++){
+			var file = new java.io.File(defaults[i]);
+			abspath = new java.io.File(file, filename).getCanonicalPath();
+			if(new java.io.File(abspath).exists()){
+				return abspath;
+			}
+		}
+	}
+}
+
+
 
 // ================ entrance ===========================
 var d2js = null;
@@ -925,14 +945,13 @@ function init(){
 		for(var k in datasourceConfig){
 			properties.setProperty(k, datasourceConfig[k] + '');
 		}
-		return Java.type('org.apache.commons.dbcp.BasicDataSourceFactory').createDataSource(properties);
+		return Java.type('org.apache.commons.dbcp2.BasicDataSourceFactory').createDataSource(properties);
 	}()));
 	
 	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine);
 	sqlExecutor.defaultJsonDbType = 'JSONB';
 	
 	d2js = handler = new D2JS(sqlExecutor);
-	d2js.exports = {fetch:1, create:1, modify:1, destroy:1, update:1, jssp:1};
 	engine.put('handler', handler);
 	engine.put('d2js', d2js);
 }

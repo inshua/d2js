@@ -12,7 +12,7 @@ d2js.fetch = function(params){
 }
 
 d2js.modify = function(row, columns){
-	$V(row, {
+	$V(this, row, {
 		name : V.notNull,
 		email : V.email,
 		info : V.attrs(['linkin']),
@@ -22,9 +22,16 @@ d2js.modify = function(row, columns){
 	return this.updateRow('author', row, columns);
 }
 
-// configure nashorn engine pool size for this page
-d2js.configurePagePool = function(config){
-	config.maxActive = 20000;
-}
+d2js.number = 1;
 
+d2js.exports.test = d2js.test = function(params, web){
+	//logger.info(web.out);
+	//logger.info(web.request);
+	//logger.info(web.response);
+	//logger.info(d2jsRunner);
+	// Java.type('java.lang.Thread').sleep(200);
+	//logger.info(d2js.number);
+	// logger.debug('run on ' + Java.type('java.lang.Thread').currentThread().name);
+	return "hello " + (d2js.number ++);
+}
 

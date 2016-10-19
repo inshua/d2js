@@ -21,10 +21,11 @@ package org.siphon.d2js;
 
 import java.sql.SQLException;
 
+import javax.script.ScriptEngine;
 import javax.servlet.http.HttpServletResponse;
 
+import org.siphon.common.js.JSON;
 import org.siphon.common.js.JsTypeUtil;
-import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.jssp.JsspWriter;
 import org.siphon.jssql.SqlExecutorException;
 
@@ -38,10 +39,9 @@ import jdk.nashorn.internal.runtime.ScriptObject;
 public class D2jsFormatter extends Formatter {
 
 	@Override
-	public void formatQueryResult(Object queryResult, String message, JsEngineHandlerContext engineContext) throws Exception {
-		JsspWriter out = (JsspWriter) engineContext.getScriptEngine().get("out");
+	public void formatQueryResult(JsspWriter out, Object queryResult, String message) throws Exception {
 		if(!out.isDirty()){
-			if (engineContext.getJsTypeUtil().isNull(queryResult)){
+			if (JsTypeUtil.isNull(queryResult)){
 				out.print("{\"success\" : true}");
 			} else {
 				out.printJson(queryResult);
@@ -50,14 +50,9 @@ public class D2jsFormatter extends Formatter {
 	}
 
 	@Override
-	public String formatRow(Object row, String message, JsEngineHandlerContext engineContext) throws Exception {
-		return engineContext.getJson().stringify(row);
-	}
-
-	@Override
-	public String formatException(Object exception, JsEngineHandlerContext engineContext) throws Exception {
+	public String formatException(Object exception, ScriptEngine engine) throws Exception {
 		if (exception instanceof ScriptObjectMirror){
-			return formatException(engineContext.getJsTypeUtil().getSealed((ScriptObjectMirror) exception), engineContext);		
+			return formatException(JsTypeUtil.getSealed((ScriptObjectMirror) exception), engine);		
 		} else if( exception instanceof ScriptObject) {
 			//NativeError, NativeTypeError, NativeEvalError, ...
 			// 现在已找到方法能 JSON.stringify Error 对象，不再需要 hack instMessage
@@ -76,36 +71,31 @@ public class D2jsFormatter extends Formatter {
 			}
 		} else if(exception instanceof Throwable){
 			if(((Throwable) exception).getCause() instanceof SqlExecutorException){
-				return formatException(((Throwable) exception).getCause(), engineContext);
+				return formatException(((Throwable) exception).getCause(), engine);
 			}
 			exception = ((Throwable) exception).getMessage();
 		} else {
 			exception = exception.toString();
 		}
-		ScriptObjectMirror result = engineContext.getJsTypeUtil().newObject();
+		ScriptObjectMirror result = new JsTypeUtil(engine).newObject();
 		result.put("error", exception);
 
-		return engineContext.getJson().stringify(result);
+		return new JSON(engine).stringify(result);
 	}
 
 	@Override
-	public String formatException(String exception, JsEngineHandlerContext engineContext) throws Exception {
-		JsTypeUtil jsTypeUtil = engineContext.getJsTypeUtil();
+	public String formatException(String exception, ScriptEngine engine) throws Exception {
+		JsTypeUtil jsTypeUtil = new JsTypeUtil(engine);
 
 		ScriptObjectMirror result = jsTypeUtil.newObject();
 		result.put("error", exception);
 
-		return engineContext.getJson().stringify(result);
+		return new JSON(engine).stringify(result);
 
 	}
 
 	@Override
-	public String formatExecuteResult(HttpServletResponse response, int number, JsEngineHandlerContext engineContext) {
-		return null;
-	}
-
-	@Override
-	public void writeHttpHeader(HttpServletResponse response, JsEngineHandlerContext engineContext) {
+	public void writeHttpHeader(HttpServletResponse response) {
 		response.setContentType("application/json");
 		response.setCharacterEncoding("utf-8");
 		response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, post-check=0, pre-check=0");

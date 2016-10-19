@@ -19,23 +19,21 @@
  *******************************************************************************/
 package org.siphon.d2js;
 
+import javax.script.ScriptEngine;
 import javax.servlet.http.HttpServletResponse;
 
-import org.siphon.d2js.jshttp.JsEngineHandlerContext;
+import org.siphon.jssp.JsspWriter;
 
 public abstract class Formatter {
 
-	public abstract void formatQueryResult(Object queryResult, String message, JsEngineHandlerContext engineContext)
+	public abstract void formatQueryResult(JsspWriter out, Object queryResult, String message)
 			throws Exception;
 
-	public abstract String formatRow(Object row, String message, JsEngineHandlerContext engineContext) throws Exception;
+	public abstract String formatException(Object exception, ScriptEngine engine) throws Exception;
 
-	public abstract String formatException(Object exception, JsEngineHandlerContext engineContext) throws Exception;
+	public abstract String formatException(String exception, ScriptEngine engine) throws Exception;
 
-	public abstract String formatException(String exception, JsEngineHandlerContext engineContext) throws Exception;
+	public abstract void writeHttpHeader(HttpServletResponse response);
 
-	public abstract String formatExecuteResult(HttpServletResponse response, int number, JsEngineHandlerContext engineContext);
-
-	public abstract void writeHttpHeader(HttpServletResponse response, JsEngineHandlerContext engineContext);
 
 }

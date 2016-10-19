@@ -24,14 +24,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -40,6 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jasper.runtime.JspFactoryImpl;
 import org.apache.log4j.Logger;
 import org.siphon.common.io.WatchDir;
 import org.siphon.d2js.jshttp.D2jsInitParams;
@@ -71,7 +76,9 @@ public class DispatchServlet extends JsServlet {
 		args.setApplication(JsServlet.application);
 		args.setPreloadJs(this.getPreloadJs());
 		
-		D2jsRunner d2jsRunner = new D2jsRunner(args, new D2jsUnitManager(path));
+		D2jsUnitManager d2jsUnitManager = new D2jsUnitManager(path, args);
+		//d2jsUnitManager.scanD2jsUnits();
+		D2jsRunner d2jsRunner = new D2jsRunner(d2jsUnitManager);	// only init once
 		this.getServletContext().setAttribute("d2jsRunner", d2jsRunner);
 	}
 	
@@ -83,34 +90,62 @@ public class DispatchServlet extends JsServlet {
 	@Override
 	protected void onFileChanged(WatchEvent<Path> ev, Path file) {
 		D2jsRunner d2jsRunner = (D2jsRunner) this.getServletContext().getAttribute("d2jsRunner");
-		d2jsRunner.getUnitManager().onFileChanged(ev, file);;
+		if(d2jsRunner != null){
+			d2jsRunner.getUnitManager().onFileChanged(ev, file);
+		}
 	}
 	
-
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		request.setCharacterEncoding("utf-8");
+		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
+		AsyncContext asyncContext = request.startAsync(request, response);
 		D2jsRunner d2jsRunner = this.getD2jsRunner();
-		d2jsRunner.run(request, response, StringUtils.defaultIfEmpty(request.getParameter("_m"), "fetch"));
+		String method = StringUtils.defaultIfEmpty(request.getParameter("_m"), "fetch");
+		
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), method);
+		} finally{
+			asyncContext.complete();
+		}
 	}
 
 	@Override
-	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.setCharacterEncoding("utf-8");
+	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setCharacterEncoding("utf-8");
+		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
+		AsyncContext asyncContext = request.startAsync(request, response);
 		D2jsRunner d2jsRunner = this.getD2jsRunner();
-		d2jsRunner.run(req, resp, "delete");	
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), "delete");
+		} finally{
+			asyncContext.complete();
+		}
 	}
 
 	@Override
-	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.setCharacterEncoding("utf-8");
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setCharacterEncoding("utf-8");
+		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
+		AsyncContext asyncContext = request.startAsync(request, response);
 		D2jsRunner d2jsRunner = this.getD2jsRunner();
-		d2jsRunner.run(req, resp, "modify");
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), "modify");
+		} finally{
+			asyncContext.complete();
+		}
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		request.setCharacterEncoding("utf-8");
+		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
+		AsyncContext asyncContext = request.startAsync(request, response);
 		D2jsRunner d2jsRunner = this.getD2jsRunner();
-		d2jsRunner.run(request, response, StringUtils.defaultIfEmpty(request.getParameter("_m"), "create"));
+		String method = StringUtils.defaultIfEmpty(request.getParameter("_m"), "create");
+		try{
+			d2jsRunner.run((HttpServletRequest)asyncContext.getRequest(), (HttpServletResponse)asyncContext.getResponse(), method);
+		} finally{
+			asyncContext.complete();
+		}
 	}
 
 }

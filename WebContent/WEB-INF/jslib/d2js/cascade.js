@@ -28,16 +28,18 @@ var ObjectArray = Java.type('java.lang.Object[]'),
 /**
  * 将子表相关行置入本次查询，构造为
  * {columns:[], rows:[], nested:{child_table: {columns:[], rows: [], ...}}}
+ * @param d2js {D2JS} D2JS 对象
  * @param table {string} 表命名
  * @param src {string} d2js 文件路径
  * @param method {string} 为本主表提供的方法，接收主表 id 数组
  * @param [id='id'] {string}
  */
-D2JS.DataTable.prototype.nest = function(table, src, method, id){
+D2JS.DataTable.prototype.nest = function(d2js, table, src, method, id){
 	id = id || 'id';
 	var ids = this.rows.map(function(row){return row[id]});
 	if(!this.nested) this.nested = {};
-	this.nested[table] = d2js.callD2js(src, method, [ids]);
+	var r = d2js.callD2js(src, method, [ids]);
+	this.nested[table] = r;
 	return this;
 }
 
@@ -45,32 +47,35 @@ D2JS.DataTable.prototype.nest = function(table, src, method, id){
  * 调用另一个 d2js 文件的函数
  * @param src {string} 文件名
  * @param method {string} 函数名
- * @param params {*|array} 数组 - 参数列表，单值 - 单个参数
+ * @param args {*|array} 数组 - 参数列表，单值 - 单个参数
  */
-D2JS.prototype.callD2js = function(src, method, params){
-	var context2 = d2jsRunner.getEngineContext(findResource(src), request, response);
-	if(context2 == null) throw new Error(src + ' maybe not exist');
+D2JS.prototype.callD2js = function(src, method, args){
+	var path = this.findResource(src);
+	var another = allD2js[path];
+	if(another == null){
+		if(d2jsRunner.ensureD2jsLoaded(path, this.request) == false){
+			throw new Error(src + ' maybe not exist');
+		} else {
+			another = allD2js[path]
+		}
+	}
 	try{
-		var another = context2.getHandler();	// ScriptObjectMirror
+		another = another.clone();
 		if(this.transactConnection){
-			another = context2.getEngineAsInvocable().invokeMethod(another, 'clone');	// ScriptObjectMirror
 			another.transactConnection = this.transactConnection;
 		}
-		var engine2 = context2.getScriptEngine();
-		var bindings = engine2.getBindings(100);
-		var params = params instanceof Array ? params : [params]
-		bindings['__s'] = params.toJava();		// 欲在两个引擎间传递对象，先转为java容器
-		bindings['__another'] = another;
-		var res = engine2.eval("JsTypeUtil.jsObjectToJava(d2js." + method + '.apply(__another, Object.fromJava(__s)))', bindings);
-		if(res != null) res = Object.fromJava(res);
-		d2jsRunner.completeTask(context2.getScriptEngine(), null);
+		another.request = this.request;
+		another.response = this.response;
+		another.out = this.out;
+		another.session = this.session;
+		
+		if(!Array.isArray(args)) args = [args];
+		var res = another[method].apply(another, args);
+		if(another.task) d2jsRunner.completeTask(another.task, null);
 		return res;
 	} catch(e){
-		d2jsRunner.completeTask(context2.getScriptEngine(), new ECMAException(e, null));
+		if(another.task) d2jsRunner.completeTask(another.task, new ECMAException(e, null));
 		throw e;
-	} finally {
-		if (context2 != null)
-			context2.free();
 	}
 }
 
@@ -91,9 +96,9 @@ D2JS.prototype.update = function(params){
 }
 
 D2JS.prototype.updateTable = function(table, parentRow, isSelf){
-	var path = request.getServletContext().getContextPath();
+	var path = this.request.getServletContext().getContextPath();
 	var src = table.src.replace(path, '');
-	src = request.getServletContext().getRealPath(src);
+	src = this.request.getServletContext().getRealPath(src);
 	this.doTransaction(function(){
 		for(var i=0;i<table.rows.length; i++){
 			var row = table.rows[i];
@@ -103,7 +108,7 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 					if(isSelf){
 						this.create(row, table.columns);
 					} else {
-						this.callD2js(src, 'create', [row, table.columns]);
+						this.callD2js(src, 'create', [row, table.columns, parentRow]);
 					}
 					row._children && updateChildren.call(this, row);
 					break;
@@ -112,7 +117,7 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 					if(isSelf){
 						this.modify(row, table.columns);
 					} else {
-						this.callD2js(src, 'modify', [row, table.columns]);
+						this.callD2js(src, 'modify', [row, table.columns, parentRow]);
 					}
 					break;
 				case 'remove' : 
@@ -120,7 +125,7 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 					if(isSelf){
 						this.destroy(row, table.columns);
 					} else {
-						this.callD2js(src, 'destroy', [row, table.columns]);
+						this.callD2js(src, 'destroy', [row, table.columns, parentRow]);
 					}
 					break;
 				case 'none' :

@@ -1,3 +1,4 @@
+d2js.exports.listAll = 
 d2js.listAll = function(params){
 	sql{.
 		select id, name from author order by name
