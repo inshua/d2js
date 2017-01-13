@@ -61,7 +61,25 @@ D2JS.prototype.findD2js = function(src){
 }
 
 /**
- * 混入另一个 d2js 对象的成员 
+ * 混入另一个 d2js 对象的成员：
+ * 用法如：
+ * -----
+ * b.d2js
+ * -----
+ * ```js
+ * d2js.exports.multi = d2js.multi = function(params){
+ * 	return params.a * params.b
+ * }
+ * ```
+ * ----
+ * a.d2js
+ * ----
+ * ```js
+ * d2js.mixin("b.d2js")
+ * ```
+ * 现在 a.d2js 即从 b.d2js 获得 multi 接口。
+ * 
+ * 目前不支持 b.d2js 有变动时混入的成员随之变动，b.d2js 变动后，应手工将 a.d2js 调整时间。 
  * @param path {string} d2js文件名
  * @param override {boolean} 是否覆盖同名成员，默认false
  */
