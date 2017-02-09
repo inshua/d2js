@@ -49,6 +49,8 @@
 		<delete dir="${dir.temp}" />
 
 		<delete file="${dir.weblib}/${ant.project.name}.jar" />
+		
+		<copy file="${project.war}" tofile="${basedir}/${ant.project.name}.war"></copy>
 	</target>
 
 	<target name="update-d2js">
@@ -66,6 +68,8 @@
 		<delete file="${file.d2js.war}" />
 		<copydir src="${dir.temp}" dest="${dir.web}">
 		</copydir>
+		
+		<delete dir="${dir.temp}" />
 	</target>
 
 	<target name="create-d2js-project">
@@ -79,6 +83,8 @@
 		<input addproperty="gen.database.username" message="database username:" defaultvalue="postgres" description="you can manually edit WebContent/WEB-INF/config/database.js" />
 		<input addproperty="gen.database.password" message="database password:" defaultvalue="password" description="you can manually edit WebContent/WEB-INF/config/database.js" />
 
+		<antcall target="default"></antcall>
+		
 		<delete dir="${dir.temp}" />
 
 		<mkdir dir="${dir.temp}" />
@@ -117,5 +123,7 @@
 			<fileset dir="${dir.temp}" includes="**/*">
 			</fileset>
 		</copy>
+		
+		<delete dir="${dir.temp}" />
 	</target>
 </project>
