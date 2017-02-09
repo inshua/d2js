@@ -4,8 +4,8 @@
 
 	<path id="classpath">
 		<fileset dir="${CATALINA_HOME}/lib">
-	        <include name="*.jar"/>
-	    </fileset>
+			<include name="*.jar" />
+		</fileset>
 		<fileset dir="${dir.weblib}">
 			<include name="**.jar" />
 			<exclude name="${ant.project.name}.jar" />
@@ -13,8 +13,9 @@
 	</path>
 
 	<target name="compile">
-		<delete dir="${dir.bin}"></delete>
-		<mkdir dir="${dir.bin}"/>
+		<delete dir="${dir.bin}">
+		</delete>
+		<mkdir dir="${dir.bin}" />
 		<javac srcdir="${dir.src}" debug="on" destdir="${dir.bin}" classpathref="classpath" includeantruntime="true" includejavaruntime="true" encoding="utf-8" />
 		<jar destfile="${dir.weblib}/${ant.project.name}.jar">
 			<fileset dir="${dir.bin}" includes="**">
@@ -26,28 +27,94 @@
 	<target name="default">
 		<antcall target="compile" />
 		<delete file="${project.war}" />
-		<mkdir dir="${dir.temp}"/>
+		<mkdir dir="${dir.temp}" />
 		<copy todir="${dir.temp}" includeemptydirs="false">
 			<fileset dir="${dir.web}">
 				<exclude name="**/*-test/" />
 				<exclude name="**/guide/" />
 				<exclude name="**/bookstore/" />
 				<exclude name="**/test/" />
-				<exclude name="**/index.html" />
+				<exclude name="**/*.html" />
 				<exclude name="**/molecule-dev/" />
 				<exclude name="**/molecules/*block*.html" />
 			</fileset>
 		</copy>
-		
+
 		<war destfile="${project.war}">
 			<fileset dir="${dir.temp}">
-				<exclude name="**/*.class"/>
+				<exclude name="**/*.class" />
 			</fileset>
 		</war>
-				
-		<delete dir="${dir.temp}"/>
-		
+
+		<delete dir="${dir.temp}" />
+
 		<delete file="${dir.weblib}/${ant.project.name}.jar" />
 	</target>
 
+	<target name="update-d2js-war">
+		<property name="file.d2js.war" value="${dir.temp}/org.siphon.d2js.war">
+		</property>
+		<mkdir dir="${dir.temp}" />
+		<get src="https://raw.githubusercontent.com/inshua/d2js/master/org.siphon.d2js.war" dest="${file.d2js.war}" />
+		<unwar dest="${dir.temp}" src="${file.d2js.war}">
+			<patternset>
+				<exclude name="WEB-INF/web.xml" />
+				<exclude name="WEB-INF/config/**" />
+				<exclude name="META-INF/**" />
+			</patternset>
+		</unwar>
+		<delete file="${file.d2js.war}" />
+		<copydir src="${dir.temp}" dest="${dir.web}">
+		</copydir>
+	</target>
+
+	<target name="create-d2js-project">
+		<input addproperty="gen.project.name" message="enter project name" />
+		<echo message="Project Name: ${gen.project.name}" />
+
+		<input addproperty="gen.project.parentdir" message="put to:" description="workspace directory" defaultvalue="${basedir}/.." />
+		<echo message="Put To: ${gen.project.parentdir}" />
+
+		<input addproperty="gen.database.url" message="database url(pg):" defaultvalue="jdbc:postgresql://localhost:5432/bookstore" description="you can manually edit WebContent/WEB-INF/config/database.js" />
+		<input addproperty="gen.database.username" message="database username:" defaultvalue="postgres" description="you can manually edit WebContent/WEB-INF/config/database.js" />
+		<input addproperty="gen.database.password" message="database password:" defaultvalue="password" description="you can manually edit WebContent/WEB-INF/config/database.js" />
+
+		<delete dir="${dir.temp}" />
+
+		<mkdir dir="${dir.temp}" />
+		<mkdir dir="${dir.temp}/src" />
+		<mkdir dir="${dir.temp}/test" />
+		<mkdir dir="${dir.temp}/WebContent" />
+
+		<unwar dest="${dir.temp}/WebContent" src="${project.war}" />
+
+		<copy todir="${dir.temp}" overwrite="true">
+			<fileset dir="${basedir}">
+				<include name=".classpath" />
+				<include name=".project" />
+				<include name="build.properties" />
+				<include name="build.xml" />
+				<include name="**/.settings/*" />
+			</fileset>
+		</copy>
+		<copy todir="${dir.temp}/src" overwrite="true" file="${basedir}/src/log4j.properties" />
+		<copy tofile="${dir.temp}/WebContent/index.html" overwrite="true" file="${dir.web}/welcome.html" />
+
+		<replace file="${dir.temp}/.project" token="&lt;name&gt;d2js&lt;/name&gt;" value="&lt;name&gt;${gen.project.name}&lt;/name&gt;" />
+		<replace file="${dir.temp}/build.xml" token="name=&quot;org.siphon.d2js&quot;" value="name=&quot;${gen.project.name}&quot;" />
+		<replace file="${dir.temp}/src/log4j.properties" token="d2js" value="${gen.project.name}" />
+		<replace file="${dir.temp}/WebContent/WEB-INF/config/website.js" token="d2js" value="${gen.project.name}" />
+		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="jdbc:postgresql://localhost:5432/bookstore" value="/${gen.database.url}/" />
+		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="&quot;postgres&quot;" value="&quot;${gen.database.username}&quot;" />
+		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="&quot;pass4postgres&quot;" value="&quot;${gen.database.password}&quot;" />
+		<replace file="${dir.temp}/.settings/org.eclipse.wst.common.component" token="d2js" value="${gen.project.name}" />
+
+		<property name="gen.project.dir" value="${gen.project.parentdir}/${gen.project.name}">
+		</property>
+		<mkdir dir="${gen.project.dir}" />
+		<copy todir="${gen.project.dir}">
+			<fileset dir="${dir.temp}" includes="**/*">
+			</fileset>
+		</copy>
+	</target>
 </project>
