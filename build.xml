@@ -51,7 +51,7 @@
 		<delete file="${dir.weblib}/${ant.project.name}.jar" />
 	</target>
 
-	<target name="update-d2js-war">
+	<target name="update-d2js">
 		<property name="file.d2js.war" value="${dir.temp}/org.siphon.d2js.war">
 		</property>
 		<mkdir dir="${dir.temp}" />
@@ -108,6 +108,7 @@
 		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="&quot;postgres&quot;" value="&quot;${gen.database.username}&quot;" />
 		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="&quot;pass4postgres&quot;" value="&quot;${gen.database.password}&quot;" />
 		<replace file="${dir.temp}/.settings/org.eclipse.wst.common.component" token="d2js" value="${gen.project.name}" />
+		<replace file="${dir.temp}/WebContent/jslib/molecule.js" token="d2js" value="${gen.project.name}" />
 
 		<property name="gen.project.dir" value="${gen.project.parentdir}/${gen.project.name}">
 		</property>
