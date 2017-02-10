@@ -77,18 +77,14 @@ d2js 原型早在 2007 年即已实现并实用了多年，当时原理是前端
 
 启动网站后，打开 [http://localhost:8080/d2js/](http://localhost:8080/d2js/) 即可看到功能展示页面。
 
-### 使用 ANT 脚本创建新项目（推荐）
+### 使用 ANT 脚本创建使用 d2js 框架的新项目
 0. 按前面步骤下载本项目后，在项目根目录下找到 `build.xml`
 0. 运行该 ant 脚本的 `crate-d2js-project` 任务
 0. 在弹出的提示框依次输入项目名称、workspace 路径、数据库连接等信息，项目即创建成功
 0. 使用 eclipse 的导入现存项目功能导入 eclipse
 
-该 ant 脚本可根据提供的信息自动创建项目，以后需要改变项目名称或其它设定，请参考下一节内容。
+该 ant 脚本可根据提供的信息自动创建项目，以后也可以改变项目名称或其它设定：
 
-### 在新项目中使用 d2js 技术
-
-0. 确保上述 jdk, 数据库, web 服务器环境正常
-0. 通过导入 [d2js.war](./org.siphon.d2js.war?raw=true)创建项目
 0. 在 `WebContent/WEB-INF/config/database.js`中修改数据库连接。
 0. 修改 `WebContent/WEB-INF/config/website.js`，设置网站路径
 0. 修改 `WebContent/jslib/molecule.js`，将 `Molecule.ModulesPath` 中的网站名称修改为你的项目名称，或自己用其它方式在其它地方设置`Molecule.ModulesPath`
@@ -97,10 +93,12 @@ d2js 原型早在 2007 年即已实现并实用了多年，当时原理是前端
 
 本框架可以和大部分 java web 框架并存。
 
-0. 将[d2js.war](./org.siphon.d2js.war?raw=true)下载后解压
-0. 把 jslib 和 WEB-INF/jslib, WEB-INF/lib 复制到你的项目中
-0. 打开 WEB-INF/web.xml，将 jssp 和 d2js 的 servlet 配置复制到你的 web.xml 中
+0. 获取 d2js 代码
+0. 把 `WebContent/jslib` 和 `WebContent/WEB-INF/jslib`, `WebContent/WEB-INF/lib` 复制到你的项目中
+0. 打开 `WEB-INF/web.xml`，将 jssp 和 d2js 的 servlet 配置复制到你的 web.xml 中
 0. 仿照`WebContent/WEB-INF/config/database.js`，设置好数据库路径 
+
+d2js 和你的 java 项目使用的是同一个容器，可以顺利访问容器提供的 session。
 
 ### 更新 d2js 代码
 

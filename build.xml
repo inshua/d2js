@@ -13,8 +13,7 @@
 	</path>
 
 	<target name="compile">
-		<delete dir="${dir.bin}">
-		</delete>
+		<delete dir="${dir.bin}" />
 		<mkdir dir="${dir.bin}" />
 		<javac srcdir="${dir.src}" debug="on" destdir="${dir.bin}" classpathref="classpath" includeantruntime="true" includejavaruntime="true" encoding="utf-8" />
 		<jar destfile="${dir.weblib}/${ant.project.name}.jar">
@@ -47,28 +46,32 @@
 		</war>
 
 		<delete dir="${dir.temp}" />
-
-		<delete file="${dir.weblib}/${ant.project.name}.jar" />
-		
-		<copy file="${project.war}" tofile="${basedir}/${ant.project.name}.war"></copy>
 	</target>
 
+	<patternset id="not-web-content">
+		<exclude name="**/WEB-INF/web.xml" />
+		<exclude name="**/WEB-INF/config/**" />
+		<exclude name="**/META-INF/**" />
+		<exclude name="**/*-test/" />
+		<exclude name="**/guide/" />
+		<exclude name="**/bookstore/" />
+		<exclude name="**/test/" />
+		<exclude name="**/*.html" />
+		<exclude name="**/*.jssp" />
+		<exclude name="**/molecule-dev/" />
+		<exclude name="**/molecules/*block*.html" />
+	</patternset>
+
 	<target name="update-d2js">
-		<property name="file.d2js.war" value="${dir.temp}/org.siphon.d2js.war">
-		</property>
+		<property name="file.d2js.war" value="${dir.temp}/org.siphon.d2js.war" />
 		<mkdir dir="${dir.temp}" />
-		<get src="https://raw.githubusercontent.com/inshua/d2js/master/org.siphon.d2js.war" dest="${file.d2js.war}" />
-		<unwar dest="${dir.temp}" src="${file.d2js.war}">
-			<patternset>
-				<exclude name="WEB-INF/web.xml" />
-				<exclude name="WEB-INF/config/**" />
-				<exclude name="META-INF/**" />
-			</patternset>
-		</unwar>
+		<get src="https://github.com/inshua/d2js/archive/master.zip" dest="${file.d2js.war}" />
+		<unzip dest="${dir.temp}" src="${file.d2js.war}">
+			<patternset refid="not-web-content" />
+		</unzip>
 		<delete file="${file.d2js.war}" />
-		<copydir src="${dir.temp}" dest="${dir.web}">
-		</copydir>
-		
+		<copydir src="${dir.temp}/d2js-master/WebContent" dest="${dir.web}" />
+
 		<delete dir="${dir.temp}" />
 	</target>
 
@@ -83,16 +86,29 @@
 		<input addproperty="gen.database.username" message="database username:" defaultvalue="postgres" description="you can manually edit WebContent/WEB-INF/config/database.js" />
 		<input addproperty="gen.database.password" message="database password:" defaultvalue="password" description="you can manually edit WebContent/WEB-INF/config/database.js" />
 
-		<antcall target="default"></antcall>
-		
+		<!--<antcall target="compile" />-->
+
 		<delete dir="${dir.temp}" />
 
 		<mkdir dir="${dir.temp}" />
 		<mkdir dir="${dir.temp}/src" />
+		<mkdir dir="${dir.temp}/build" />
 		<mkdir dir="${dir.temp}/test" />
 		<mkdir dir="${dir.temp}/WebContent" />
 
-		<unwar dest="${dir.temp}/WebContent" src="${project.war}" />
+		<copy todir="${dir.temp}/WebContent">
+			<fileset dir="${dir.web}">
+				<patternset refid="not-web-content" />
+			</fileset>
+			<fileset dir="${dir.web}">
+				<!-- ignored by prior pattern -->
+				<patternset>
+					<include name="**/WEB-INF/web.xml" />
+					<include name="**/WEB-INF/config/**" />
+					<include name="**/welcome.jssp" />
+				</patternset>
+			</fileset>
+		</copy>
 
 		<copy todir="${dir.temp}" overwrite="true">
 			<fileset dir="${basedir}">
@@ -104,26 +120,27 @@
 			</fileset>
 		</copy>
 		<copy todir="${dir.temp}/src" overwrite="true" file="${basedir}/src/log4j.properties" />
-		<copy tofile="${dir.temp}/WebContent/index.html" overwrite="true" file="${dir.web}/welcome.html" />
+		<copy tofile="${dir.temp}/WebContent/index.jssp" overwrite="true" file="${dir.web}/welcome.jssp" />
 
 		<replace file="${dir.temp}/.project" token="&lt;name&gt;d2js&lt;/name&gt;" value="&lt;name&gt;${gen.project.name}&lt;/name&gt;" />
 		<replace file="${dir.temp}/build.xml" token="name=&quot;org.siphon.d2js&quot;" value="name=&quot;${gen.project.name}&quot;" />
 		<replace file="${dir.temp}/src/log4j.properties" token="d2js" value="${gen.project.name}" />
 		<replace file="${dir.temp}/WebContent/WEB-INF/config/website.js" token="d2js" value="${gen.project.name}" />
+		<replace file="${dir.temp}/WebContent/WEB-INF/web.xml" token="&lt;display-name&gt;d2js&lt;/display-name&gt;" value="&lt;display-name&gt;${gen.project.name}&lt;/display-name&gt;" />
 		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="jdbc:postgresql://localhost:5432/bookstore" value="/${gen.database.url}/" />
 		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="&quot;postgres&quot;" value="&quot;${gen.database.username}&quot;" />
 		<replace file="${dir.temp}/WebContent/WEB-INF/config/database.js" token="&quot;pass4postgres&quot;" value="&quot;${gen.database.password}&quot;" />
 		<replace file="${dir.temp}/.settings/org.eclipse.wst.common.component" token="d2js" value="${gen.project.name}" />
 		<replace file="${dir.temp}/WebContent/jslib/molecule.js" token="d2js" value="${gen.project.name}" />
 
-		<property name="gen.project.dir" value="${gen.project.parentdir}/${gen.project.name}">
-		</property>
+		<property name="gen.project.dir" value="${gen.project.parentdir}/${gen.project.name}" />
+
 		<mkdir dir="${gen.project.dir}" />
 		<copy todir="${gen.project.dir}">
 			<fileset dir="${dir.temp}" includes="**/*">
 			</fileset>
 		</copy>
-		
+
 		<delete dir="${dir.temp}" />
 	</target>
 </project>
