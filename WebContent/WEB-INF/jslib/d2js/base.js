@@ -917,7 +917,12 @@ D2JS.prototype.getConnection = function(){
  * @param filename
  */
 D2JS.prototype.findResource = function(filename){
-	var abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+	var file = new java.io.File(filename);
+	if(file.exists()){
+		var abspath = file.getAbsolutePath();
+	} else {
+		var abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+	}
 	if(new java.io.File(abspath).exists()){
 		return abspath;
 	} else {

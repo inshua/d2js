@@ -8,7 +8,8 @@ d2js.fetch = function(params){
 		.}
 	.}
 	
-	return this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
+	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
+        return r;
 }
 
 d2js.modify = function(row, columns){

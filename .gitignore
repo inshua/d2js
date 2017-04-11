@@ -1,4 +1,10 @@
 /build/
 /nbproject/private/
 /nbbuild/
+<<<<<<< HEAD
 .classpath
+=======
+/nbproject/
+/nb-build.xml
+/temp/
+>>>>>>> origin/master

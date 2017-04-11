@@ -51,6 +51,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JSON;
@@ -65,11 +66,11 @@ import org.siphon.jssql.SqlExecutor;
 public class D2jsUnitManager extends ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
-	
+
 	public D2jsUnitManager(String srcFolder, D2jsInitParams initParams) {
 		super(srcFolder, initParams);
 	}
-	
+
 	@Override
 	protected ScriptEngine createEngine(D2jsInitParams initParams) throws Exception {
 		ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
@@ -80,12 +81,13 @@ public class D2jsUnitManager extends ServerUnitManager {
 
 		engine.put("logger", logger);
 		engine.put("application", initParams.getApplication());
-		
+
 		// 由 js 根据业务需要创建，创建后由 java 关闭
 		if (initParams.getPreloadJs() != null) {
-			String[] preloadJs = initParams.getPreloadJs();		// [abs path, alias]
+			String[] preloadJs = initParams.getPreloadJs(); // [abs path, alias]
 			logger.info("evaluate preload js: " + preloadJs[0]);
-			JsEngineUtil.eval(engine, preloadJs[0], preloadJs[1], FileUtils.readFileToString(new File(preloadJs[0]), "utf-8"), true, false);
+			JsEngineUtil.eval(engine, preloadJs[0], preloadJs[1], FileUtils.readFileToString(new File(preloadJs[0]), "utf-8"),
+					true, false);
 		}
 
 		return engine;
@@ -102,25 +104,30 @@ public class D2jsUnitManager extends ServerUnitManager {
 			logger.debug(srcFile + " converted as " + tmp.getAbsolutePath());
 
 		ScriptObjectMirror d2js = (ScriptObjectMirror) JsEngineUtil.eval(engine, srcFile, aliasPath, covertedCode, false, true);
-		d2js.put("srcFile", srcFile);
 		return d2js;
 	}
 
 	protected String convertCode(String code, File src) throws Exception {
-		//return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + "; d2js.cloner = function(){}; d2js.cloner.prototype=d2js; return d2js;})(d2js.clone());";
-		return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + ";return d2js;})(d2js.clone());";
+		// return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + "; d2js.cloner = function(){};
+		// d2js.cloner.prototype=d2js; return d2js;})(d2js.clone());";
+		return "(function (d2js, src){"
+				+ "d2js.srcFile = src; " 
+				+ new EmbedSqlTranslator().translate(code) + "; "
+				+ "return d2js;})("
+				+ "d2js.clone(), \"" + StringEscapeUtils.escapeJava(src.getAbsolutePath()) + "\");";
 	}
 
-//	public void scanD2jsUnits() {
-//		File dir = new File(this.srcFolder);
-//		Collection<File> files = FileUtils.listFiles(dir, FileFilterUtils.suffixFileFilter(".d2js"), DirectoryFileFilter.DIRECTORY);
-//		for(File file : files){
-//			try {
-//				this.createEngineContext(this.engine, file.getAbsolutePath(), file.getAbsolutePath());
-//			} catch (Exception e) {
-//				logger.warn("load d2js failed " + file, e);
-//			}
-//		}
-//	}
+	// public void scanD2jsUnits() {
+	// File dir = new File(this.srcFolder);
+	// Collection<File> files = FileUtils.listFiles(dir, FileFilterUtils.suffixFileFilter(".d2js"),
+	// DirectoryFileFilter.DIRECTORY);
+	// for(File file : files){
+	// try {
+	// this.createEngineContext(this.engine, file.getAbsolutePath(), file.getAbsolutePath());
+	// } catch (Exception e) {
+	// logger.warn("load d2js failed " + file, e);
+	// }
+	// }
+	// }
 
 }

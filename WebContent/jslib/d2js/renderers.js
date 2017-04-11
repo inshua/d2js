@@ -341,7 +341,7 @@ d2js.Renderers.repeater = function(element, rows){
 	var repeater = element['repeater-tpl'];
 	if(element['repeater-tpl'] == null){
 		var arr = $(element).find('[repeater]').toArray().filter(function(r){
-			return $(r).closest('[renderer=repeater]').is(element);
+			return $(r).closest('[renderer*=repeater]').is(element);
 		});
 		if(arr.length == 0) return console.error('repeater child not found');
 		element['repeater-prev'] = arr[0].previousSibling; 		

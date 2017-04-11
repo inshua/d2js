@@ -38,27 +38,74 @@ D2JS.DataTable.prototype.nest = function(d2js, table, src, method, id){
 	id = id || 'id';
 	var ids = this.rows.map(function(row){return row[id]});
 	if(!this.nested) this.nested = {};
-	var r = d2js.callD2js(src, method, [ids]);
+	var r = this.callD2js(src, method, [ids]);
 	this.nested[table] = r;
 	return this;
 }
 
 /**
- * 调用另一个 d2js 文件的函数
- * @param src {string} 文件名
- * @param method {string} 函数名
- * @param args {*|array} 数组 - 参数列表，单值 - 单个参数
+ * 得到另一个 d2js 文件相应的对象 
+ * @param src {string} d2js文件名
  */
-D2JS.prototype.callD2js = function(src, method, args){
+D2JS.prototype.findD2js = function(src){
 	var path = this.findResource(src);
 	var another = allD2js[path];
 	if(another == null){
-		if(d2jsRunner.ensureD2jsLoaded(path, this.request) == false){
+		if(d2jsRunner.ensureD2jsLoaded(path, src) == false){
 			throw new Error(src + ' maybe not exist');
 		} else {
 			another = allD2js[path]
 		}
 	}
+	return another;
+}
+
+/**
+ * 混入另一个 d2js 对象的成员：
+ * 用法如：
+ * -----
+ * b.d2js
+ * -----
+ * ```js
+ * d2js.exports.multi = d2js.multi = function(params){
+ * 	return params.a * params.b
+ * }
+ * ```
+ * ----
+ * a.d2js
+ * ----
+ * ```js
+ * d2js.mixin("b.d2js")
+ * ```
+ * 现在 a.d2js 即从 b.d2js 获得 multi 接口。
+ * 
+ * 目前不支持 b.d2js 有变动时混入的成员随之变动，b.d2js 变动后，应手工将 a.d2js 调整时间。 
+ * @param path {string} d2js文件名
+ * @param override {boolean} 是否覆盖同名成员，默认false
+ */
+D2JS.prototype.mixin = function(path, override){
+	var another = this.findD2js(path);
+	for(var k in another){
+		if(another[k] != null && k != 'exports'){
+			if(k in this == false || override){
+				this[k] = another[k]
+			} 
+		}
+	}
+	for(var k in another.exports){
+		this.exports[k] = another.exports[k]
+	}
+	return this;
+} 
+
+/**
+ * 调用另一个 d2js 文件的函数
+ * @param src {string} d2js文件名
+ * @param method {string} 函数名
+ * @param args {*|array} 数组 - 参数列表，单值 - 单个参数
+ */
+D2JS.prototype.callD2js = function(src, method, args){
+	var another = this.findD2js(src);
 	try{
 		another = another.clone();
 		if(this.transactConnection){
@@ -74,7 +121,9 @@ D2JS.prototype.callD2js = function(src, method, args){
 		if(another.task) d2jsRunner.completeTask(another.task, null);
 		return res;
 	} catch(e){
-		if(another.task) d2jsRunner.completeTask(another.task, new ECMAException(e, null));
+		if(another.task) {
+			d2jsRunner.completeTask(another.task, new ECMAException(e, null));
+		}
 		throw e;
 	}
 }

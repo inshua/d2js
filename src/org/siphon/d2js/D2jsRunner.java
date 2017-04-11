@@ -127,13 +127,10 @@ public class D2jsRunner {
 
 	/**
 	 * 为 d2js 中隔离调用另一个 d2js 提供支持
+	 * @throws Exception 
 	 */
-	public boolean ensureD2jsLoaded(String jsfile, JsspRequest request) {
-		try {
-			return d2jsManager.getD2js(jsfile, request.getContextPath()) != null;
-		} catch (Exception e3) {
-			return false;
-		}
+	public boolean ensureD2jsLoaded(String jsfile, String aliasPath) throws Exception {
+		return d2jsManager.getD2js(jsfile, aliasPath) != null;
 	}
 
 	public String getServletPath(HttpServletRequest request){
