@@ -12,7 +12,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Properties;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.postgresql.Driver;
 import org.postgresql.jdbc4.Jdbc4Connection;
 
