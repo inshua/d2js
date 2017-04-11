@@ -119,11 +119,13 @@ var JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil');
  * 将本对象转为Java对象，为 JsTypeUtil.jsObjectToJava 的包装。
  * 很多库，比如activiti，都需要传递 Map<String, Object>等，采取本方式可以写作:
  *   submit({username: xxx, password: ''}.toJava())
- * @param b 另一对象
- * @param override 仅复制本对象没有的属性。
- * @returns {Object} 当前对象本身
+ *   
+ * 如对象已有 _java_type 说明，则自动取该说明指定的对象类型。如 {_java_type: 'com.my.entity.Person', name:'Mike'}.toJava() 可得到类型为 com.my.entity.Person 的对象。
+ * @param [selfType] {Java.type|string} Java.type('') 返回值, or java class name。对数组默认为 ArrayList，对对象默认为 HashMap<String,Object>。
+ * @param [elementType] {Java.type|string} Java.type('') 返回值, or java class name. 对数组默认为 ArrayList，对对象默认为 HashMap<String,Object>。
+ * @returns {Object} java object
  */
-Object.defineProperty(Object.prototype, 'toJava', {value: function(){
+Object.defineProperty(Object.prototype, 'toJava', {value: function(selfType, elementType){
 	return JsTypeUtil.jsObjectToJava(this);
 }, enumerable: false});
 
