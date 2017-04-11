@@ -2,17 +2,18 @@ d2js.entity_map = {
 	name : 'Author', 
 	// table: 'author',
 	map: {
-		books : {d2js: 'book.d2js', by: 'author_id'},	// book.d2js 提供 fetchBy 函数，接收 {author_id: xxx}, 返回一个数组，也可接收 {id:xx} 返回一行，行根据 entity map 设置有type信息。
-		fav : {d2js: 'fav.d2js',  by: 'person_id'},
+		books : {d2js: 'book-entity.d2js', by: 'author'},	// book.d2js 提供 fetchBy 函数，接收 {author_id: xxx}, 返回一个数组，也可接收 {id:xx} 返回一行，行根据 entity map 设置有type信息。
+		// fav : {d2js: 'fav.d2js',  by: 'person_id'},
 	}
 }
 
 /**
  * 实现ORM映射，可对外键、子表数据关联提取。
  */
-//D2JS.DataTable.prototype.orm = function(d2js){
-d2js.orm = function(d2js){
+D2JS.DataTable.prototype.orm = function(d2js){
 	var et = d2js.entity_map;
+	if(et == null) return this;
+	
 	var r = {};
 	for(var k in this){
 		r[k] = this[k];
@@ -22,7 +23,7 @@ d2js.orm = function(d2js){
 		var row = rows[i];
 		row._d2js_entity_type = et.name;
 		for(var attr in et.map){
-			if(et.hasOwnProperty(attr)){
+			if(et.map.hasOwnProperty(attr)){
 				var m = et.map[attr];
 				var another = d2js.findD2js(m.d2js);
 				if(another['fetchBy'] == null) throw new Error('fetchBy not existed in ' + m.d2js);
@@ -34,16 +35,17 @@ d2js.orm = function(d2js){
 						fromKey = et.pk || 'id';
 					}
 				}
+				logger.info('from key ' + fromKey + ', m: ' + JSON.stringify(m));
 				var search = {};
-				search[m.by] = row[attr];
+				search[m.by] = row[fromKey];
 				var result = another['fetchBy'](search);
-				result = result.orm(d2js);
+				logger.info('search by ' + JSON.stringify(search));
+				result = result.orm(another);
 				if(m.one){
-					result[attr] = result.rows.length ? result.rows[0] : null;
+					row[attr] = result.rows.length ? result.rows[0] : null;
 				} else {
-					result[attr] = result.rows;
+					row[attr] = result.rows;
 				}
-				rows[i] = result;
 			}
 		}
 	}
