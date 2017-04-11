@@ -1,10 +1,10 @@
 // in book.d2js
 d2js.entity_map = {
-			name : 'Book', 
-			map: {
-				author : {d2js: 'author.d2js', fk: 'author'}		
-			}
-		}
+	name : 'Book', 
+	map: {
+		author : {d2js: 'author.d2js', attr: 'author', by: 'author_id', one: true}		
+	}
+}
 
 
 d2js.fetch = function(params){
