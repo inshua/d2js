@@ -85,4 +85,9 @@ D2JS.prototype.destroy = function(rcd, columns){
 	return this.deleteRow(this.entity_map.table, rcd, this.entity_map.pk)
 }
 
-
+D2JS.prototype.init = function(){
+	this.mustBeEntity();
+	
+	var sql = 'select * from ' + this.entity_map.table + ' where 1=0';
+	this.entity_map.columns = this.query(sql).columns;
+}
