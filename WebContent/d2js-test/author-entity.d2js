@@ -35,7 +35,7 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	var rows = r.rows;
 	var colIndex = this.columns.indexBy('name');
 	var mapper = createMapper(filter, et);
-	
+	logger.info(JSON.stringify(mapper, null, '\t'));
 	for(var alias in mapper){if(mapper.hasOwnProperty(alias)){
 		var m = mapper[alias];
 		var result = m.apply(rows, path);
@@ -105,9 +105,10 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 						} else {
 							var cond = {};
 							cond[this.fk] = value;
+							logger.info('fetch ' + JSON.stringify(cond) + ' for ' + JSON.stringify(this.map) + ' with d2js ' + this.d2js.srcFile);
 							result = this.d2js.fetchBy(cond);
 							if(result.isDataTable){
-								result = result.orm(another, this.deepFilter, path ? path.concat(this.map) : [this.map]);
+								result = result.orm(this.d2js, this.deepFilter, path ? path.concat(this.map) : [this.map]);
 							}
 							found[value] = result;
 						}

@@ -37,6 +37,8 @@ if(datasourceConfig.isMongodb){
 
 imports("./d2js/cascade.js");
 
+imports("./d2js/entity_map.js");
+
 imports("./d2js/validation.js");
 
 init();

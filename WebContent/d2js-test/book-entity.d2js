@@ -1,6 +1,7 @@
 // in book.d2js
 d2js.entity_map = {
 	name : 'Book', 
+	table : 'book', 
 	map: {
 		author : { type: 'Author', d2js: 'author-entity.d2js', relation: 'one', key: 'author', fk: 'id'},
 		publisher : { type: 'Publisher', d2js: 'publisher-entity.d2js', relation: 'one', key: 'publisher_id', fk: 'id'}		
@@ -22,14 +23,6 @@ d2js.fetch = function(params){
 	sql = this.orderBy(sql, params._sorts, {'b.title' : 'asc'});
 	return this.query(sql, params, params._page).orm(this);
 }
-
-d2js.fetchBy = function(by){
-	sql{.
-		select * from book where author = :author
-	.}
-	return this.query(sql, by);
-}
-
 
 d2js.create = function(rcd){
 	logger.info('add book ' + JSON.stringify(rcd));
