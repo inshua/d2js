@@ -5,7 +5,7 @@ d2js.entity_map = {
 		books : {
 				type : 'Book',
 				d2js:'book-entity.d2js', 	// or type : 'Book',  book.d2js 提供 fetchBy 函数，接收 {author: xxx}, 返回一个数组，也可接收 {id:xx} 返回一行，行根据 entity map 设置有type信息。
-				relation: 'many', 			// many - array  one - entity 	value - returned value, such as dictionary mapping value
+				relation: 'many', 			// many - array  table - table information(may contains page info)	 one - entity 	value - returned value, such as dictionary mapping value
 				key: 'id', 					// optional
 				fk: 'author'				// 用于向 fetchBy 提交查询条件，查询条件组织为 {'author': row['id']}
 		}
@@ -22,15 +22,46 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	var et = d2js.entity_map;
 	if(et == null) return this;
 	
-	var r = {};
+	var r = {meta : {}};
+	var emeta = r.meta[et.name] = {};
+	emeta.columns = this.columns;
+	emeta.name = et.name;
+	emeta.d2js = et.d2js;
 	for(var k in this){
-		r[k] = this[k];
+		if(k in emeta == false){
+			r[k] = this[k];
+		}
 	}
 	var rows = r.rows;
-	var colIndex = this.columns.indexBy('name')
-	for(var i=0; i<rows.length; i++){
-		var row = rows[i];
-		row._d2js_entity_type = et.name;
+	var colIndex = this.columns.indexBy('name');
+	var mapper = createMapper(filter, et);
+	
+	for(var alias in mapper){if(mapper.hasOwnProperty(alias)){
+		var m = mapper[alias];
+		var result = m.apply(rows, path);
+		
+		var col = colIndex[alias];
+		if (col == null){
+			this.columns.push(col = {name : alias, type : m.map.type, mapped: true});
+		}
+		col.map = m.map;		// TODO 可能不需要，尽量不需要
+		r.meta.merge(result.meta);
+		r.meta[m.map.type].src = m.map.d2js;  
+		
+		switch(m.map.relation){
+		case 'table' :
+			col.type = 'TABLE';
+			break;
+		case 'value' :
+			col.type = result.columns[0].type; 
+			break;
+		}
+	}}
+	
+	return r;
+	
+	function createMapper(filter, et){
+		var mapper = {};
 		for(var alias in et.map){
 			if(et.map.hasOwnProperty(alias)){
 				var deepFilter = null;
@@ -50,6 +81,7 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 						}
 					}
 				}
+				
 				var map = et.map[alias];
 				if(path != null && path.some(function(exist){		// 防止递归引用
 					return exist.type == et.name && exist.key == map.fk && exist.fk == map.key 
@@ -59,48 +91,46 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 				var another = d2js.findD2js(map.d2js);
 				var key = map.key || et.pk || 'id';
 				var fk = map.fk;
+
+				var m = mapper[alias] = {d2js: another, key: key, fk: fk, deepFilter: deepFilter, map: map, alias: alias};
 				
-				var search = {};
-				search[fk] = row[key];
-				
-				var result = another.fetchBy(search);
-				if(i == 0){
-					var col = colIndex[alias];
-					if (col == null){
-						this.columns.push(col = {name : alias, type : 'Object'});
-					}
-					col.map = map;
-					if(result.isDataTable){
-						switch(map.relation){
-						case 'value' :
-							col.type = result.columns[0].type; 
-							break;
-						case 'one': 
-						default:
-							col.meta = {};
-							for(var k in result){
-								if(result.hasOwnProperty(k) && k != 'rows'){
-									col.meta[k] = result[k];
-								}
+				m.apply = function(rows, path){
+					var found = {};
+					var output = null;
+					rows.forEach(function(row){
+						var result = null;
+						var value = row[this.key];
+						if(found[value]){
+							result = found[value];
+						} else {
+							var cond = {};
+							cond[this.fk] = value;
+							result = this.d2js.fetchBy(cond);
+							if(result.isDataTable){
+								result = result.orm(another, this.deepFilter, path ? path.concat(this.map) : [this.map]);
 							}
+							found[value] = result;
 						}
-					}
+						if(result.isDataTable){
+							switch(map.relation){
+							case 'one': row[this.alias] = result.rows[0]; break;
+							case 'value' : row[this.alias] = result.rows[0] && result.rows[0][result.columns[0].name]; break;
+							case 'page' : row[this.alias] = result;
+							default: row[this.alias] = result.rows;
+							}
+						} else {
+							row[this.alias] = result;
+						}
+						if(output == null) output = result;
+					}, this);
+					
+					return output;
 				}
 				
-				if(result.isDataTable){
-					result = result.orm(another, deepFilter, path ? path.concat(map) : [map]);
-					switch(map.relation){
-					case 'one': row[alias] = result.rows[0]; break;
-					case 'value' : row[alias] = result.rows[0] && result.rows[0][result.columns[0].name]; break;
-					default: row[alias] = result.rows;
-					}
-				} else {
-					row[alias] = result;
-				}
 			}
 		}
+		return mapper;
 	}
-	return r;
 }
 		
 		
@@ -113,6 +143,8 @@ d2js.fetch = function(params){
 			}
 		.}
 	.}
+	
+	params._page = {start:1, limit: 2};
 	
 	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
 	return r.orm(this);

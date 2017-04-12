@@ -2,7 +2,8 @@
 d2js.entity_map = {
 	name : 'Book', 
 	map: {
-		author : { type: 'Author', d2js: 'author-entity.d2js', relation: 'one', key: 'author', fk: 'id'}		
+		author : { type: 'Author', d2js: 'author-entity.d2js', relation: 'one', key: 'author', fk: 'id'},
+		publisher : { type: 'Publisher', d2js: 'publisher-entity.d2js', relation: 'one', key: 'publisher_id', fk: 'id'}		
 	}
 }
 

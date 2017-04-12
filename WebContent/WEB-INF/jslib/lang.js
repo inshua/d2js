@@ -98,6 +98,25 @@ Array.prototype.distinct = function(){
 }
 
 /**
+ * 得到按属性的索引，如:
+ * 		[{name: 'mike', phone: '12233'}, {name: 'tom', phone: '53332'},].indexOf('phone') 
+ * 得到：
+ * 		{'12233' : {name: 'mike', phone: '12233'}, '53332': {name: 'tom', phone: '53332'}}
+ * 这里值部分为对象引用。
+ */
+Array.prototype.indexBy = function(key){
+	var result = {};
+	for(var i=0; i<this.length; i++){
+		var el = this[i];
+		var v = el[key];
+		if(v){
+			result[v] = el;
+		}
+	}
+	return result;
+}
+
+/**
  * 将当前对象与另一对象合并，另一对象的属性复制到本对象。
  * narshorn 的bug，当使用 JSON.parse(obj, parseDate) 后，随着 merge 的引入，就会出现堆栈溢出
  * 所以采用 defineProperty 的方式声明该成员不可枚举，无法被 JSON.stringify
