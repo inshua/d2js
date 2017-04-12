@@ -182,29 +182,3 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 	}
 }
 
-D2JS.prototype.fetchBy = function(by){
-	if(this.entity_map == null)
-		throw new Error('entity_map not defined');
-	
-	if(this.entity_map.table == null)
-		throw new Error('entity_map.table not defined');
-	
-	if(by == null){
-		throw new Error('condition cannot be null');
-	}
-	
-	var cond = [];
-	var sql = 'select * from ' + this.entity_map.table + ' where ';
-	for(var k in by){
-		if(by.hasOwnProperty(k)){
-			sql += k + ' = ?';
-			cond.push(by[k]);
-			break;
-		}
-	}
-	if(cond.length == 0){
-		throw new Error('condition cannot be empty');
-	} 
-	return this.query(sql, cond);
-}
-
