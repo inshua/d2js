@@ -45,16 +45,18 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 			this.columns.push(col = {name : alias, type : m.map.type, mapped: true});
 		}
 		col.map = m.map;		// TODO 可能不需要，尽量不需要
-		r.meta.merge(result.meta);
-		r.meta[m.map.type].src = m.map.d2js;  
 		
-		switch(m.map.relation){
-		case 'table' :
-			col.type = 'TABLE';
-			break;
-		case 'value' :
-			col.type = result.columns[0].type; 
-			break;
+		if(result != null){
+			r.meta.merge(result.meta);
+			r.meta[m.map.type].src = m.map.d2js;  
+			switch(m.map.relation){
+			case 'table' :
+				col.type = 'TABLE';
+				break;
+			case 'value' :
+				col.type = result.columns[0].type; 
+				break;
+			}
 		}
 	}}
 	
@@ -109,6 +111,7 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 							result = this.d2js.fetchBy(cond);
 							if(result.isDataTable){
 								result = result.orm(this.d2js, this.deepFilter, path ? path.concat(this.map) : [this.map]);
+								if(output == null) output = result;
 							}
 							found[value] = result;
 						}
@@ -122,7 +125,6 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 						} else {
 							row[this.alias] = result;
 						}
-						if(output == null) output = result;
 					}, this);
 					
 					return output;
