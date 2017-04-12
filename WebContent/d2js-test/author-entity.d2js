@@ -1,16 +1,24 @@
 d2js.entity_map = {
 	name : 'Author', 
-	// table: 'author',
+	table: 'author',		// 提供 table 后可不提供 fetchBy 函数，默认使用 D2JS.prototype 的 fetchBy 函数
 	map: {
-		books : {d2js: 'book-entity.d2js', by: 'author'},	// book.d2js 提供 fetchBy 函数，接收 {author_id: xxx}, 返回一个数组，也可接收 {id:xx} 返回一行，行根据 entity map 设置有type信息。
-		// fav : {d2js: 'fav.d2js',  by: 'person_id'},
+		books : {
+				type : 'Book',
+				d2js:'book-entity.d2js', 	// or type : 'Book',  book.d2js 提供 fetchBy 函数，接收 {author: xxx}, 返回一个数组，也可接收 {id:xx} 返回一行，行根据 entity map 设置有type信息。
+				relation: 'many', 			// many - array  one - entity 	value - returned value, such as dictionary mapping value
+				key: 'id', 					// optional
+				fk: 'author'				// 用于向 fetchBy 提交查询条件，查询条件组织为 {'author': row['id']}
+		}
 	}
 }
 
 /**
  * 实现ORM映射，可对外键、子表数据关联提取。
+ * filter 为 {include : ['books', 'contact'], exclude: ['fav']}
+ * 如需要套用到关联层次，可使用： {include : ['books', {include: ['publisher'], exclude: ['translator']}] }, 也即使用紧跟在 'alias' 后的 filter 对象, exclude 自然不支持这种跟随对象
+ * include 中可使用 'all' 表示应含所有对象
  */
-D2JS.DataTable.prototype.orm = function(d2js){
+D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	var et = d2js.entity_map;
 	if(et == null) return this;
 	
@@ -19,32 +27,75 @@ D2JS.DataTable.prototype.orm = function(d2js){
 		r[k] = this[k];
 	}
 	var rows = r.rows;
+	var colIndex = this.columns.indexBy('name')
 	for(var i=0; i<rows.length; i++){
 		var row = rows[i];
 		row._d2js_entity_type = et.name;
-		for(var attr in et.map){
-			if(et.map.hasOwnProperty(attr)){
-				var m = et.map[attr];
-				var another = d2js.findD2js(m.d2js);
-				if(another['fetchBy'] == null) throw new Error('fetchBy not existed in ' + m.d2js);
-				var fromKey = m.attr;
-				if(fromKey == null){
-					if(m.one){
-						fromKey = attr;
-					} else {
-						fromKey = et.pk || 'id';
+		for(var alias in et.map){
+			if(et.map.hasOwnProperty(alias)){
+				var deepFilter = null;
+				if(filter){
+					if(filter.include){
+						var idx = filter.include.indexOf(alias);
+						if(idx != -1) {
+							deepFilter = filter.include[idx + 1];
+							if(typeof deepFilter == 'string') deepFilter = null;
+						} else {
+							if(filter.include.indexOf('all') == -1) continue;
+						}
+					} else if(filter.exclude){
+						var idx = filter.exclude.indexOf(alias);
+						if(idx != -1) {
+							continue;
+						}
 					}
 				}
-				logger.info('from key ' + fromKey + ', m: ' + JSON.stringify(m));
+				var map = et.map[alias];
+				if(path != null && path.some(function(exist){		// 防止递归引用
+					return exist.type == et.name && exist.key == map.fk && exist.fk == map.key 
+				}))  
+					continue;
+				
+				var another = d2js.findD2js(map.d2js);
+				var key = map.key || et.pk || 'id';
+				var fk = map.fk;
+				
 				var search = {};
-				search[m.by] = row[fromKey];
-				var result = another['fetchBy'](search);
-				logger.info('search by ' + JSON.stringify(search));
-				result = result.orm(another);
-				if(m.one){
-					row[attr] = result.rows.length ? result.rows[0] : null;
+				search[fk] = row[key];
+				
+				var result = another.fetchBy(search);
+				if(i == 0){
+					var col = colIndex[alias];
+					if (col == null){
+						this.columns.push(col = {name : alias, type : 'Object'});
+					}
+					col.map = map;
+					if(result.isDataTable){
+						switch(map.relation){
+						case 'value' :
+							col.type = result.columns[0].type; 
+							break;
+						case 'one': 
+						default:
+							col.meta = {};
+							for(var k in result){
+								if(result.hasOwnProperty(k) && k != 'rows'){
+									col.meta[k] = result[k];
+								}
+							}
+						}
+					}
+				}
+				
+				if(result.isDataTable){
+					result = result.orm(another, deepFilter, path ? path.concat(map) : [map]);
+					switch(map.relation){
+					case 'one': row[alias] = result.rows[0]; break;
+					case 'value' : row[alias] = result.rows[0] && result.rows[0][result.columns[0].name]; break;
+					default: row[alias] = result.rows;
+					}
 				} else {
-					row[attr] = result.rows;
+					row[alias] = result;
 				}
 			}
 		}
@@ -67,14 +118,6 @@ d2js.fetch = function(params){
 	return r.orm(this);
 }
 
-d2js.fetchBy = function(by){
-	// assert(by.id || by.author)
-	sql{.
-		select * from author
-		sql{.?(by.id) and id = :id .}
-	.}
-	return this.query(sql);
-}
 
 d2js.modify = function(row, columns){
 	$V(this, row, {

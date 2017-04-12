@@ -1,10 +1,10 @@
 // in book.d2js
-//d2js.entity_map = {
-//	name : 'Book', 
-//	map: {
-//		author : {d2js: 'author.d2js', attr: 'author', by: 'author_id', one: true}		
-//	}
-//}
+d2js.entity_map = {
+	name : 'Book', 
+	map: {
+		author : { type: 'Author', d2js: 'author-entity.d2js', relation: 'one', key: 'author', fk: 'id'}		
+	}
+}
 
 d2js.fetch = function(params){
 	sql{.
@@ -19,7 +19,7 @@ d2js.fetch = function(params){
 		.}
 	.}
 	sql = this.orderBy(sql, params._sorts, {'b.title' : 'asc'});
-	return this.query(sql, params, params._page);
+	return this.query(sql, params, params._page).orm(this);
 }
 
 d2js.fetchBy = function(by){
