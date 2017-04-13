@@ -961,8 +961,6 @@ function init(){
 	d2js = handler = new D2JS(sqlExecutor);
 	engine.put('handler', handler);
 	engine.put('d2js', d2js);
-	
-	application['types'] = new java.util.concurrent.ConcurrentHashMap();
 }
 
 
