@@ -84,20 +84,33 @@ public abstract class ServerUnitManager {
 	public void onFileChanged(WatchEvent<Path> ev, Path file) {
 		Kind<Path> kind = ev.kind();
 		String filename = file.toString();
-		if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-			if (allD2js.containsKey(filename)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(filename + " dropped");
+		try {
+			if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+				if (allD2js.containsKey(filename)) {
+					if (logger.isDebugEnabled()) {
+						logger.debug(filename + " dropped");
+					}
+					ScriptObjectMirror d2js = allD2js.get(filename);
+					if(d2js.containsKey("releaseD2js")){
+						d2js.callMember("releaseD2js");
+					}
+					allD2js.remove(filename);
+					//TODO call releaseD2js?
 				}
-				allD2js.remove(filename);
-			}
-		} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-			if (allD2js.containsKey(filename)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(filename + " changed");
+			} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+				if (allD2js.containsKey(filename)) {
+					if (logger.isDebugEnabled()) {
+						logger.debug(filename + " changed");
+					}
+					ScriptObjectMirror d2js = allD2js.get(filename);
+					if(d2js.containsKey("releaseD2js")){
+						d2js.callMember("releaseD2js");
+					}
+					allD2js.remove(filename);
 				}
-				allD2js.remove(filename);
 			}
+		} catch (Exception e) {
+			logger.error("file synchronize failed on " + filename + " changed ", e);
 		}
 	}
 

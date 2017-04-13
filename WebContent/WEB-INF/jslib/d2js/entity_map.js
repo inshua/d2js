@@ -85,9 +85,26 @@ D2JS.prototype.destroy = function(rcd, columns){
 	return this.deleteRow(this.entity_map.table, rcd, this.entity_map.pk)
 }
 
-D2JS.prototype.init = function(){
-	this.mustBeEntity();
+D2JS.prototype.acquireMeta = function(params){
+	var types = params.types;
 	
-	var sql = 'select * from ' + this.entity_map.table + ' where 1=0';
-	this.entity_map.columns = this.query(sql).columns;
+}
+
+D2JS.prototype.initD2js = function(){
+	if(! this.entity_map) return;
+	
+	if(this.entity_map.pk == null) this.entity_map.pk = 'id';
+	var cond = {};
+	cond[this.entity_map.pk] = null;
+	this.entity_map.columns = this.fetchBy(cond).columns;
+	
+	var types = application['d2js_enity_map'];
+	types.put(this.entity_map.type, this.entity_map);
+}
+
+D2JS.prototype.releaseD2js = function(){
+	if(! this.entity_map) return;
+	
+	var types = application['d2js_enity_map'];
+	types.remove(this.entity_map.type);
 }

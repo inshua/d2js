@@ -113,7 +113,7 @@ public class D2jsUnitManager extends ServerUnitManager {
 		return "(function (d2js, src){"
 				+ "d2js.srcFile = src; " 
 				+ new EmbedSqlTranslator().translate(code) + "; "
-				+ "d2js.init && d2js.init(); return d2js;})("
+				+ "d2js.init && d2js.initD2js(); return d2js;})("
 				+ "d2js.clone(), \"" + StringEscapeUtils.escapeJava(src.getAbsolutePath()) + "\");";
 	}
 
