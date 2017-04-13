@@ -35,7 +35,7 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	var rows = r.rows;
 	var colIndex = this.columns.indexBy('name');
 	var mapper = createMapper(filter, et);
-	logger.info(JSON.stringify(mapper, null, '\t'));
+	// logger.info(JSON.stringify(mapper, null, '\t'));
 	for(var alias in mapper){if(mapper.hasOwnProperty(alias)){
 		var m = mapper[alias];
 		var result = m.apply(rows, path);
