@@ -921,20 +921,20 @@ D2JS.prototype.getConnection = function(){
 D2JS.prototype.findResource = function(filename){
 	var file = new java.io.File(filename);
 	if(file.exists()){
-		var abspath = file.getAbsolutePath();
-	} else {
-		var abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+		return file.getAbsolutePath();
 	}
-	if(new java.io.File(abspath).exists()){
-		return abspath;
-	} else {
-		var defaults = DEFAULT_IMPORTS_PATHS;
-		for(var i=0; i<defaults.length; i++){
-			var file = new java.io.File(defaults[i]);
-			abspath = new java.io.File(file, filename).getCanonicalPath();
-			if(new java.io.File(abspath).exists()){
-				return abspath;
-			}
+	var abspath = servletContext.getRealPath(filename);
+	if(new java.io.File(abspath).exists()) return abspath;
+	
+	abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+	if(new java.io.File(abspath).exists()) return abspath;
+		
+	var defaults = DEFAULT_IMPORTS_PATHS;
+	for(var i=0; i<defaults.length; i++){
+		var file = new java.io.File(defaults[i]);
+		abspath = new java.io.File(file, filename).getCanonicalPath();
+		if(new java.io.File(abspath).exists()){
+			return abspath;
 		}
 	}
 }

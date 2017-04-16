@@ -73,10 +73,11 @@ public class JsspRunner extends D2jsRunner {
 
 	public void run(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 
-		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
+		String requestPath = getServletPath(request);
+		String jsfile = request.getServletContext().getRealPath(requestPath);
 		ScriptObjectMirror d2js = null;
 		try {
-			d2js = d2jsManager.getD2js(jsfile, getServletPath(request));
+			d2js = d2jsManager.getD2js(jsfile, requestPath);
 			if (d2js == null) {
 				response.setStatus(404);
 				PrintWriter out = response.getWriter();

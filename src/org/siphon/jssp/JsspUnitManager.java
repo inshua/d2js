@@ -35,6 +35,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -54,17 +55,17 @@ public class JsspUnitManager extends D2jsUnitManager {
 
 	private static Logger logger = Logger.getLogger(JsspUnitManager.class);
 
-	public JsspUnitManager(String srcFolder, D2jsInitParams initParams) {
-		super(srcFolder, initParams);
+	public JsspUnitManager(ServletContext servletContext, D2jsInitParams initParams) {
+		super(servletContext, initParams);
 	}
 
 	@Override
-	protected String convertCode(String code, File src) throws Exception {
+	protected String convertCode(String code, File src, String requestPath) throws Exception {
 		if (src.getName().toLowerCase().endsWith(".jssp")) {
 			code = new JsspTranslator(code).translate();
-			return super.convertCode(code, src);
+			return super.convertCode(code, src, requestPath);
 		} else {
-			return super.convertCode(code, src);
+			return super.convertCode(code, src, requestPath);
 		}
 	}
 

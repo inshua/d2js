@@ -132,7 +132,7 @@ public class D2jsRunner {
 	public boolean ensureD2jsLoaded(String jsfile, String aliasPath) throws Exception {
 		return d2jsManager.getD2js(jsfile, aliasPath) != null;
 	}
-
+	
 	public String getServletPath(HttpServletRequest request){
 		// FORWARD,  INCLUDE,  REQUEST,  ASYNC,  ERROR
 		if(request.getDispatcherType() == DispatcherType.REQUEST){
@@ -147,11 +147,11 @@ public class D2jsRunner {
 	public void run(HttpServletRequest request, HttpServletResponse response, String method)
 			throws ServletException, IOException {
 		
-		
-		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
+		String requestPath = getServletPath(request);
+		String jsfile = request.getServletContext().getRealPath(requestPath);
 		ScriptObjectMirror d2js = null;
 		try {
-			d2js = d2jsManager.getD2js(jsfile, getServletPath(request));
+			d2js = d2jsManager.getD2js(jsfile, requestPath);
 			if(d2js == null){
 				response.setStatus(404);
 				PrintWriter out = response.getWriter();

@@ -53,15 +53,13 @@ public class JsspServlet extends JsServlet {
 	public void init() throws ServletException {
 		super.init();
 
-		String path = this.getServletContext().getRealPath("");
-		
 		D2jsInitParams args = new D2jsInitParams();
 		args.setLibs(this.getJsLibs());
 		args.setApplication(JsServlet.application);
 		args.setPreloadJs(this.getPreloadJs());
 		args.setGlobalLockObject(new Object());
 		
-		JsspRunner jsspRunner = new JsspRunner(new JsspUnitManager(path, args));
+		JsspRunner jsspRunner = new JsspRunner(new JsspUnitManager(this.getServletContext(), args));
 		this.getServletContext().setAttribute("jsspRunner", jsspRunner);		
 	}
 
