@@ -112,7 +112,8 @@ D2JS.prototype.initD2js = function(){
 	var types = application['d2js_entity_map'];
 	types.put(this.entity_map.type, this.entity_map);
 	
-	this.exports.acquireMeta = this.acquireMeta;
+	this.entity_map.path = this.path;
+	this.exports.getD2jsMeta = this.getD2jsMeta;
 }
 
 D2JS.prototype.releaseD2js = function(reason){
@@ -124,9 +125,7 @@ D2JS.prototype.releaseD2js = function(reason){
 
 /**
  * 实现ORM映射，可对外键、子表数据关联提取。
- * filter 为 {include : ['books', 'contact'], exclude: ['fav']}
- * 如需要套用到关联层次，可使用： {include : ['books', {include: ['publisher'], exclude: ['translator']}] }, 也即使用紧跟在 'alias' 后的 filter 对象, exclude 自然不支持这种跟随对象
- * include 中可使用 'all' 表示应含所有对象
+ * filter 为 {includes : ['Book'], excludes: ['Publisher']}
  */
 D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	var et = d2js.entity_map;
@@ -144,7 +143,7 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	}
 	var rows = r.rows;
 	var colIndex = this.columns.indexBy('name');
-	var mapper = createMapper(filter, et);
+	var mapper = createMapper(et);
 	// logger.info(JSON.stringify(mapper, null, '\t'));
 	for(var alias in mapper){if(mapper.hasOwnProperty(alias)){
 		var m = mapper[alias];
@@ -163,39 +162,31 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	
 	return r;
 	
-	function createMapper(filter, et){
+	function createMapper(et){
 		var mapper = {};
 		for(var alias in et.map){
 			if(et.map.hasOwnProperty(alias)){
-				var deepFilter = null;
+				var map = et.map[alias];
+				
 				if(filter){
-					if(filter.include){
-						var idx = filter.include.indexOf(alias);
-						if(idx != -1) {
-							deepFilter = filter.include[idx + 1];
-							if(typeof deepFilter == 'string') deepFilter = null;
-						} else {
-							if(filter.include.indexOf('all') == -1) continue;
-						}
-					} else if(filter.exclude){
-						var idx = filter.exclude.indexOf(alias);
-						if(idx != -1) {
+					if(filter.includes && filter.includes.indexOf(map.type) == -1){
 							continue;
-						}
+					}
+					if(filter.excludes && filter.excludes.indexOf(map.type) != -1){
+						continue;
 					}
 				}
 				
-				var map = et.map[alias];
 				if(path != null && path.some(function(exist){		// 防止递归引用
 					return exist.type == et.name && exist.key == map.fk && exist.fk == map.key 
 				}))  
 					continue;
 				
-				var another = d2js.findD2js(map.d2js);
+				var another = d2js.findD2js(map.path || map.d2js);
 				var key = map.key || et.pk || 'id';
 				var fk = map.fk;
 
-				var m = mapper[alias] = {d2js: another, key: key, fk: fk, deepFilter: deepFilter, map: map, alias: alias};
+				var m = mapper[alias] = {d2js: another, key: key, fk: fk, map: map, alias: alias};
 				
 				m.apply = function(rows, path){
 					var found = {};
@@ -208,10 +199,10 @@ D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 						} else {
 							var cond = {};
 							cond[this.fk] = value;
-							logger.info('fetch ' + JSON.stringify(cond) + ' for ' + JSON.stringify(this.map) + ' with d2js ' + this.d2js.srcFile);
+							// logger.info('fetch ' + JSON.stringify(cond) + ' for ' + JSON.stringify(this.map) + ' with d2js ' + this.d2js.srcFile);
 							result = this.d2js.fetchBy(cond);
 							if(result.isDataTable){
-								result = result.orm(this.d2js, this.deepFilter, path.concat(this.map));
+								result = result.orm(this.d2js, filter, path.concat(this.map));
 								if(output == null) output = result;
 							}
 							found[value] = result;
