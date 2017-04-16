@@ -134,6 +134,8 @@ function include(scriptFile){
 
 /**
  * 找出文件路径。前面两个函数不用这个函数，是因为前面两个函数可能在eval的代码中调用 include 或 imports。
+ * @deprecated use D2JS.prototype.findResource instead
+ * 不要使用这个函数
  * @param filename
  */
 function findResource(filename){
