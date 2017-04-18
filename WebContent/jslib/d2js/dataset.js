@@ -1200,14 +1200,6 @@ d2js.DataRow = function(table, rowData){
 	}
 	
 	/**
-	 * 返回所有没有删除的行(行状态不为 remove)
-	 * @returns {DataRow[]}
-	 */
-	this.getRows = function(){
-		return this.rows.filter(function(row){return row._state != 'remove'});
-	}
-	
-	/**
 	 * 接受变更
 	 * @returns {Boolean} 确实有变动返回 true，否则返回 false
 	 */
