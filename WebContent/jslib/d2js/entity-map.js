@@ -247,21 +247,21 @@ d2js.Entity.prototype._remove = function(){
 d2js.Entity.fetchById = function(id, filter, callback){
 	var Fun = this;
 	
-	var url = contextPath + this.meta.path;
+	var url = contextPath + Fun.prototype.meta.path;
 	var q = {id: id};
 	if(filter){
 		q.filter = filter;
 	}
 	$.ajax({
 		url : url,
-		data : {_m : 'fetchBy', params : JSON.stringify(q)}, 
+		data : {_m : 'fetchEntityById', params : JSON.stringify(q)}, 
 		type : 'get',
 		dataType : 'text',
 		success : onSuccess,
 		error : function (error){onError(new Error(error.responseText || 'cannot establish connection to server'));}
 	});
 	
-	function onSucess(data){
+	function onSuccess(data){
 		var obj = null;
 		var table = JSON.parse(data);
 		var row = table.rows[0];
