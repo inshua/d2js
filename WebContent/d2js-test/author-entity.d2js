@@ -7,7 +7,8 @@ d2js.entity_map = {
 				d2js:'/d2js-test/book-entity.d2js', 	// or type : 'Book',  book.d2js 提供 fetchBy 函数，接收 {author: xxx}, 返回一个数组，也可接收 {id:xx} 返回一行，行根据 entity map 设置有type信息。
 				relation: 'many', 			// many - array  table - table information(may contains page info)	 one - entity 	value - returned value, such as dictionary mapping value
 				key: 'id', 					// optional
-				fk: 'author'				// 用于向 fetchBy 提交查询条件，查询条件组织为 {'author': row['id']}
+				fk: 'author',				// 用于向 fetchBy 提交查询条件，查询条件组织为 {'author': row['id']}
+				depend: 'full',				// full, none 强依赖关系的，先存在本对象再存在关系对象，本对象移除则关系对象追随移除。
 		}
 	}   
 }

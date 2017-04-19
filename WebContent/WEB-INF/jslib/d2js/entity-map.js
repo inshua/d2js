@@ -61,6 +61,19 @@ D2JS.prototype.fetchBy = function(by){
 	return this.query(sql, cond);
 }
 
+D2JS.prototype.fetchEntityById = function(params){
+	this.mustBeEntity();
+	
+	if(params == null || params.id == null){
+		throw new Error('id cannot be null');
+	}
+	
+	var cond = {};
+	cond[this.entity_map.pk] = params.id;
+	
+	return this.fetchBy(cond).orm(this, params.filter);
+}
+
 D2JS.prototype.create = function(rcd, columns){
 	this.mustBeEntity();
 	
@@ -121,6 +134,8 @@ D2JS.prototype.initD2js = function(){
 	
 	this.entity_map.path = this.path;
 	this.exports.getD2jsMeta = this.getD2jsMeta;
+	
+	this.exports.fetchEntityById = this.fetchEntityById;
 }
 
 D2JS.prototype.releaseD2js = function(reason){

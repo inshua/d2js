@@ -39,6 +39,7 @@ entity 提交时，同名map  如（author : {key:'author'} ） 在更新时应�
 在 map 中，key/fk 是 pk 的，先执行更新。
 
 */
+var contextPath = '/d2js';
 
 d2js.meta = {};
 
@@ -53,7 +54,7 @@ d2js.meta.load = function(d2jses, namespace, callback){
 	
 	var q = {d2jses: d2jses};
 	$.ajax({
-		url : '/d2js/meta.d2js',		// TODO contextPath
+		url : contextPath + '/meta.d2js',		// TODO contextPath
 		data : {_m : 'getD2jsMeta', params : JSON.stringify(q)}, 
 		type : 'post',
 		dataType : 'text',
@@ -78,20 +79,24 @@ d2js.meta.load = function(d2jses, namespace, callback){
 			meta.columnNames = meta.columns.map(function(column){return column.name});
 			var names = [];
 			for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
-				names.push(name);
+				(function(name){
+					var def = {get: function(){ return this.values[name]} };
+					if(meta.map[name].relation == 'one'){		// many is readonly
+						def.set = function(value){this._set(name, value); }
+					}
+					Object.defineProperty(fun.prototype, name, def);
+				})(name);
 			}}
-			names.concat(meta.columnNames).forEach(function(name){
+			meta.columnNames.forEach(function(name){
 				if(name in fun.prototype == false){
-					Object.defineProperty(fun.prototype, name, {
-							get: function(){ return this.values[name]},
-							set: function(value){this._set(name, value); }
-						});
+					var def = {
+								get: function(){ return this.values[name]},
+								set: function(value){this._set(name, value); }
+							};
+					Object.defineProperty(fun.prototype, name, def);
 				}
 			});
-			fun.prototype.getById = function(resolve, reject){
-				//TODO 
-				this.meta.path
-			}
+			fun.fetchById = d2js.Entity.fetchById;
 		}}
 		if(callback) callback();
 	}
@@ -109,7 +114,7 @@ d2js.meta.load = function(d2jses, namespace, callback){
  * 数据行。
  * @class d2js.Entity
  */
-d2js.Entity = function(columns, meta, values){
+d2js.Entity = function(values){
 	this.values = {};
 	
 	/**
@@ -130,117 +135,144 @@ d2js.Entity = function(columns, meta, values){
 	 */
 	this._error_at = null;
 	
-	function processValue(v){
-		if(v == null || v == '') return null;
-		return v;
-	}
-	
-	/**
-	 * 设置字段的值，如果当前行状态为 none，则新的行状态为 edit
-	 * @param column {string} 字段名
-	 * @param value {object} 值
-	 */
-	this._set = function(column, value){
-		var v = processValue(value);
-		if(this.values[column] != v){			
-			if(this._state == 'none') {
-				this._state = 'edit';
-				if(this._origin == null){
-					this._origin = this._toJson();
-				}
-			}
-			this.values[column] = value;
-		}
-		return this;
-	}
-
-	/**
-	 * 批次设置值，与 _set 相似，只是批次调用
-	 * @param rowData {object} {col1:val, col2:val, col3:val}
-	 */
-	this._setValues = function(rowData){
-		for(var k in rowData){
-			if(this.meta.columns.some(function(col){return col.name == k})){
-				this._set(k, rowData[k]);
-			}
-		}
-		return this;
-	}
-	
-	/**
-	 * 转换为JSON数据对象
-	 */
-	this._toJson = function(){
-		var obj = {};
-		for(var k in this.values){
-			if(this.values.hasOwnProperty(k)){
-				obj[k] = this.values[k]; 
-			}
-		}
-		return obj;
-	}
-	
-	/**
-	 * 行状态是否为脏状态，所谓脏状态是指 edit, remove, new 三种状态
-	 * @returns {Boolean}
-	 */
-	this._isDirty = function(){
-		return this._state != 'none';
-	}
-	
-	/**
-	 * 接受变更
-	 * @returns {Boolean} 确实有变动返回 true，否则返回 false
-	 */
-	this._accept = function(){
-		switch(this._state){
-		case 'edit' :
-			this._origin = null;
-			this._state = 'none';
-			return true;
-		case 'new':
-			this._state = 'none';
-			return true;
-		case 'remove' :
-			this._table.rows.splice(this._table.rows.indexOf(this), 1);
-			return true;
-		}
-	}
-	
-	/**
-	 * 回滚变更，退回上一版本
-	 * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
-	 */
-	this._reject = function(){
-		switch(this._state){
-		case 'edit' :
-			table.columnNames.forEach(function(cname){
-				this[cname] = this._origin[cname];
-			}, this);
-			this._state = 'none';
-			this._origin = null;
-			return true;
-		case 'new' :
-			table.rows.splice(table.rows.indexOf(this), 1);
-			return true;
-		} 
-	}
-	
-	/**
-	 * 将本数据行状态设为 remove
-	 */
-	this._remove = function(){
-		this._state = 'remove';
-	}
-	
 	// 初始化列表成员
 	for(var k in this.meta.map){
 		if(this.meta.map.hasOwnProperty(k)){
 			var m = this.meta.map[k];
 			if(m.relation == 'many'){
-				this.values[k] = new d2js.List(m)		// TODO
+				this.values[k] = new d2js.List(m);
 			}
 		}
+	}
+}
+
+/**
+ * 设置字段的值，如果当前行状态为 none，则新的行状态为 edit
+ * @param column {string} 字段名
+ * @param value {object} 值
+ */
+d2js.Entity.prototype._set = function(column, value){
+	var v = (value == null ? null : value);
+	if(this.values[column] != v){			
+		if(this._state == 'none') {
+			this._state = 'edit';
+			if(this._origin == null){
+				this._origin = this._toJson();
+			}
+		}
+		this.values[column] = value;
+	}
+	return this;
+}
+
+/**
+ * 批次设置值，与 _set 相似，只是批次调用
+ * @param rowData {object} {col1:val, col2:val, col3:val}
+ */
+d2js.Entity.prototype._setValues = function(rowData){
+	for(var k in rowData){
+		if(this.meta.columns.some(function(col){return col.name == k})){
+			this._set(k, rowData[k]);
+		}
+	}
+	return this;
+}
+
+/**
+ * 转换为JSON数据对象
+ */
+d2js.Entity.prototype._toJson = function(){
+	var obj = {};
+	for(var k in this.values){
+		if(this.values.hasOwnProperty(k)){
+			obj[k] = this.values[k]; 
+		}
+	}
+	return obj;
+}
+
+/**
+ * 行状态是否为脏状态，所谓脏状态是指 edit, remove, new 三种状态
+ * @returns {Boolean}
+ */
+d2js.Entity.prototype._isDirty = function(){
+	return this._state != 'none';
+}
+
+/**
+ * 接受变更
+ * @returns {Boolean} 确实有变动返回 true，否则返回 false
+ */
+d2js.Entity.prototype._accept = function(){
+	switch(this._state){
+	case 'edit' :
+		this._origin = null;
+		this._state = 'none';
+		return true;
+	case 'new':
+		this._state = 'none';
+		return true;
+	case 'remove' :
+		this._table.rows.splice(this._table.rows.indexOf(this), 1);
+		return true;
+	}
+}
+
+/**
+ * 回滚变更，退回上一版本
+ * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
+ */
+d2js.Entity.prototype._reject = function(){
+	switch(this._state){
+	case 'edit' :
+		table.columnNames.forEach(function(cname){
+			this[cname] = this._origin[cname];
+		}, this);
+		this._state = 'none';
+		this._origin = null;
+		return true;
+	case 'new' :
+		table.rows.splice(table.rows.indexOf(this), 1);
+		return true;
+	} 
+}
+
+/**
+ * 将本数据行状态设为 remove
+ */
+d2js.Entity.prototype._remove = function(){
+	this._state = 'remove';
+}
+
+d2js.Entity.fetchById = function(id, filter, callback){
+	var Fun = this;
+	
+	var url = contextPath + this.meta.path;
+	var q = {id: id};
+	if(filter){
+		q.filter = filter;
+	}
+	$.ajax({
+		url : url,
+		data : {_m : 'fetchBy', params : JSON.stringify(q)}, 
+		type : 'get',
+		dataType : 'text',
+		success : onSuccess,
+		error : function (error){onError(new Error(error.responseText || 'cannot establish connection to server'));}
+	});
+	
+	function onSucess(data){
+		var obj = null;
+		var table = JSON.parse(data);
+		var row = table.rows[0];
+		if(row){
+			obj = new Fun(row);
+		} 
+		callback(obj)
+	}
+	
+	function onError(error){
+		callback(error)
 	}
 }
 
