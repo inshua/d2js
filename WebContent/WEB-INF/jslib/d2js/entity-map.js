@@ -91,6 +91,9 @@ D2JS.prototype.getD2jsMeta = function(params){
 		var result = {};
 		d2jses.forEach(function(src){
 			var d2js = this.findD2js(src);
+			if(params.refreshSchema){
+				d2js.reinitColumns();
+			}
 			result[src] = d2js.entity_map;
 		}, this);
 		return result;
@@ -101,13 +104,17 @@ D2JS.prototype.getD2jsMeta = function(params){
 
 application['d2js_entity_map'] = new java.util.concurrent.ConcurrentHashMap();
 
+D2JS.prototype.reinitColumns = function(){
+	var cond = {};
+	cond[this.entity_map.pk] = null;
+	this.entity_map.columns = this.fetchBy(cond).columns;
+}
+
 D2JS.prototype.initD2js = function(){
 	if(! this.entity_map) return;
 	
 	if(this.entity_map.pk == null) this.entity_map.pk = 'id';
-	var cond = {};
-	cond[this.entity_map.pk] = null;
-	this.entity_map.columns = this.fetchBy(cond).columns;
+	this.reinitColumns();
 	
 	var types = application['d2js_entity_map'];
 	types.put(this.entity_map.type, this.entity_map);
