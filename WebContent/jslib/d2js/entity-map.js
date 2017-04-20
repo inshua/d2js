@@ -39,9 +39,26 @@ entity 提交时，同名map  如（author : {key:'author'} ） 在更新时应�
 在 map 中，key/fk 是 pk 的，先执行更新。
 
 */
+"use strict"
 var contextPath = '/d2js';
 
 d2js.meta = {};
+
+d2js.processResponse = function(response){
+	return new Promise(async function(resolve, reject){
+		var s = await response.text();
+		try{
+			var result = JSON.parse(s);
+			if(result.error){
+				reject(new Error(result.error));
+			} else {
+				resolve(result);
+			}
+		} catch (e){
+			reject(new Error(s));
+		}
+	});
+}
 
 d2js.meta.load = function(d2jses, namespace, callback){
 	if(namespace == null){
@@ -52,59 +69,51 @@ d2js.meta.load = function(d2jses, namespace, callback){
 		// namespace is object,just put in this object
 	}
 	
-	var q = {d2jses: d2jses};
-	$.ajax({
-		url : contextPath + '/meta.d2js',		// TODO contextPath
-		data : {_m : 'getD2jsMeta', params : JSON.stringify(q)}, 
-		type : 'post',
-		dataType : 'text',
-		success : onSuccess,
-		error : function (error){onError(new Error(error.responseText || 'cannot establish connection to server'));}
-	});
-	
-	function onSuccess(text){
-		var metas = JSON.parse(text);
-		
-		for(var s in metas){ if(metas.hasOwnProperty(s)){
-			var meta = metas[s];
-			var code = 'd2js.Entity.apply(this, arguments)'
-			var fun = namespace[meta.name] = new Function(code);
-			fun.prototype = Object.create(d2js.Entity.prototype, {
-				constructor : {
-					value : fun
-				}
-			});
-			fun.prototype.meta = meta;
-			fun.prototype.namespace = namespace;
-			meta.columnNames = meta.columns.map(function(column){return column.name});
-			var names = [];
-			for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
-				(function(name){
-					var def = {get: function(){ return this.values[name]} };
-					if(meta.map[name].relation == 'one'){		// many is readonly
-						def.set = function(value){this._set(name, value); }
+	return new Promise(async function(resolve, reject){
+		try{
+			var q = {d2jses: d2jses};
+			var s = jQuery.param({_m : 'getD2jsMeta', params : JSON.stringify(q)});
+			var response = await fetch(contextPath + '/meta.d2js?' + s);
+			var metas = await d2js.processResponse(response);
+			
+			for(var s in metas){ if(metas.hasOwnProperty(s)){
+				var meta = metas[s];
+				var code = 'd2js.Entity.apply(this, arguments)'
+				var fun = namespace[meta.name] = new Function(code);
+				fun.prototype = Object.create(d2js.Entity.prototype, {
+					constructor : {
+						value : fun
 					}
-					Object.defineProperty(fun.prototype, name, def);
-				})(name);
+				});
+				fun.prototype.meta = meta;
+				fun.prototype.namespace = namespace;
+				meta.columnNames = meta.columns.map(function(column){return column.name});
+				var names = [];
+				for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
+					(function(name){
+						var def = {get: function(){ return this.values[name]} };
+						if(meta.map[name].relation == 'one'){		// many is readonly
+							def.set = function(value){this._set(name, value); }
+						}
+						Object.defineProperty(fun.prototype, name, def);
+					})(name);
+				}}
+				meta.columnNames.forEach(function(name){
+					if(name in fun.prototype == false){
+						var def = {
+									get: function(){ return this.values[name]},
+									set: function(value){this._set(name, value); }
+								};
+						Object.defineProperty(fun.prototype, name, def);
+					}
+				});
+				fun.fetchById = d2js.Entity.fetchById;
 			}}
-			meta.columnNames.forEach(function(name){
-				if(name in fun.prototype == false){
-					var def = {
-								get: function(){ return this.values[name]},
-								set: function(value){this._set(name, value); }
-							};
-					Object.defineProperty(fun.prototype, name, def);
-				}
-			});
-			fun.fetchById = d2js.Entity.fetchById;
-		}}
-		if(callback) callback();
-	}
-	
-	function onError(error){
-		if(callback) callback(error); else throw error;
-	}
-	
+			resolve();
+		} catch(e){
+			reject(e)
+		}	
+	});
 	
 }
 
@@ -244,7 +253,7 @@ d2js.Entity.prototype._remove = function(){
 	this._state = 'remove';
 }
 
-d2js.Entity.fetchById = function(id, filter, callback){
+d2js.Entity.fetchById = function(id, filter){
 	var Fun = this;
 	
 	var url = contextPath + Fun.prototype.meta.path;
@@ -252,28 +261,21 @@ d2js.Entity.fetchById = function(id, filter, callback){
 	if(filter){
 		q.filter = filter;
 	}
-	$.ajax({
-		url : url,
-		data : {_m : 'fetchEntityById', params : JSON.stringify(q)}, 
-		type : 'get',
-		dataType : 'text',
-		success : onSuccess,
-		error : function (error){onError(new Error(error.responseText || 'cannot establish connection to server'));}
+	
+	return new Promise(async function(resolve, reject){
+		try{
+			var resposne = await fetch(url + '?' + jQuery.param({_m : 'fetchEntityById', params : JSON.stringify(q)}));
+			var table = await d2js.processResponse(resposne);
+			var row = table.rows[0];
+			var obj = null;
+			if(row){
+				obj = new Fun(row);
+			}
+			resolve(obj);
+		} catch(e){
+			reject(e);
+		} 	
 	});
-	
-	function onSuccess(data){
-		var obj = null;
-		var table = JSON.parse(data);
-		var row = table.rows[0];
-		if(row){
-			obj = new Fun(row);
-		} 
-		callback(obj)
-	}
-	
-	function onError(error){
-		callback(error)
-	}
 }
 
 if(Object.getPrototypeOf == null){
@@ -289,8 +291,7 @@ if(Object.setPrototypeOf == null){
 	}
 }
 
-d2js.List = function (meta){
-	var d2jsList = arguments.callee;
+d2js.List = function d2jsList(meta){
 	var array = [];
 	var isNew = this instanceof d2jsList;
 	var proto = isNew ? Object.getPrototypeOf(this) : d2jsList.prototype;
