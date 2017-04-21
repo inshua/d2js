@@ -23,15 +23,16 @@
 <body>
 </body>
 <script>
-	d2js.meta.load(['/d2js-test/author-entity.d2js', '/d2js-test/book-entity.d2js'], null,
-		function(error){
-			if(error){
-				console.error(error)
-			}
-			d2js.root.Author.fetchById(1, null, function(author){
-				debugger;
-				console.log(author);
-			})
-		});	
+	'use strict'
+	
+	var author = null;
+	var book = null;
+	(async function(){
+		await d2js.meta.load(['/d2js-test/author-entity.d2js', '/d2js-test/book-entity.d2js', '/d2js-test/publisher-entity.d2js']);
+		author = await d2js.root.Author.fetchById(1);
+		console.log(author)
+		book = await d2js.root.Book.fetchById(1);
+		console.log(book)
+	})();
 </script>
 </html>

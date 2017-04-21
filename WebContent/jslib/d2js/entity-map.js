@@ -78,20 +78,25 @@ d2js.meta.load = function(d2jses, namespace, callback){
 			
 			for(var s in metas){ if(metas.hasOwnProperty(s)){
 				var meta = metas[s];
+				meta.namespace = namespace;
+				meta.columnNames = meta.columns.map(function(column){return column.name});
+
 				var code = 'd2js.Entity.apply(this, arguments)'
-				var fun = namespace[meta.name] = new Function(code);
+				var fun  = new Function(code);
 				fun.prototype = Object.create(d2js.Entity.prototype, {
 					constructor : {
 						value : fun
 					}
 				});
-				fun.prototype.meta = meta;
-				fun.prototype.namespace = namespace;
-				meta.columnNames = meta.columns.map(function(column){return column.name});
+				fun.prototype._meta = meta;
+				fun.prototype._namespace = namespace;
+				namespace[meta.name] = fun;
+				meta.Constructor = fun;
+				
 				var names = [];
 				for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
 					(function(name){
-						var def = {get: function(){ return this.values[name]} };
+						var def = {get: function(){ return this._values[name]} };
 						if(meta.map[name].relation == 'one'){		// many is readonly
 							def.set = function(value){this._set(name, value); }
 						}
@@ -101,7 +106,7 @@ d2js.meta.load = function(d2jses, namespace, callback){
 				meta.columnNames.forEach(function(name){
 					if(name in fun.prototype == false){
 						var def = {
-									get: function(){ return this.values[name]},
+									get: function(){ return this._values[name]},
 									set: function(value){this._set(name, value); }
 								};
 						Object.defineProperty(fun.prototype, name, def);
@@ -124,7 +129,7 @@ d2js.meta.load = function(d2jses, namespace, callback){
  * @class d2js.Entity
  */
 d2js.Entity = function(values){
-	this.values = {};
+	this._values = {};
 	
 	/**
 	 * 行状态, new edit remove none
@@ -145,13 +150,36 @@ d2js.Entity = function(values){
 	this._error_at = null;
 	
 	// 初始化列表成员
-	for(var k in this.meta.map){
-		if(this.meta.map.hasOwnProperty(k)){
-			var m = this.meta.map[k];
-			if(m.relation == 'many'){
-				this.values[k] = new d2js.List(m);
+	for(var k in this._meta.map){
+		if(this._meta.map.hasOwnProperty(k)){
+			var map = this._meta.map[k];
+			if(map.relation == 'many'){
+				map.meta = this._namespace[map.type].prototype._meta;
+				var ls = new d2js.List(map.meta, map);
+				ls.owner = this;
+				this._values[k] = ls;
 			}
 		}
+	}
+
+	// 初始化数据
+	if(values){
+		for(var k in values){if(values.hasOwnProperty(k)){
+			var value = values[k];
+			if(k in this._meta.map){
+				var map = this._meta.map[k];
+				if(map.relation == 'many'){
+					this._values[k].setArray(value);
+				} else if(map.relation == 'one'){
+					var Constructor = this._namespace[map.type];
+					this._values[k] = new Constructor(values[k]);		// if column name == map name, just keep map name, when collect data, will collect fk id.
+				} else {
+					this._values[k] = values[k];
+				}
+			} else {
+				this._values[k] = value;
+			}
+		}}
 	}
 }
 
@@ -162,14 +190,14 @@ d2js.Entity = function(values){
  */
 d2js.Entity.prototype._set = function(column, value){
 	var v = (value == null ? null : value);
-	if(this.values[column] != v){			
+	if(this._values[column] != v){			
 		if(this._state == 'none') {
 			this._state = 'edit';
 			if(this._origin == null){
 				this._origin = this._toJson();
 			}
 		}
-		this.values[column] = value;
+		this._values[column] = value;
 	}
 	return this;
 }
@@ -192,9 +220,9 @@ d2js.Entity.prototype._setValues = function(rowData){
  */
 d2js.Entity.prototype._toJson = function(){
 	var obj = {};
-	for(var k in this.values){
-		if(this.values.hasOwnProperty(k)){
-			obj[k] = this.values[k]; 
+	for(var k in this._values){
+		if(this._values.hasOwnProperty(k)){
+			obj[k] = this._values[k]; 
 		}
 	}
 	return obj;
@@ -256,7 +284,7 @@ d2js.Entity.prototype._remove = function(){
 d2js.Entity.fetchById = function(id, filter){
 	var Fun = this;
 	
-	var url = contextPath + Fun.prototype.meta.path;
+	var url = contextPath + Fun.prototype._meta.path;
 	var q = {id: id};
 	if(filter){
 		q.filter = filter;
@@ -268,6 +296,39 @@ d2js.Entity.fetchById = function(id, filter){
 			var table = await d2js.processResponse(resposne);
 			var row = table.rows[0];
 			var obj = null;
+			if(row){
+				obj = new Fun(row);
+			}
+			resolve(obj);
+		} catch(e){
+			reject(e);
+		} 	
+	});
+}
+
+d2js.Entity.prototype.submit = function(){
+	var Fun = this;
+	
+	var url = contextPath + Fun.prototype._meta.path;
+	var q = {id: id};
+	if(filter){
+		q.filter = filter;
+	}
+
+	var ls = new d2js.List(this._meta);
+	ls.append(this);
+	return ls.submit();
+	
+	return new Promise(async function(resolve, reject){
+		try{
+			var resposne = await fetch(url + '?_m=updateEntity', {
+							method:'post', 
+							headers: {  
+								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
+							},  
+							body : jQuery.param(submition)
+						});
+			var result = await d2js.processResponse(resposne);
 			if(row){
 				obj = new Fun(row);
 			}
@@ -291,29 +352,14 @@ if(Object.setPrototypeOf == null){
 	}
 }
 
-d2js.List = function d2jsList(meta){
+d2js.List = function d2jsList(meta, map){
 	var array = [];
 	var isNew = this instanceof d2jsList;
 	var proto = isNew ? Object.getPrototypeOf(this) : d2jsList.prototype;
-//	switch (arguments.length) {
-//	case 0:
-//		array = [];
-//		break;
-//	case 1:
-//		array = isNew ? new Array(arguments[0]) : Array(arguments[0]);
-//		break;
-//	case 2:
-//		array = [ arguments[0], arguments[1] ];
-//		break;
-//	case 3:
-//		array = [ arguments[0], arguments[1], arguments[2] ];
-//		break;
-//	default:
-//		array = new (Array.bind.apply(Array, [ null ].concat([].slice
-//				.call(arguments))));
-//	}
-	this.meta = meta;
-	return Object.setPrototypeOf(array, proto);
+	var result = Object.setPrototypeOf(array, proto);
+	result.map = map;
+	result.meta = meta || (map && map.meta);
+	return result;
 }
 
 
@@ -322,24 +368,38 @@ d2js.List.prototype = Object.create(Array.prototype, {
 		value : d2js.List
 	}
 });
-d2js.List.prototype.append = function(var_args) {
-	var_args = this.concat.apply([], arguments);
-	this.push.apply(this, var_args);
-	return this;
+
+d2js.List.prototype.append = function(ele) {
+	Array.prototype.push.call(this, ele);
 };
 
-d2js.List.prototype.prepend = function(var_args) {
-	var_args = this.concat.apply([], arguments);
-	this.unshift.apply(this, var_args);
+d2js.List.prototype.push = function(ele){
+	Array.prototype.push.call(this, ele);	// TODO 设置所属容器
+	if(this.map != null){
+		
+	}
+}
 
+d2js.List.prototype.setArray = function(arr){
+	this.length = 0;
+	if(arr == null) return;
+	for(var i=0; i<arr.length; i++){
+		var Constructor = this.meta.Constructor;
+		if(Constructor){
+			this.push(new Constructor(arr[i]));
+		} else {
+			// TODO 这里考虑是直接调用meta里的path动态按需加载meta还是报错。如果动态加载会产生一堆 await，不可收拾。
+			throw new Error("meta not loaded for " + this.map.type);
+		}
+	}
 	return this;
-};
+}
 
-[ "concat", "reverse", "slice", "splice", "sort", "filter", "map" ]
-		.forEach(function(name) {
-			var _Array_func = this[name];
-			d2js.List.prototype[name] = function() {
-				var result = _Array_func.apply(this, arguments);
-				return setPrototypeOf(result, getPrototypeOf(this));
-			}
-		}, Array.prototype);
+// [ "concat", "reverse", "slice", "splice", "sort", "filter", "map" ]
+// 		.forEach(function(name) {
+// 			var _Array_func = this[name];
+// 			d2js.List.prototype[name] = function() {
+// 				var result = _Array_func.apply(this, arguments);
+// 				return setPrototypeOf(result, getPrototypeOf(this));
+// 			}
+// 		}, Array.prototype);
