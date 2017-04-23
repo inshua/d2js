@@ -95,7 +95,7 @@ d2js.meta.load = function(d2jses, namespace, callback){
 			var q = {d2jses: d2jses};
 			var s = jQuery.param({_m : 'getD2jsMeta', params : JSON.stringify(q)});
 			var response = await fetch(contextPath + '/meta.d2js?' + s);
-			d2js.processMetas(await response.json());
+			d2js.processMetas(namespace, await response.json());
 			resolve();
 		} catch(e){
 			reject(e)
@@ -104,7 +104,7 @@ d2js.meta.load = function(d2jses, namespace, callback){
 	
 }
 
-d2js.processMetas = function(metas){			
+d2js.processMetas = function(namespace, metas){			
 	for(var s in metas){ if(metas.hasOwnProperty(s)){
 		var meta = metas[s];
 		meta.namespace = namespace;
@@ -149,13 +149,15 @@ d2js.processMetas = function(metas){
 
 	for(var k in namespace){if(namespace.hasOwnProperty(k)){
 		var fun = namespace[k];
-		for(const map of fun.prototype._meta.maps){
-			if(map.inverse != null) continue;
-			var rmeta = namespace[map.type];
-			if(rmeta) rmeta = rmeta.prototype._meta;
-			var rmap = d2js.findInverseMap(map, rmeta.map);
-			map.inverse = rmap;
-			rmap.inverse = map;
+		if(fun && fun.prototype && fun.prototype._meta){
+			for(const map of fun.prototype._meta.maps){
+				if(map.inverse != null) continue;
+				var rmeta = namespace[map.type];
+				if(rmeta) rmeta = rmeta.prototype._meta;
+				var rmap = d2js.findInverseMap(map, rmeta.map);
+				map.inverse = rmap;
+				rmap.inverse = map;
+			}
 		}
 	}}
 }
@@ -214,10 +216,10 @@ d2js.Entity = function(values){
 						if(value._isEntity){
 							this._values[k] = value;
 						} else {
-							var Constructor = this._namespace[map.type];
 							if(map.inverse != null){
 								value[map.inverse.name] = this;
 							}
+							var Constructor = this._namespace[map.type];
 							this._values[k] = new Constructor(value);		// if column name == map name, just keep map name, when collect data, will collect fk id.
 						}
 					} else {
@@ -303,8 +305,9 @@ d2js.Entity.prototype._set = function(attr, value){
 			var rmeta = null;
 			if(old != null) rmeta = old._meta; else if(value != null) rmeta = value._meta;
 			if(rmeta){ 
-				var [rname, rmap] = d2js.findInverseMap(map, rmeta.map);
+				let rmap = d2js.findInverseMap(map, rmeta.map);
 				if(rmap != null && rmap.relation == 'many'){	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
+					let rname = rmap.name;
 					if(old){
 						if(value) 
 							old[rname].drop(this);
@@ -505,7 +508,7 @@ d2js.List = function(meta, map){
 	result.map = map;
 	result.meta = meta || (map && map.meta);
 	result.owner = null;
-	// result.removed = [];
+	result.removed = [];
 	return result;
 }
 
@@ -534,10 +537,10 @@ d2js.List.prototype.push = function(ele){
 
 	Array.prototype.push.call(this, ele);
 	if(this.map != null){
-		var [inverseName, inverseMap] = d2js.findInverseMap(this.map, ele._meta.map);	
+		var inverseMap = this.map.inverse;	
 		if(inverseMap != null){
 			if(inverseMap.relation != 'one') throw new Error(`relation of ${inverseName} should be 'one'`);
-			ele._set(inverseName, this.owner);
+			ele._set(inverseMap.name, this.owner);
 		}
 	}
 }
