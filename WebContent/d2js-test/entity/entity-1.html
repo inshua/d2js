@@ -27,12 +27,12 @@
 	
 	var author = null;
 	var book = null;
+	var publisher = null;
 	(async function(){
 		await d2js.meta.load(['/d2js-test/author-entity.d2js', '/d2js-test/book-entity.d2js', '/d2js-test/publisher-entity.d2js']);
 		author = await d2js.root.Author.fetchById(1);
-		console.log(author)
+		//publisher = await d2js.root.Publisher.fetchById(2);
 		book = await d2js.root.Book.fetchById(1);
-		console.log(book)
 	})();
 </script>
 </html>

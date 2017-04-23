@@ -60,6 +60,27 @@ d2js.processResponse = function(response){
 	});
 }
 
+/**
+ * 所给字段是否为某项映射的 key
+ */
+d2js.isMapKey = function(meta, columnName){
+	for(var k in meta.map){if(meta.map.hasOwnProperty(k)){
+		var map = meta.map[k];
+		if(map.key == columnName){
+			return true;
+		}
+	}}
+}
+
+d2js.findInverseMap = function(map, metaMaps){
+	for(var k in metaMaps){ if(metaMaps.hasOwnProperty(k)){
+		var m = metaMaps[k];
+		if(map.fk == m.key && map.key == m.fk){
+			return m;
+		}
+	}}
+}
+
 d2js.meta.load = function(d2jses, namespace, callback){
 	if(namespace == null){
 		namespace = d2js.root;
@@ -74,52 +95,69 @@ d2js.meta.load = function(d2jses, namespace, callback){
 			var q = {d2jses: d2jses};
 			var s = jQuery.param({_m : 'getD2jsMeta', params : JSON.stringify(q)});
 			var response = await fetch(contextPath + '/meta.d2js?' + s);
-			var metas = await d2js.processResponse(response);
-			
-			for(var s in metas){ if(metas.hasOwnProperty(s)){
-				var meta = metas[s];
-				meta.namespace = namespace;
-				meta.columnNames = meta.columns.map(function(column){return column.name});
-
-				var code = 'd2js.Entity.apply(this, arguments)'
-				var fun  = new Function(code);
-				fun.prototype = Object.create(d2js.Entity.prototype, {
-					constructor : {
-						value : fun
-					}
-				});
-				fun.prototype._meta = meta;
-				fun.prototype._namespace = namespace;
-				namespace[meta.name] = fun;
-				meta.Constructor = fun;
-				
-				var names = [];
-				for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
-					(function(name){
-						var def = {get: function(){ return this._values[name]} };
-						if(meta.map[name].relation == 'one'){		// many is readonly
-							def.set = function(value){this._set(name, value); }
-						}
-						Object.defineProperty(fun.prototype, name, def);
-					})(name);
-				}}
-				meta.columnNames.forEach(function(name){
-					if(name in fun.prototype == false){
-						var def = {
-									get: function(){ return this._values[name]},
-									set: function(value){this._set(name, value); }
-								};
-						Object.defineProperty(fun.prototype, name, def);
-					}
-				});
-				fun.fetchById = d2js.Entity.fetchById;
-			}}
+			d2js.processMetas(await response.json());
 			resolve();
 		} catch(e){
 			reject(e)
 		}	
 	});
 	
+}
+
+d2js.processMetas = function(metas){			
+	for(var s in metas){ if(metas.hasOwnProperty(s)){
+		var meta = metas[s];
+		meta.namespace = namespace;
+		if(meta.map == null) meta.map = {};
+		meta.columnNames = meta.columns.map(function(column){return column.name});
+
+		var code = 'd2js.Entity.apply(this, arguments)'
+		var fun  = new Function(code);
+		fun.prototype = Object.create(d2js.Entity.prototype, { constructor : { value : fun } });
+		fun.prototype._meta = meta;
+		fun.prototype._namespace = namespace;
+		namespace[meta.name] = fun;
+		meta.Constructor = fun;
+		
+		var maps = [];
+		var names = [];
+		for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
+			(function(name){
+				var map = meta.map[name];
+				map.name = name;
+				maps.push(map);
+				var def = { get: function(){ return this._values[name]} };
+				if(map.relation == 'one') {		// many is readonly
+					def.set = function(value){this._set(name, value); }
+				} 
+				Object.defineProperty(fun.prototype, name, def);
+			})(name);
+		}}
+		meta.maps = maps;
+
+		meta.columnNames.forEach(function(name){
+			if(name in meta.map == false){
+				var def = { get: function(){ return this._values[name]} };
+				if(!d2js.isMapKey(name)){	// 外键如 publisher_id 不能直接设置值
+					def.set = function(value){this._set(name, value); };
+				}
+				Object.defineProperty(fun.prototype, name, def);
+			}
+		});
+		fun.fetchById = d2js.Entity.fetchById;
+	}}
+
+	for(var k in namespace){if(namespace.hasOwnProperty(k)){
+		var fun = namespace[k];
+		for(const map of fun.prototype._meta.maps){
+			if(map.inverse != null) continue;
+			var rmeta = namespace[map.type];
+			if(rmeta) rmeta = rmeta.prototype._meta;
+			var rmap = d2js.findInverseMap(map, rmeta.map);
+			map.inverse = rmap;
+			rmap.inverse = map;
+		}
+	}}
 }
 
 
@@ -164,22 +202,73 @@ d2js.Entity = function(values){
 
 	// 初始化数据
 	if(values){
+		var makeOrigin = false;
 		for(var k in values){if(values.hasOwnProperty(k)){
 			var value = values[k];
 			if(k in this._meta.map){
 				var map = this._meta.map[k];
 				if(map.relation == 'many'){
-					this._values[k].setArray(value);
+					this._values[k].setArray(value);	// _setInverse auto called in setArray
 				} else if(map.relation == 'one'){
-					var Constructor = this._namespace[map.type];
-					this._values[k] = new Constructor(values[k]);		// if column name == map name, just keep map name, when collect data, will collect fk id.
+					if(typeof value == 'object'){
+						if(value._isEntity){
+							this._values[k] = value;
+						} else {
+							var Constructor = this._namespace[map.type];
+							if(map.inverse != null){
+								value[map.inverse.name] = this;
+							}
+							this._values[k] = new Constructor(value);		// if column name == map name, just keep map name, when collect data, will collect fk id.
+						}
+					} else {
+						this._values[k] = null;	
+						makeOrigin = true;	// author.books[0].author 收到是 author.id
+					}
 				} else {
-					this._values[k] = values[k];
+					this._values[k] = value;
 				}
 			} else {
 				this._values[k] = value;
 			}
 		}}
+		if(makeOrigin){	// 将此类成员记录到 origin，后面如调用 _set (如在 push 中)可避免误认为有变化
+			this._origin = this._toRow();
+			this._meta.columnNames.forEach(function(cname){
+				if(this._origin[cname] == null && values[cname] != null){
+					this._origin[cname] = values[cname];
+				}
+			}, this);
+		}
+	}
+}
+
+d2js.Entity.prototype._setInverse = function(map, value){
+	if(map.inverse == null || value == null) return;
+	value._set(map.inverse.name, this);
+	return value;
+}
+
+d2js.Entity.prototype._isEntity = true;
+
+/**
+ * 将 map.relation = 'one' 的外来对象，映射回本类的属性值
+ */
+d2js.Entity.prototype._reverseMapToValue = function(map, mappedObject){
+	if(map.relation != 'one'){
+		throw new Error('only relation=one can map back');
+	}
+	if(mappedObject == null){
+		return null;
+	} else {
+		return mappedObject._getValueBeforeMap(map.fk);
+	}
+}
+
+d2js.Entity.prototype._getValueBeforeMap = function(columnName){
+	if(columnName in this._meta.map){
+		return this._reverseMapToValue(this._meta.map[columnName], this._values[columnName]);
+	} else {
+		return this._values[columnName];
 	}
 }
 
@@ -188,16 +277,70 @@ d2js.Entity = function(values){
  * @param column {string} 字段名
  * @param value {object} 值
  */
-d2js.Entity.prototype._set = function(column, value){
-	var v = (value == null ? null : value);
-	if(this._values[column] != v){			
+d2js.Entity.prototype._set = function(attr, value){
+	let isMappedOject = attr in this._meta.map;
+	value = (value == null ? null : value);
+	if(isMappedOject){
+		var map = this._meta.map[attr];
+		if(map.relation == 'many') throw new Error('cannot modify List');
+		if(value != null){
+			if(!value._isEntity) 
+				throw new Error('cannot set foreign key value directly, set an entity instead');	// 只能为另一个实体对象
+			if(value._meta.name != map.type){
+				throw new Error(`${map.type} required, ${value._meta.name} not allowed`);
+			}
+		}
+		if(this._origin == null) this._origin = this._toRow();
+		var fkValue = this._reverseMapToValue(map, value);		// 反查 v 的值, 此时 v 不属于 entity,不能使用 _getValueBeforeMap
+		if(this._state == 'none') {
+			var originFk = this._origin[map.key];
+			if(originFk != fkValue){
+				this._state = 'edit';		
+			}
+		}
+		if(map.relation == 'one') {		
+			var old = this._values[attr];
+			var rmeta = null;
+			if(old != null) rmeta = old._meta; else if(value != null) rmeta = value._meta;
+			if(rmeta){ 
+				var [rname, rmap] = d2js.findInverseMap(map, rmeta.map);
+				if(rmap != null && rmap.relation == 'many'){	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
+					if(old){
+						if(value) 
+							old[rname].drop(this);
+						else
+							old[rname].remove(this);
+					}
+					if(value){
+						value[rname].push(this);
+					}
+				} else if(rmap.relation == 'one'){		// 如为 one - one 关系，则对方也解除对我的引用
+					// TODO one-one
+				}
+			}
+		}
+		this._values[attr] = value;
+		if(this._meta.columnNames.indexOf(attr) != -1){	// 与 column 同名
+			return this;
+		} else {
+			value = fkValue;
+			attr = map.key;
+			// goto _set(attr, fkValue);
+		}
+	} else {
+		if(d2js.isMapKey(this._meta, attr)){
+			throw new Error('cannot set foreign key value directly, set an entity instead');
+		}
+	}
+	
+	if(this._values[attr] != value){			
 		if(this._state == 'none') {
 			this._state = 'edit';
 			if(this._origin == null){
-				this._origin = this._toJson();
+				this._origin = this._toRow();
 			}
 		}
-		this._values[column] = value;
+		this._values[attr] = value;
 	}
 	return this;
 }
@@ -208,7 +351,7 @@ d2js.Entity.prototype._set = function(column, value){
  */
 d2js.Entity.prototype._setValues = function(rowData){
 	for(var k in rowData){
-		if(this.meta.columns.some(function(col){return col.name == k})){
+		if(this._meta.columnNames.indexOf(k) != -1 ||  k in this._meta.map){
 			this._set(k, rowData[k]);
 		}
 	}
@@ -216,15 +359,18 @@ d2js.Entity.prototype._setValues = function(rowData){
 }
 
 /**
- * 转换为JSON数据对象
+ * 转换为只包含 column 信息的纯数据对象
  */
-d2js.Entity.prototype._toJson = function(){
+d2js.Entity.prototype._toRow = function(){
 	var obj = {};
-	for(var k in this._values){
-		if(this._values.hasOwnProperty(k)){
-			obj[k] = this._values[k]; 
-		}
-	}
+	this._meta.columnNames.forEach(function(k){
+		var value = this._values[k];
+		if(k in this._meta.map && value != null){
+			obj[k] = value._getValueBeforeMap(this._meta.map[k].fk);
+		} else {
+			obj[k] = value;
+		} 
+	}, this);
 	return obj;
 }
 
@@ -319,24 +465,24 @@ d2js.Entity.prototype.submit = function(){
 	ls.append(this);
 	return ls.submit();
 	
-	return new Promise(async function(resolve, reject){
-		try{
-			var resposne = await fetch(url + '?_m=updateEntity', {
-							method:'post', 
-							headers: {  
-								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
-							},  
-							body : jQuery.param(submition)
-						});
-			var result = await d2js.processResponse(resposne);
-			if(row){
-				obj = new Fun(row);
-			}
-			resolve(obj);
-		} catch(e){
-			reject(e);
-		} 	
-	});
+	// return new Promise(async function(resolve, reject){
+	// 	try{
+	// 		var resposne = await fetch(url + '?_m=updateEntity', {
+	// 						method:'post', 
+	// 						headers: {  
+	// 							"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
+	// 						},  
+	// 						body : jQuery.param(submition)
+	// 					});
+	// 		var result = await d2js.processResponse(resposne);
+	// 		if(row){
+	// 			obj = new Fun(row);
+	// 		}
+	// 		resolve(obj);
+	// 	} catch(e){
+	// 		reject(e);
+	// 	} 	
+	// });
 }
 
 if(Object.getPrototypeOf == null){
@@ -352,13 +498,14 @@ if(Object.setPrototypeOf == null){
 	}
 }
 
-d2js.List = function d2jsList(meta, map){
+d2js.List = function(meta, map){
 	var array = [];
-	var isNew = this instanceof d2jsList;
-	var proto = isNew ? Object.getPrototypeOf(this) : d2jsList.prototype;
+	var proto = Object.getPrototypeOf(this);
 	var result = Object.setPrototypeOf(array, proto);
 	result.map = map;
 	result.meta = meta || (map && map.meta);
+	result.owner = null;
+	// result.removed = [];
 	return result;
 }
 
@@ -370,14 +517,43 @@ d2js.List.prototype = Object.create(Array.prototype, {
 });
 
 d2js.List.prototype.append = function(ele) {
+	if(ele == null) throw new Error('element cannot be null')
+	if(ele._isEntity == false || ele._meta.name != this.meta.name)
+		 throw new Error('element must be ' + this.meta.name);
+
+	if(this.indexOf(ele) != -1) return;
 	Array.prototype.push.call(this, ele);
 };
 
 d2js.List.prototype.push = function(ele){
-	Array.prototype.push.call(this, ele);	// TODO 设置所属容器
+	if(ele == null) throw new Error('element cannot be null')
+	if(ele._isEntity == false || ele._meta.name != this.meta.name)
+		 throw new Error('element must be ' + this.meta.name);
+	
+	if(this.indexOf(ele) != -1) return; 
+
+	Array.prototype.push.call(this, ele);
 	if(this.map != null){
-		
+		var [inverseName, inverseMap] = d2js.findInverseMap(this.map, ele._meta.map);	
+		if(inverseMap != null){
+			if(inverseMap.relation != 'one') throw new Error(`relation of ${inverseName} should be 'one'`);
+			ele._set(inverseName, this.owner);
+		}
 	}
+}
+
+d2js.List.prototype.remove = function(ele){
+	var idx = this.indexOf(ele);
+	if(idx == -1) return;
+	this.splice(idx,1);
+	ele._remove();
+	this.removed.push(ele);		// TODO 在 _remove 中实现
+}
+
+d2js.List.prototype.drop = function(ele){
+	var idx = this.indexOf(ele);
+	if(idx == -1) return;
+	this.splice(idx,1);
 }
 
 d2js.List.prototype.setArray = function(arr){
