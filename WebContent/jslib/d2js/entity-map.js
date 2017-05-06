@@ -210,17 +210,32 @@ d2js.Entity = function(values){
 			if(k in this._meta.map){
 				var map = this._meta.map[k];
 				if(map.relation == 'many'){
-					this._values[k].setArray(value);	// _setInverse auto called in setArray
+					if(value != null){
+						let ls = this._values[k];
+						let C = ls.meta.Constructor;
+						value.forEach(function(item){
+							let obj = new C(item);
+							ls.append(obj);
+							obj._values[map.inverse.name] = this;
+							ls.origin.push(obj);
+						}, this);
+					}
 				} else if(map.relation == 'one'){
 					if(typeof value == 'object'){
 						if(value._isEntity){
 							this._values[k] = value;
 						} else {
-							if(map.inverse != null){
+							if(map.inverse && map.inverse.relation == 'one'){
 								value[map.inverse.name] = this;
 							}
 							var Constructor = this._namespace[map.type];
-							this._values[k] = new Constructor(value);		// if column name == map name, just keep map name, when collect data, will collect fk id.
+							let obj = this._values[k] = new Constructor(value);		// if column name == map name, just keep map name, when collect data, will collect fk id.
+							if(map.inverse && map.inverse.relation == 'many'){
+								let ls = obj[map.inverse.name];
+								this._values[k] = obj;
+								ls.append(this);
+								ls.origin.push(this);
+							} 
 						}
 					} else {
 						this._values[k] = null;	
@@ -233,13 +248,8 @@ d2js.Entity = function(values){
 				this._values[k] = value;
 			}
 		}}
-		if(makeOrigin){	// 将此类成员记录到 origin，后面如调用 _set (如在 push 中)可避免误认为有变化
+		if(makeOrigin){
 			this._origin = this._toRow();
-			this._meta.columnNames.forEach(function(cname){
-				if(this._origin[cname] == null && values[cname] != null){
-					this._origin[cname] = values[cname];
-				}
-			}, this);
 		}
 	}
 }
@@ -255,7 +265,7 @@ d2js.Entity.prototype._isEntity = true;
 /**
  * 将 map.relation = 'one' 的外来对象，映射回本类的属性值
  */
-d2js.Entity.prototype._reverseMapToValue = function(map, mappedObject){
+d2js.Entity.prototype._reverseMappedObjToRaw = function(map, mappedObject){
 	if(map.relation != 'one'){
 		throw new Error('only relation=one can map back');
 	}
@@ -268,7 +278,7 @@ d2js.Entity.prototype._reverseMapToValue = function(map, mappedObject){
 
 d2js.Entity.prototype._getValueBeforeMap = function(columnName){
 	if(columnName in this._meta.map){
-		return this._reverseMapToValue(this._meta.map[columnName], this._values[columnName]);
+		return this._reverseMappedObjToRaw(this._meta.map[columnName], this._values[columnName]);
 	} else {
 		return this._values[columnName];
 	}
@@ -279,73 +289,86 @@ d2js.Entity.prototype._getValueBeforeMap = function(columnName){
  * @param column {string} 字段名
  * @param value {object} 值
  */
-d2js.Entity.prototype._set = function(attr, value){
+d2js.Entity.prototype._set = function(attr, newValue){
 	let isMappedOject = attr in this._meta.map;
-	value = (value == null ? null : value);
+	newValue = (newValue == null ? null : newValue);
 	if(isMappedOject){
-		var map = this._meta.map[attr];
-		if(map.relation == 'many') throw new Error('cannot modify List');
-		if(value != null){
-			if(!value._isEntity) 
-				throw new Error('cannot set foreign key value directly, set an entity instead');	// 只能为另一个实体对象
-			if(value._meta.name != map.type){
-				throw new Error(`${map.type} required, ${value._meta.name} not allowed`);
-			}
-		}
-		if(this._origin == null) this._origin = this._toRow();
-		var fkValue = this._reverseMapToValue(map, value);		// 反查 v 的值, 此时 v 不属于 entity,不能使用 _getValueBeforeMap
-		if(this._state == 'none') {
-			var originFk = this._origin[map.key];
-			if(originFk != fkValue){
-				this._state = 'edit';		
-			}
-		}
-		if(map.relation == 'one') {		
-			var old = this._values[attr];
-			var rmeta = null;
-			if(old != null) rmeta = old._meta; else if(value != null) rmeta = value._meta;
-			if(rmeta){ 
-				let rmap = d2js.findInverseMap(map, rmeta.map);
-				if(rmap != null && rmap.relation == 'many'){	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
-					let rname = rmap.name;
-					if(old){
-						if(value) 
-							old[rname].drop(this);
-						else
-							old[rname].remove(this);
-					}
-					if(value){
-						value[rname].push(this);
-					}
-				} else if(rmap.relation == 'one'){		// 如为 one - one 关系，则对方也解除对我的引用
-					// TODO one-one
-				}
-			}
-		}
-		this._values[attr] = value;
-		if(this._meta.columnNames.indexOf(attr) != -1){	// 与 column 同名
-			return this;
-		} else {
-			value = fkValue;
-			attr = map.key;
-			// goto _set(attr, fkValue);
-		}
+		return this._setMappedAttribute(attr, newValue);
 	} else {
 		if(d2js.isMapKey(this._meta, attr)){
 			throw new Error('cannot set foreign key value directly, set an entity instead');
 		}
 	}
 	
-	if(this._values[attr] != value){			
+	if(this._values[attr] != newValue){			
 		if(this._state == 'none') {
 			this._state = 'edit';
 			if(this._origin == null){
 				this._origin = this._toRow();
 			}
 		}
-		this._values[attr] = value;
+		this._values[attr] = newValue;
 	}
 	return this;
+}
+
+d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
+	var map = this._meta.map[attr];
+	if(map.relation == 'many') throw new Error(`cannot set List attribute ${attr}`);
+	
+	if(newValue != null){
+		if(!newValue._isEntity) 
+			throw new Error('cannot set foreign key value directly, set an entity instead');	// 只能为另一个实体对象
+		if(newValue._meta.name != map.type){
+			throw new Error(`${map.type} required, ${newValue._meta.name} not allowed`);
+		}
+	}
+
+	var currValue = this._getValueBeforeMap(map.fk);
+	var fkValue = this._reverseMappedObjToRaw(map, newValue);		// 反查 v 的值, 此时 v 不属于 entity,不能使用 _getValueBeforeMap
+	let changed = (currValue != fkValue);
+	if(!changed) return this;
+
+	if(map.relation == 'one') {			// many - many 关系是列表动作，不会发生 _set(attr, )，故不在此处理
+		var old = this._values[attr];
+		let rmap = map.inverse;
+		if(rmap){ 
+			if(rmap != null && rmap.relation == 'many'){	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
+				let rname = rmap.name;
+				if(old){
+					old[rname].drop(this);
+					if(newValue == null && old[rname]._origin.indexOf(this) != -1){
+						old[rname].removed.push(this);		// TODO 在 _remove 中实现，不直接移除本元素，等提交时体现为移除态
+					}
+				}
+				if(newValue){
+					let ls = newValue[rname];
+					ls.append(this);
+					let idx = ls.removed.indexOf(this);
+					if(idx != -1){
+						ls.removed.splice(idx, 1);
+					}
+				}
+			} else if(rmap.relation == 'one'){		// 如为 one - one 关系，则对方也解除对我的引用
+				if(old){
+					old._set(rmap.name, null);
+				}
+				if(newValue){
+					newValue._set(rmap.name, this);
+				}
+			}
+		}
+	}
+	
+	this._values[attr] = newValue;
+	if(this._meta.columnNames.indexOf(attr) != -1){	// 与 column 同名
+		if(this._state == 'none') {
+			this._state = 'edit';
+		}
+		return this;
+	} else {
+		return this._set(map.key, fkValue);
+	}
 }
 
 /**
@@ -375,6 +398,11 @@ d2js.Entity.prototype._toRow = function(){
 		} 
 	}, this);
 	return obj;
+}
+
+
+d2js.Entity.prototype.toString = function(){
+	return `(${this._meta.name} ${JSON.stringify(this._toRow())})`
 }
 
 /**
@@ -505,10 +533,11 @@ d2js.List = function(meta, map){
 	var array = [];
 	var proto = Object.getPrototypeOf(this);
 	var result = Object.setPrototypeOf(array, proto);
-	result.map = map;
+	result._map = map;
 	result.meta = meta || (map && map.meta);
 	result.owner = null;
 	result.removed = [];
+	result.origin = result._origin = [];
 	return result;
 }
 
@@ -529,28 +558,23 @@ d2js.List.prototype.append = function(ele) {
 };
 
 d2js.List.prototype.push = function(ele){
-	if(ele == null) throw new Error('element cannot be null')
-	if(ele._isEntity == false || ele._meta.name != this.meta.name)
-		 throw new Error('element must be ' + this.meta.name);
-	
-	if(this.indexOf(ele) != -1) return; 
-
-	Array.prototype.push.call(this, ele);
-	if(this.map != null){
-		var inverseMap = this.map.inverse;	
+	if(this._map != null){
+		var inverseMap = this._map.inverse;	
 		if(inverseMap != null){
 			if(inverseMap.relation != 'one') throw new Error(`relation of ${inverseName} should be 'one'`);
 			ele._set(inverseMap.name, this.owner);
 		}
+	} else {
+		this.append(ele);
 	}
 }
 
 d2js.List.prototype.remove = function(ele){
-	var idx = this.indexOf(ele);
-	if(idx == -1) return;
-	this.splice(idx,1);
-	ele._remove();
-	this.removed.push(ele);		// TODO 在 _remove 中实现
+	if(this._map && this._map.inverse){
+		ele._set(this._map.inverse.name, null);
+	} else {
+		return this.drop(ele);
+	}
 }
 
 d2js.List.prototype.drop = function(ele){
@@ -565,10 +589,12 @@ d2js.List.prototype.setArray = function(arr){
 	for(var i=0; i<arr.length; i++){
 		var Constructor = this.meta.Constructor;
 		if(Constructor){
-			this.push(new Constructor(arr[i]));
+			var ele = new Constructor(arr[i]);
+			this.push(ele);
+			this._origin.push(ele);
 		} else {
 			// TODO 这里考虑是直接调用meta里的path动态按需加载meta还是报错。如果动态加载会产生一堆 await，不可收拾。
-			throw new Error("meta not loaded for " + this.map.type);
+			throw new Error("meta not loaded for " + this._map.type);
 		}
 	}
 	return this;

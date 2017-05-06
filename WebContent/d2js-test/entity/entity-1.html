@@ -25,14 +25,48 @@
 <script>
 	'use strict'
 	
-	var author = null;
-	var book = null;
+	var author2 = null;
+	var book1 = null;
 	var publisher = null;
 	(async function(){
 		await d2js.meta.load(['/d2js-test/author-entity.d2js', '/d2js-test/book-entity.d2js', '/d2js-test/publisher-entity.d2js']);
-		author = await d2js.root.Author.fetchById(2);
+		
+		author2 = await d2js.root.Author.fetchById(2);
 		//publisher = await d2js.root.Publisher.fetchById(2);
-		book = await d2js.root.Book.fetchById(1);
+		book1 = await d2js.root.Book.fetchById(1);
+		
+		book1.author = author2;
+		console.assert(book1.author == author2)
+		console.assert(book1._state == 'edit')
+		console.assert(author2.books[author2.books.length -1] == book1);
+		
+		
+		book1.author = null;
+		console.assert(book1.author == null)
+		console.assert(author2.books.indexOf(book1) == -1);
+		console.assert(author2.books.removed.indexOf(book1) == -1);	 // 原来不属于该列表
+		
+		var book = author2.books[1];
+		book.author = null;
+		console.assert(book._state = 'edit')
+		console.assert(author2.books.indexOf(book) == -1);
+		console.assert(author2.books._origin.indexOf(book) != -1);
+		console.assert(author2.books.removed.indexOf(book) != -1);
+		
+		book.author = author2;
+		console.assert(book._state = 'edit')
+		console.assert(author2.books.indexOf(book) != -1);	// 还不能从origin恢复为 none 状态
+		console.assert(author2.books.removed.indexOf(book) == -1);
+		console.assert(book.author == author2);
+		
+		author2.books.remove(book);
+		console.assert(book.author == null);
+		console.assert(author2.books._origin.indexOf(book) != -1);
+		console.assert(author2.books.removed.indexOf(book) != -1);
+		
+		author2.books.push(book);
+		console.assert(book.author == author2);
+		console.assert(author2.books.removed.indexOf(book) == -1);
 	})();
 </script>
 </html>
