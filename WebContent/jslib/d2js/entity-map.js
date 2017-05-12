@@ -50,12 +50,12 @@ d2js.processResponse = function(response){
 		try{
 			var result = JSON.parse(s);
 			if(result.error){
-				reject(new Error(result.error));
+				reject(Object.assign(new Error(), result.error));
 			} else {
 				resolve(result);
 			}
 		} catch (e){
-			reject(new Error(s));
+			reject(e);
 		}
 	});
 }
@@ -81,21 +81,15 @@ d2js.findInverseMap = function(map, metaMaps){
 	}}
 }
 
-d2js.meta.load = function(d2jses, namespace, callback){
-	if(namespace == null){
-		namespace = d2js.root;
-	} else if(typeof namespace == 'string'){
-		namespace = d2js.root[namespace] = new Object(); 	
-	} else {
-		// namespace is object,just put in this object
-	}
-	
+d2js.meta.load = function(d2jses, namespace){
 	return new Promise(async function(resolve, reject){
 		try{
 			var q = {d2jses: d2jses};
 			var s = jQuery.param({_m : 'getD2jsMeta', params : JSON.stringify(q)});
 			var response = await fetch(contextPath + '/meta.d2js?' + s);
-			d2js.processMetas(namespace, await response.json());
+			var metas = await d2js.processResponse(response);
+			metas = Object.getOwnPropertyNames(metas).map(k => metas[k])
+			d2js.meta.loadMetas(metas, namespace);
 			resolve();
 		} catch(e){
 			reject(e)
@@ -104,9 +98,17 @@ d2js.meta.load = function(d2jses, namespace, callback){
 	
 }
 
-d2js.processMetas = function(namespace, metas){			
-	for(var s in metas){ if(metas.hasOwnProperty(s)){
-		var meta = metas[s];
+d2js.meta.loadMetas = function(metas, namespace = d2js.root){
+	if(namespace == null){
+		namespace = d2js.root;
+	} else if(typeof namespace == 'string'){
+		if(d2js.root[namespace] == null) d2js.root[namespace] = new Object();
+		namespace = d2js.root[namespace];
+	} else {
+		// namespace is object,just put in this object
+	}
+
+	metas.forEach(function(meta){
 		meta.namespace = namespace;
 		if(meta.map == null) meta.map = {};
 		meta.columnNames = meta.columns.map(function(column){return column.name});
@@ -114,7 +116,7 @@ d2js.processMetas = function(namespace, metas){
 		var code = 'd2js.Entity.apply(this, arguments)'
 		var fun  = new Function(code);
 		fun.prototype = Object.create(d2js.Entity.prototype, { constructor : { value : fun } });
-		fun.prototype._meta = meta;
+		fun.meta = fun.prototype._meta = meta;
 		fun.prototype._namespace = namespace;
 		namespace[meta.name] = fun;
 		meta.Constructor = fun;
@@ -145,12 +147,13 @@ d2js.processMetas = function(namespace, metas){
 			}
 		});
 		fun.fetchById = d2js.Entity.fetchById;
-	}}
+		fun.fetch = d2js.Entity.fetch;
+	}, this);
 
 	for(var k in namespace){if(namespace.hasOwnProperty(k)){
 		var fun = namespace[k];
-		if(fun && fun.prototype && fun.prototype._meta){
-			for(const map of fun.prototype._meta.maps){
+		if(fun && fun.meta){
+			for(const map of fun.meta.maps){
 				if(map.inverse != null) continue;
 				var rmeta = namespace[map.type];
 				if(rmeta) rmeta = rmeta.prototype._meta;
@@ -188,6 +191,11 @@ d2js.Entity = function(values){
 	 * @type {object}
 	 */
 	this._error_at = null;
+
+	/**
+	 * 关联对象，主要是指 one - one 关系定义的引用对象。存储{map: map, object: object}。
+	 */
+	this._associatedObjects = [];
 	
 	// 初始化列表成员
 	for(var k in this._meta.map){
@@ -224,11 +232,12 @@ d2js.Entity = function(values){
 					if(typeof value == 'object'){
 						if(value._isEntity){
 							this._values[k] = value;
+							this._associatedObjects.push({map: map, object: value});
 						} else {
 							if(map.inverse && map.inverse.relation == 'one'){
 								value[map.inverse.name] = this;
 							}
-							var Constructor = this._namespace[map.type];
+							let Constructor = this._namespace[map.type];
 							let obj = this._values[k] = new Constructor(value);		// if column name == map name, just keep map name, when collect data, will collect fk id.
 							if(map.inverse && map.inverse.relation == 'many'){
 								let ls = obj[map.inverse.name];
@@ -236,6 +245,7 @@ d2js.Entity = function(values){
 								ls.append(this);
 								ls.origin.push(this);
 							} 
+							this._associatedObjects.push({map: map, object: obj});
 						}
 					} else {
 						this._values[k] = null;	
@@ -324,38 +334,27 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 		}
 	}
 
-	var currValue = this._getValueBeforeMap(map.fk);
+	var currValue = this._getValueBeforeMap(map.name);
 	var fkValue = this._reverseMappedObjToRaw(map, newValue);		// 反查 v 的值, 此时 v 不属于 entity,不能使用 _getValueBeforeMap
 	let changed = (currValue != fkValue);
 	if(!changed) return this;
 
-	if(map.relation == 'one') {			// many - many 关系是列表动作，不会发生 _set(attr, )，故不在此处理
-		var old = this._values[attr];
-		let rmap = map.inverse;
-		if(rmap){ 
-			if(rmap != null && rmap.relation == 'many'){	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
-				let rname = rmap.name;
-				if(old){
-					old[rname].drop(this);
-					if(newValue == null && old[rname]._origin.indexOf(this) != -1){
-						old[rname].removed.push(this);		// TODO 在 _remove 中实现，不直接移除本元素，等提交时体现为移除态
-					}
-				}
-				if(newValue){
-					let ls = newValue[rname];
-					ls.append(this);
-					let idx = ls.removed.indexOf(this);
-					if(idx != -1){
-						ls.removed.splice(idx, 1);
-					}
-				}
-			} else if(rmap.relation == 'one'){		// 如为 one - one 关系，则对方也解除对我的引用
-				if(old){
-					old._set(rmap.name, null);
-				}
-				if(newValue){
-					newValue._set(rmap.name, this);
-				}
+	var old = this._values[attr];
+	let rmap = map.inverse;
+	if(rmap && rmap.relation == 'many'){ 	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
+		let rname = rmap.name;
+		if(old){
+			old[rname].drop(this);
+			if(newValue == null && old[rname]._origin.indexOf(this) != -1){
+				old[rname].removed.push(this);		// TODO 在 _remove 中实现。不直接移除本元素，等提交时体现为移除态
+			}
+		}
+		if(newValue){
+			let ls = newValue[rname];
+			ls.append(this);
+			let idx = ls.removed.indexOf(this);
+			if(idx != -1){
+				ls.removed.splice(idx, 1);
 			}
 		}
 	}
@@ -365,10 +364,23 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 		if(this._state == 'none') {
 			this._state = 'edit';
 		}
-		return this;
 	} else {
-		return this._set(map.key, fkValue);
+		if(map.key != this._meta.pk){
+			this._set(map.key, fkValue);
+		} else if(map.inverse && map.inverse.key == this._namespace[map.type].meta.key){
+			throw new Error('cannot set PK-PK relation');
+		}
 	}
+
+	if(rmap && rmap.relation == 'one'){	// 如为 one - one 关系，则对方也解除对我的引用
+			if(old){
+				old._set(rmap.name, null);
+			}
+			if(newValue){
+				newValue._set(rmap.name, this);
+			}
+	}
+	return this;
 }
 
 /**
@@ -461,7 +473,7 @@ d2js.Entity.prototype._remove = function(){
 d2js.Entity.fetchById = function(id, filter){
 	var Fun = this;
 	
-	var url = contextPath + Fun.prototype._meta.path;
+	var url = contextPath + Fun.meta.path;
 	var q = {id: id};
 	if(filter){
 		q.filter = filter;
@@ -469,8 +481,8 @@ d2js.Entity.fetchById = function(id, filter){
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var resposne = await fetch(url + '?' + jQuery.param({_m : 'fetchEntityById', params : JSON.stringify(q)}));
-			var table = await d2js.processResponse(resposne);
+			var response = await fetch(url + '?' + jQuery.param({_m : 'fetchEntityById', params : JSON.stringify(q)}));
+			var table = await d2js.processResponse(response);
 			var row = table.rows[0];
 			var obj = null;
 			if(row){
@@ -483,10 +495,36 @@ d2js.Entity.fetchById = function(id, filter){
 	});
 }
 
+d2js.Entity.fetch = function(method = 'fetch', params, option){
+	var Fun = this;
+	
+	var url = contextPath + Fun.meta.path;
+	var q = params;
+	
+	return new Promise(async function(resolve, reject){
+		try{
+			var response = await fetch(url + '?' + jQuery.param({_m : method, params : JSON.stringify(q)}));
+			var table = await d2js.processResponse(response);
+			var ls = new d2js.List(Fun.meta);
+			if(table.total != null){
+				ls.total = table.total;
+				ls.start = table.start;
+				ls.pageIndex = table.start / table.pageSize;
+				ls.pageCount = Math.ceil(table.total / table.pageSize);
+			}
+
+			ls.setArray(table.rows);
+			resolve(ls);
+		} catch(e){
+			reject(e);
+		} 	
+	});
+}
+
 d2js.Entity.prototype.submit = function(){
 	var Fun = this;
 	
-	var url = contextPath + Fun.prototype._meta.path;
+	var url = contextPath + Fun.meta.path;
 	var q = {id: id};
 	if(filter){
 		q.filter = filter;
@@ -537,7 +575,7 @@ d2js.List = function(meta, map){
 	result.meta = meta || (map && map.meta);
 	result.owner = null;
 	result.removed = [];
-	result.origin = result._origin = [];
+	result.origin = [];
 	return result;
 }
 
@@ -591,7 +629,7 @@ d2js.List.prototype.setArray = function(arr){
 		if(Constructor){
 			var ele = new Constructor(arr[i]);
 			this.push(ele);
-			this._origin.push(ele);
+			this.origin.push(ele);
 		} else {
 			// TODO 这里考虑是直接调用meta里的path动态按需加载meta还是报错。如果动态加载会产生一堆 await，不可收拾。
 			throw new Error("meta not loaded for " + this._map.type);
@@ -599,12 +637,3 @@ d2js.List.prototype.setArray = function(arr){
 	}
 	return this;
 }
-
-// [ "concat", "reverse", "slice", "splice", "sort", "filter", "map" ]
-// 		.forEach(function(name) {
-// 			var _Array_func = this[name];
-// 			d2js.List.prototype[name] = function() {
-// 				var result = _Array_func.apply(this, arguments);
-// 				return setPrototypeOf(result, getPrototypeOf(this));
-// 			}
-// 		}, Array.prototype);
