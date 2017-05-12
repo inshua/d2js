@@ -345,7 +345,7 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 		let rname = rmap.name;
 		if(old){
 			old[rname].drop(this);
-			if(newValue == null && old[rname]._origin.indexOf(this) != -1){
+			if(newValue == null && old[rname].origin.indexOf(this) != -1){
 				old[rname].removed.push(this);		// TODO 在 _remove 中实现。不直接移除本元素，等提交时体现为移除态
 			}
 		}
