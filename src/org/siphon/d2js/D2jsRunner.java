@@ -172,7 +172,7 @@ public class D2jsRunner {
 		} catch (Exception e3) {
 			response.setStatus(500);
 			PrintWriter out = response.getWriter();
-			out.print("params must be json");
+			out.print("{\"error\":{\"message\" : \"params must be json\"}}");
 			out.flush();
 			return;
 		} 
