@@ -348,7 +348,7 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 	if(rmap && rmap.relation == 'many'){ 	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
 		let rname = rmap.name;
 		if(old){
-			old[rname].drop(this);	// 不直接移除本元素，等提交时体现为移除态
+			old[rname].drop(this);	// 不直接移除本元素，等提交时根据是否为owner决定是否体现为移除态
 		}
 		if(newValue){
 			let ls = newValue[rname];
@@ -621,8 +621,6 @@ d2js.List.prototype.setArray = function(arr){
 	return this;
 }
 
-
-
 d2js.Entity.prototype._isAlone = function(map){
 	if(this[map.name] == null){  // TODO N-N 关系另外考虑
 		return true;
@@ -630,26 +628,39 @@ d2js.Entity.prototype._isAlone = function(map){
 }
 
 d2js.Entity.prototype._collectChange = function(path, state){
+	if(state == 'remove' && this._state == 'new') return null;
+
 	path = path ? path.concat([this]) : [this];
 	state = state || this._state;
 	
 	var children = [];
 	for(let k in this._values){if(this._values.hasOwnProperty(k)){
 		if(k in this._meta.map){
-			var relatedObject = this._values[k];
+			let map = this._meta.map[k];
+			let relatedObject = this._values[k];
+			if(relatedObject && path.indexOf(relatedObject) != -1) continue;
+
+			if(map.inverse && map.inverse.isOwner){ // belong to relatedObject, and owner not in path
+				continue;		// 不收集 owner 对象
+			}
 			if(relatedObject != null){
-				if(relatedObject._collectChange && path.indexOf(relatedObject) == -1){	// d2js.List or d2js.Entity
-					var c = relatedObject._collectChange(path, state == 'remove' ? 'remove' : undefined);
+				if(relatedObject._collectChange){	// d2js.List or d2js.Entity
+					var relatedState = undefined;
+					if(state == 'remove' && map.isOwner){
+						relatedState = 'remove';
+					}
+					let c = relatedObject._collectChange(path, relatedState);
 					if(c != null){
 						children.push(c);
 					}
 				} 
 			} else {
-				var map = this._meta.map[k];
-				relatedObject = this._associatedObjects.find(v => v.map == map);
-				if(relatedObject && relatedObject._isAlone(map.inverse) && path.indexOf(relatedObject) == -1){
-					var c = relatedObject._collectChangeAsTable(path, 'remove');
-					children.push(c);
+				if(map.isOwner){	// one -one 关系中的 owner
+					relatedObject = this._associatedObjects.find(v => v.map == map);
+					if(relatedObject && relatedObject._isAlone(map.inverse)){
+						var c = relatedObject._collectChangeAsTable(path, 'remove');
+						children.push(c);
+					}
 				}
 			}
 		}
@@ -711,14 +722,14 @@ d2js.Entity.prototype.submit = function(){
 }
 
 d2js.List.prototype._collectChange = function(path = [], state){
-	if(state == null && this.owner && this.owner._state == 'remove'){
+	if(state == null && this.owner && this.map.isOwner && this.owner._state == 'remove'){
 		state = 'remove';
 	}
 	var table = {
 		src : contextPath + this.meta.path,
 		columns : this.meta.columns,
 		rows : this.map(row => row._collectChange(path, state))
-			.concat(this.origin.filter(isRemoved, this).map(row => row._collectChange(path, 'remove')))
+			.concat(this.origin.filter(isRemoved, this).map(row => row._collectChange(path, map.isOwner ? 'remove': undefined)))
 			.filter(r => r != null),
 	};
 	if(table.rows.length == 0) return null;

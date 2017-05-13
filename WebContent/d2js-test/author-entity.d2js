@@ -8,7 +8,7 @@ d2js.entity_map = {
 				relation: 'many', 			// many - array  table - table information(may contains page info)	 one - entity 	value - returned value, such as dictionary mapping value
 				key: 'id', 					// optional
 				fk: 'author',				// 用于向 fetchBy 提交查询条件，查询条件组织为 {'author': row['id']}
-				depend: 'full',				// full, none 强依赖关系的，先存在本对象再存在关系对象，本对象移除则关系对象追随移除。
+				isOwner : true,				// 强持有关系，先存在本对象再存在关系对象，本对象移除则关系对象追随移除。否则仅解除关系。
 		}
 	}   
 }
@@ -23,10 +23,8 @@ d2js.fetch = function(params){
 		.}
 	.}
 	
-	params._page = {start:1, limit: 2};
-	
 	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
-	return r.orm(this, {includes:['Book', 'Publisher']});
+	return r.orm(this, ['Book']);
 }
 
 
