@@ -348,18 +348,11 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 	if(rmap && rmap.relation == 'many'){ 	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
 		let rname = rmap.name;
 		if(old){
-			old[rname].drop(this);
-			if(newValue == null && old[rname].origin.indexOf(this) != -1){
-				old[rname].removed.push(this);		// 不直接移除本元素，等提交时体现为移除态
-			}
+			old[rname].drop(this);	// 不直接移除本元素，等提交时体现为移除态
 		}
 		if(newValue){
 			let ls = newValue[rname];
 			ls.append(this);
-			let idx = ls.removed.indexOf(this);
-			if(idx != -1){
-				ls.removed.splice(idx, 1);
-			}
 		}
 	}
 	
@@ -563,7 +556,6 @@ d2js.List = function(meta, map){
 	result._map = map;
 	result.meta = meta || (map && map.meta);
 	result.owner = null;
-	result.removed = [];
 	result.origin = [];
 	return result;
 }
