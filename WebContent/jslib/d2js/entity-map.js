@@ -49,6 +49,10 @@ d2js.processResponse = function(response){
 		var s = await response.text();
 		try{
 			var result = JSON.parse(s);
+		} catch(e){
+			throw new Erorr(s);
+		}
+		try{
 			if(result.error){
 				reject(Object.assign(new Error(), result.error));
 			} else {
@@ -64,7 +68,7 @@ d2js.processResponse = function(response){
  * 所给字段是否为某项映射的 key
  */
 d2js.isMapKey = function(meta, columnName){
-	for(var k in meta.map){if(meta.map.hasOwnProperty(k)){
+	for(let k in meta.map){if(meta.map.hasOwnProperty(k)){
 		var map = meta.map[k];
 		if(map.key == columnName){
 			return true;
@@ -73,7 +77,7 @@ d2js.isMapKey = function(meta, columnName){
 }
 
 d2js.findInverseMap = function(map, metaMaps){
-	for(var k in metaMaps){ if(metaMaps.hasOwnProperty(k)){
+	for(let k in metaMaps){ if(metaMaps.hasOwnProperty(k)){
 		var m = metaMaps[k];
 		if(map.fk == m.key && map.key == m.fk){
 			return m;
@@ -150,7 +154,7 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root){
 		fun.fetch = d2js.Entity.fetch;
 	}, this);
 
-	for(var k in namespace){if(namespace.hasOwnProperty(k)){
+	for(let k in namespace){if(namespace.hasOwnProperty(k)){
 		var fun = namespace[k];
 		if(fun && fun.meta){
 			for(const map of fun.meta.maps){
@@ -198,7 +202,7 @@ d2js.Entity = function(values){
 	this._associatedObjects = [];
 	
 	// 初始化列表成员
-	for(var k in this._meta.map){
+	for(let k in this._meta.map){
 		if(this._meta.map.hasOwnProperty(k)){
 			var map = this._meta.map[k];
 			if(map.relation == 'many'){
@@ -213,7 +217,7 @@ d2js.Entity = function(values){
 	// 初始化数据
 	if(values){
 		var makeOrigin = false;
-		for(var k in values){if(values.hasOwnProperty(k)){
+		for(let k in values){if(values.hasOwnProperty(k)){
 			var value = values[k];
 			if(k in this._meta.map){
 				var map = this._meta.map[k];
@@ -346,7 +350,7 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 		if(old){
 			old[rname].drop(this);
 			if(newValue == null && old[rname].origin.indexOf(this) != -1){
-				old[rname].removed.push(this);		// TODO 在 _remove 中实现。不直接移除本元素，等提交时体现为移除态
+				old[rname].removed.push(this);		// 不直接移除本元素，等提交时体现为移除态
 			}
 		}
 		if(newValue){
@@ -388,7 +392,7 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
  * @param rowData {object} {col1:val, col2:val, col3:val}
  */
 d2js.Entity.prototype._setValues = function(rowData){
-	for(var k in rowData){
+	for(let k in rowData){
 		if(this._meta.columnNames.indexOf(k) != -1 ||  k in this._meta.map){
 			this._set(k, rowData[k]);
 		}
@@ -464,10 +468,21 @@ d2js.Entity.prototype._reject = function(){
 }
 
 /**
- * 将本数据行状态设为 remove
+ * 将本数据行状态设为 remove, 并从各关联对象移除。
  */
 d2js.Entity.prototype._remove = function(){
 	this._state = 'remove';
+	for(let k in this._values){
+		if(this._values.hasOwnProperty(k) && k in this._meta.map){
+			// var map = this._meta.map[k];
+			let relatedObject = this._values[k];
+			if(relatedObject != null){
+				if(relatedObject._isEntity){
+					this._set(k, null);
+				}
+			}
+		}
+	}
 }
 
 d2js.Entity.fetchById = function(id, filter){
@@ -500,17 +515,22 @@ d2js.Entity.fetch = function(method = 'fetch', params, option){
 	
 	var url = contextPath + Fun.meta.path;
 	var q = params;
+	params = {_m : method};
+	if(q) params.params = JSON.stringify(q);
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var response = await fetch(url + '?' + jQuery.param({_m : method, params : JSON.stringify(q)}));
+			var response = await fetch(url + '?' + jQuery.param(params));
 			var table = await d2js.processResponse(response);
 			var ls = new d2js.List(Fun.meta);
-			if(table.total != null){
-				ls.total = table.total;
-				ls.start = table.start;
-				ls.pageIndex = table.start / table.pageSize;
-				ls.pageCount = Math.ceil(table.total / table.pageSize);
+			for(let k in table){
+				if(table.hasOwnProperty(k) && k != 'columns' && k != 'rows'){
+					ls[k] = table[k];
+				}
+			}
+			if(ls.total != null){
+				ls.pageIndex = ls.start / ls.pageSize;
+				ls.pageCount = Math.ceil(ls.total / ls.pageSize);
 			}
 
 			ls.setArray(table.rows);
@@ -521,38 +541,7 @@ d2js.Entity.fetch = function(method = 'fetch', params, option){
 	});
 }
 
-d2js.Entity.prototype.submit = function(){
-	var Fun = this;
-	
-	var url = contextPath + Fun.meta.path;
-	var q = {id: id};
-	if(filter){
-		q.filter = filter;
-	}
 
-	var ls = new d2js.List(this._meta);
-	ls.append(this);
-	return ls.submit();
-	
-	// return new Promise(async function(resolve, reject){
-	// 	try{
-	// 		var resposne = await fetch(url + '?_m=updateEntity', {
-	// 						method:'post', 
-	// 						headers: {  
-	// 							"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
-	// 						},  
-	// 						body : jQuery.param(submition)
-	// 					});
-	// 		var result = await d2js.processResponse(resposne);
-	// 		if(row){
-	// 			obj = new Fun(row);
-	// 		}
-	// 		resolve(obj);
-	// 	} catch(e){
-	// 		reject(e);
-	// 	} 	
-	// });
-}
 
 if(Object.getPrototypeOf == null){
 	Object.getPrototypeOf = function(o) {
@@ -585,6 +574,8 @@ d2js.List.prototype = Object.create(Array.prototype, {
 		value : d2js.List
 	}
 });
+
+d2js.List.prototype.isList = true;
 
 d2js.List.prototype.append = function(ele) {
 	if(ele == null) throw new Error('element cannot be null')
@@ -636,4 +627,135 @@ d2js.List.prototype.setArray = function(arr){
 		}
 	}
 	return this;
+}
+
+
+
+d2js.Entity.prototype._isAlone = function(map){
+	if(this[map.name] == null){  // TODO N-N 关系另外考虑
+		return true;
+	}
+}
+
+d2js.Entity.prototype._collectChange = function(path, state){
+	path = path ? path.concat([this]) : [this];
+	state = state || this._state;
+	
+	var children = [];
+	for(let k in this._values){if(this._values.hasOwnProperty(k)){
+		if(k in this._meta.map){
+			var relatedObject = this._values[k];
+			if(relatedObject != null){
+				if(relatedObject._collectChange && path.indexOf(relatedObject) == -1){	// d2js.List or d2js.Entity
+					var c = relatedObject._collectChange(path, state == 'remove' ? 'remove' : undefined);
+					if(c != null){
+						children.push(c);
+					}
+				} 
+			} else {
+				var map = this._meta.map[k];
+				relatedObject = this._associatedObjects.find(v => v.map == map);
+				if(relatedObject && relatedObject._isAlone(map.inverse) && path.indexOf(relatedObject) == -1){
+					var c = relatedObject._collectChangeAsTable(path, 'remove');
+					children.push(c);
+				}
+			}
+		}
+	}}
+
+	var r = null;
+	switch(state){
+	case 'remove':
+	case 'new' :
+		r = this._toRow();
+		break;
+	case 'edit':
+		r = this._toRow();
+		if(this._origin){
+			r._origin = this._origin;
+		}
+		break;
+	case 'none':
+		if(children.length) r = {src: contextPath + this._meta.path};
+	}
+	if(r == null) return null;
+	r._state = state;
+	if(children.length) r._children = children;
+	return r;
+}
+
+d2js.Entity.prototype._collectChangeAsTable = function(path, state){
+	var change = this._collectChange(path, state);
+	if(change == null) return null;
+	var table = {
+		src : contextPath + this._meta.path,
+		columns : this._meta.columns,
+		rows : [change]
+	};
+	return table;
+}
+
+d2js.Entity.prototype.submit = function(){
+	var Fun = this;
+	
+	var url = contextPath + Fun.meta.path + "?_m=update";
+	var change = this._collectChangeAsTable();
+	var params = {table: change};
+	return new Promise(async function(resolve, reject){
+		try{
+			var resposne = await fetch(url + '?_m=update', {
+							method:'post', 
+							headers: {  
+								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
+							},  
+							body : jQuery.param(params)
+						});
+			var result = await d2js.processResponse(resposne);
+			resolve(result);
+		} catch(e){
+			reject(e);
+		} 	
+	});
+}
+
+d2js.List.prototype._collectChange = function(path = [], state){
+	if(state == null && this.owner && this.owner._state == 'remove'){
+		state = 'remove';
+	}
+	var table = {
+		src : contextPath + this.meta.path,
+		columns : this.meta.columns,
+		rows : this.map(row => row._collectChange(path, state))
+			.concat(this.origin.filter(isRemoved, this).map(row => row._collectChange(path, 'remove')))
+			.filter(r => r != null),
+	};
+	if(table.rows.length == 0) return null;
+	return table;
+
+	function isRemoved(entity){
+		return this.indexOf(entity) == -1 && entity._isAlone(this._map.inverse);
+	}
+}
+
+d2js.List.prototype.submit = function(){
+	var Fun = this;
+	
+	var url = contextPath + Fun.meta.path + "?_m=update";
+	var change = this._collectChange();
+	var params = {table: change};
+	return new Promise(async function(resolve, reject){
+		try{
+			var resposne = await fetch(url + '?_m=update', {
+							method:'post', 
+							headers: {  
+								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
+							},  
+							body : jQuery.param(params)
+						});
+			var result = await d2js.processResponse(resposne);
+			resolve(result);
+		} catch(e){
+			reject(e);
+		} 	
+	});
 }
