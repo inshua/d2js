@@ -51,22 +51,22 @@
 		console.assert(book._state = 'edit')
 		console.assert(author2.books.indexOf(book) == -1);
 		console.assert(author2.books.origin.indexOf(book) != -1);
-		console.assert(author2.books.removed.indexOf(book) != -1);
+		//console.assert(author2.books.removed.indexOf(book) != -1);
 		
 		book.author = author2;
 		console.assert(book._state = 'edit')
 		console.assert(author2.books.indexOf(book) != -1);	// 还不能从origin恢复为 none 状态
-		console.assert(author2.books.removed.indexOf(book) == -1);
+		//console.assert(author2.books.removed.indexOf(book) == -1);
 		console.assert(book.author == author2);
 		
 		author2.books.remove(book);
 		console.assert(book.author == null);
 		console.assert(author2.books.origin.indexOf(book) != -1);
-		console.assert(author2.books.removed.indexOf(book) != -1);
+		//console.assert(author2.books.removed.indexOf(book) != -1);
 		
 		author2.books.push(book);
 		console.assert(book.author == author2);
-		console.assert(author2.books.removed.indexOf(book) == -1);
+		//console.assert(author2.books.removed.indexOf(book) == -1);
 	})();
 </script>
 </html>

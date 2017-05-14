@@ -43,19 +43,19 @@
 		book1.author = null;
 		console.assert(book1.author == null)
 		console.assert(author2.books.indexOf(book1) == -1);
-		console.assert(author2.books.removed.indexOf(book1) == -1);	 // 原来不属于该列表
+		// console.assert(author2.books.removed.indexOf(book1) == -1);	 // 原来不属于该列表
 		
 		var book = author2.books[1];
 		book.author = null;
 		console.assert(book._state = 'edit')
 		console.assert(author2.books.indexOf(book) == -1);
 		console.assert(author2.books.origin.indexOf(book) != -1);
-		console.assert(author2.books.removed.indexOf(book) != -1);
+		// console.assert(author2.books.removed.indexOf(book) != -1);
 		
 		book.author = author2;
 		console.assert(book._state = 'edit')
 		console.assert(author2.books.indexOf(book) != -1);	// 还不能从origin恢复为 none 状态
-		console.assert(author2.books.removed.indexOf(book) == -1);
+		// console.assert(author2.books.removed.indexOf(book) == -1);
 		
 	})();
 </script>
