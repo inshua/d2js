@@ -230,6 +230,7 @@ d2js.Entity = function(values){
 							ls.append(obj);
 							obj._values[map.inverse.name] = this;
 							ls.origin.push(obj);
+							obj._associatedObjects.push({map: map.inverse, object:this});
 						}, this);
 					}
 				} else if(map.relation == 'one'){
@@ -237,6 +238,7 @@ d2js.Entity = function(values){
 						if(value._isEntity){
 							this._values[k] = value;
 							this._associatedObjects.push({map: map, object: value});
+							value._associatedObjects.push({map: map.inverse, object:this});
 						} else {
 							if(map.inverse && map.inverse.relation == 'one'){
 								value[map.inverse.name] = this;
@@ -250,6 +252,7 @@ d2js.Entity = function(values){
 								ls.origin.push(this);
 							} 
 							this._associatedObjects.push({map: map, object: obj});
+							obj._associatedObjects.push({map: map.inverse, object:this});
 						}
 					} else {
 						this._values[k] = null;	
@@ -426,18 +429,52 @@ d2js.Entity.prototype._isDirty = function(){
  * 接受变更
  * @returns {Boolean} 确实有变动返回 true，否则返回 false
  */
-d2js.Entity.prototype._accept = function(){
-	switch(this._state){
-	case 'edit' :
-		this._origin = null;
-		this._state = 'none';
-		return true;
-	case 'new':
-		this._state = 'none';
-		return true;
-	case 'remove' :
-		this._table.rows.splice(this._table.rows.indexOf(this), 1);
-		return true;
+d2js.Entity.prototype._accept = function(path = []){
+	path = path.concat([this])
+	for(var k in this._meta.map){if(this._meta.map.hasOwnProperty(k)){
+		var map = this._meta.map[k];
+		if(map.relation == 'many' && map.inverse && map.inverse.relation == 'one'){
+			this._values[map.name].forEach(entity => entity._accept());	// List
+		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'one'){
+			var old =  this._associatedObjects.find(ass => ass.map == map);
+			if(old) old = old.object;
+			var now = this._values[map.name];
+			if(old != now || map.isOwner){
+				if(old && path.indexOf(old) == -1) {
+					old._accept(path);
+				}
+				if(now && now != old && path.indexOf(now) == -1){
+					now._accept(path);
+				}
+			}
+		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'many'){
+			var old =  this._associatedObjects.find(ass => ass.map == map);
+			if(old) old = old.object;
+			if(old){
+				old._acceptChildChange(map.inverse, this);
+			}
+			var now = this._values[map.name];
+			if(old != now){
+				now._acceptChildChange(map.inverse, this);
+			}
+			this._associatedObjects.splice(this._associatedObjects.indexOf(old));
+			this._associatedObjects.splice(this._associatedObjects.indexOf(now));
+		}
+	}}
+	if(this._state == 'edit' || this._state == 'new'){
+		this._origin = this._toRow();
+	}
+	this._state = 'none';
+}
+
+d2js.Entity.prototype._acceptChildChange = function(map, child){
+	var ls = this._values[map.name];
+	if(ls.indexOf(child) != -1 && ls.origin.indexOf(child) == -1){
+		ls.origin.push(child);
+		this._associatedObjects.push({map: map, object: child});
+	} else if(child._state == 'remove' || (ls.indexOf(child) == -1 && ls.origin.indexOf(child) != -1)){
+		ls.origin.splice(ls.origin.indexOf(child), 1);
+		this._associatedObjects.splice(this._associatedObjects.findIndex(ass => ass.map == map), 1);
 	}
 }
 
@@ -446,18 +483,7 @@ d2js.Entity.prototype._accept = function(){
  * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
  */
 d2js.Entity.prototype._reject = function(){
-	switch(this._state){
-	case 'edit' :
-		table.columnNames.forEach(function(cname){
-			this[cname] = this._origin[cname];
-		}, this);
-		this._state = 'none';
-		this._origin = null;
-		return true;
-	case 'new' :
-		table.rows.splice(table.rows.indexOf(this), 1);
-		return true;
-	} 
+	
 }
 
 /**
@@ -625,6 +651,14 @@ d2js.List.prototype.toString = function(){
 	return "[" + this.join(',') + "]";
 }
 
+d2js.List.prototype._accept = function(path = []){
+	this.forEach(e => e._accept(path));
+} 
+
+d2js.List.prototype._reject = function(path = []){
+	this.forEach(e => e._reject(path));
+} 
+
 d2js.Entity.prototype._isAlone = function(map){
 	if(this[map.name] == null){  // TODO N-N 关系另外考虑
 		return true;
@@ -719,6 +753,7 @@ d2js.Entity.prototype._markChange = function(path){
 			removed = true;
 		} else if(relatedObject == null) {
 			var prevObject = this._associatedObjects.find(v => v.map == map);
+			if(prevObject) prevObject = prevObject.object;
 			if(prevObject && prevObject._isAlone(map.inverse)){
 				relatedObject = prevObject;
 				removed = true;
