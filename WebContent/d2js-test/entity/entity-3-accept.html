@@ -56,18 +56,19 @@
 		// console.assert(book._associatedObjects.filter(ass => ass.map.name == 'author')[0] == author[3]);
 		console.assert(authors[2].books.origin.indexOf(book) == -1)
 		console.assert(authors[3].books.origin.indexOf(book) != -1)
-		console.assert(book._origin.author == authors[3].id);
-		return;
+		console.assert(book._origin.author == authors[3]);
+		console.assert(authors[3]._collectChange() == null);
 		
-		authors[3].books[1].author = null;
-		console.log('author3', c = authors[3]._collectChange());	// 判断力批判移除且无新属主,按 remove 提交
-		console.assert(c._children[0].rows.length == 2);
-		console.assert(c._children[0].rows[1]._state == 'remove');
+		book = authors[3].books[1];
+		book.author = null;
+		authors[3]._accept();
+		console.assert(authors[3].books.origin.indexOf(book) == -1);
+		console.assert(authors[3].books.indexOf(book) == -1);
 		
 		authors[3]._remove();
-		console.log('authors all remove ', c = authors[3]._collectChange());		// 3本都移除
-		console.assert(c._children[0].rows.length == 3);
-		console.assert(c._children[0].rows.every(r => r._state == 'remove'));
+		authors._accept();
+		console.assert(authors.length == 3);
+		console.assert(authors.origin.length == 3);
 	})();
 </script>
 </html>

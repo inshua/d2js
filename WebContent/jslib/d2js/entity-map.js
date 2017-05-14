@@ -240,7 +240,7 @@ d2js.Entity = function(values){
 				value.forEach(function(item){
 					let obj = new C(item);
 					ls.append(obj);
-					obj._values[map.inverse.name] = this;
+					obj._values[map.inverse.name] = obj._origin[map.inverse.name] = this;
 					ls.origin.push(obj);
 				}, this);
 			}
@@ -438,7 +438,7 @@ d2js.Entity.prototype._accept = function(path = []){
 	path = path.concat([this])
 	this.eachMappedAttribute(function(map, curr){
 		if(map.relation == 'many' && map.inverse && map.inverse.relation == 'one'){
-			curr.forEach(entity => entity._accept());	// List
+			curr._accept(path);
 
 		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'one'){
 			var old =  this._origin[map.name];
@@ -650,7 +650,16 @@ d2js.List.prototype.toString = function(){
 }
 
 d2js.List.prototype._accept = function(path = []){
-	this.forEach(e => e._accept(path));
+	var items = this;
+	if(this._map && this._map.isOwner){
+		items = this.slice();
+		this.origin.forEach(function(e){
+			if(this.indexOf(e) == -1 && e._isAlone(this._map.inverse)){
+				items.push(e);
+			}
+		}, this)
+	}
+	items.forEach(e => e._accept(path));
 } 
 
 d2js.List.prototype._reject = function(path = []){
