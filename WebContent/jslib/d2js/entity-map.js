@@ -723,14 +723,14 @@ d2js.List.prototype._collectChange = function(path = [], state){
 
 d2js.Entity.prototype._initCollectData = function(){
 	if(this._lastData) return;
-	console.log('initCollectData ' + this);
+	//console.log('initCollectData ' + this);
 	this._lastData = this._toRow();
 	this._affected = [];
 	this._lastState = this._state;
 }
 
 d2js.Entity.prototype._cleanCollectData = function(){
-	console.log('_cleanCollectData ' + this);
+	//console.log('_cleanCollectData ' + this);
 	delete this._lastData;
 	delete this._lastState;
 	delete this._affected;
@@ -745,7 +745,7 @@ d2js.List.prototype._isChanged = function(){
 }
 
 d2js.List.prototype._markChange = function(path = []){
-	console.log('markChange ' + this);
+	//console.log('markChange ' + this);
 	var state = this.owner ? (this.owner._lastState || this.owner._state) : undefined;
 	this._affected = [];
 	this.forEach(function(entity){
@@ -789,7 +789,7 @@ d2js.List.prototype._markChange = function(path = []){
 }
 
 d2js.Entity.prototype._markChange = function(path){
-	console.log('markChange ' + this);
+	// console.log('markChange ' + this);
 	//debugger;
 
 	this._initCollectData();
