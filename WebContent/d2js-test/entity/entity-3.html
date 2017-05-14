@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+
+<link href="../../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../../jslib/jquery-1.10.2.js"></script>
+<script src="../../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../../jslib/d2js/dataset.js"></script>
+<script src="../../jslib/d2js/entity-map.js"></script>
+<script src="../../jslib/d2js/render.js"></script>
+<script src="../../jslib/d2js/renderers.js"></script>
+<script src="../../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../../jslib/d2js/collector.js"></script>
+<script src="../../jslib/d2js/pipelines.js"></script>
+<script src="../../jslib/molecule.js"></script>
+
+<script src="../../jslib/date.js/Date.js"></script>
+
+</head>
+<body>
+</body>
+<script>
+	'use strict';
+	var authors = null;
+	(async function(){
+		await d2js.meta.load(['/d2js-test/author-entity.d2js', '/d2js-test/book-entity.d2js', '/d2js-test/publisher-entity.d2js']);
+
+		authors = await d2js.root.Author.fetch();
+		console.log(authors);
+		
+		authors[0].name += '名';
+		
+		console.log('name changed', authors[0]._collectChange());
+		
+		var c = authors._collectChange();
+		console.log('change info ', c);
+		console.assert(c.rows.length == 1);
+		console.assert(c.rows[0]._state == 'edit')
+		
+		authors[1].books[0].title += '啊';
+		console.log('a book changed', c = authors[1]._collectChange());
+		console.assert(c._state == 'none');
+		console.assert(c._children.length == 1);
+		console.assert(c._children[0].rows[0]._state == 'edit');
+		
+		console.log(authors[2].books[0]);
+		authors[2].books[0].author = authors[3];
+		console.log('author2', authors[2]._collectChange());	// null，飘移到康德名下，假定会通过康德提交，玛格丽特端认为无变化
+		console.log('author3', authors[3]._collectChange());	// 飘
+		console.assert(c._state == 'none');
+		console.assert(c._children.length == 1);
+		console.assert(c._children[0].rows[0]._state == 'edit');
+		
+		authors[3].books[1].author = null;
+		console.log('author3', c = authors[3]._collectChange());	// 判断力批判移除且无新属主,按 remove 提交
+		console.assert(c._children[0].rows.length == 2);
+		console.assert(c._children[0].rows[1]._state == 'remove');
+		
+		authors[3]._remove();
+		console.log('authors all remove ', c = authors[3]._collectChange());		// 3本都移除
+		console.assert(c._children[0].rows.length == 3);
+		console.assert(c._children[0].rows.every(r => r._state == 'remove'));
+	})();
+</script>
+</html>

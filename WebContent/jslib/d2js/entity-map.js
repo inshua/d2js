@@ -621,6 +621,10 @@ d2js.List.prototype.setArray = function(arr){
 	return this;
 }
 
+d2js.List.prototype.toString = function(){
+	return "[" + this.join(',') + "]";
+}
+
 d2js.Entity.prototype._isAlone = function(map){
 	if(this[map.name] == null){  // TODO N-N 关系另外考虑
 		return true;
@@ -698,6 +702,218 @@ d2js.Entity.prototype._collectChangeAsTable = function(path, state){
 	return table;
 }
 
+d2js.List.prototype._collectChange = function(path = [], state){
+	if(state == null && this.owner && this.map.isOwner && this.owner._state == 'remove'){
+		state = 'remove';
+	}
+	var table = {
+		src : contextPath + this.meta.path,
+		columns : this.meta.columns,
+		rows : this.map(row => row._collectChange(path, state))
+			.concat(this.origin.filter(isRemoved, this).map(row => row._collectChange(path, map.isOwner ? 'remove': undefined)))
+			.filter(r => r != null),
+	};
+	if(table.rows.length == 0) return null;
+	return table;
+
+	function isRemoved(entity){
+		return this.indexOf(entity) == -1 && entity._isAlone(this._map.inverse);
+	}
+}
+
+d2js.Entity.prototype._initCollectData = function(){
+	if(this._lastData) return;
+	console.log('initCollectData ' + this);
+	this._lastData = this._toRow();
+	this._affected = [];
+	this._lastState = this._state;
+}
+
+d2js.Entity.prototype._cleanCollectData = function(){
+	console.log('_cleanCollectData ' + this);
+	delete this._lastData;
+	delete this._lastState;
+	delete this._affected;
+}
+
+d2js.Entity.prototype._isChanged = function(){
+	return this._lastState != 'none' || this._affected.some(e => e._isChanged());
+}
+
+d2js.List.prototype._isChanged = function(){
+	return this._affected.some(e => e._isChanged());
+}
+
+d2js.List.prototype._markChange = function(path = []){
+	console.log('markChange ' + this);
+	var state = this.owner ? (this.owner._lastState || this.owner._state) : undefined;
+	this._affected = [];
+	this.forEach(function(entity){
+		if(path.indexOf(entity) != -1) return;
+		entity._initCollectData();
+		if(state == 'remove'){
+			pushRemovedEntity.call(this, entity);
+		} else {
+			this._affected.push(entity);
+		}
+	}, this);
+
+	this.origin.forEach(function(entity){
+		if(path.indexOf(entity) == -1 && this.indexOf(entity) == -1 && entity._isAlone(this._map.inverse)){
+			entity._initCollectData();
+			pushRemovedEntity.call(this, entity);
+		}
+	}, this);
+
+	this._affected = this._affected.filter(function(entity){
+		entity._markChange(path);
+		if(entity._isChanged() == false) {	// 最终没有需要提交的
+			entity._cleanCollectData();
+		} else {
+			return true;
+		}
+	});
+
+	function pushRemovedEntity(entity){
+		if(entity._state == 'new'){
+			return entity._cleanCollectData()
+		}
+		if(this._map && this._map.isOwner){
+			entity._lastState = 'remove';
+		} else {
+			entity._lastData[this._map.inverse.name] == null;	// 通常已经是 null
+			if(entity._state == 'none') entity._lastState = 'edit';
+		}
+		this._affected.push(entity);
+	}
+}
+
+d2js.Entity.prototype._markChange = function(path){
+	console.log('markChange ' + this);
+	//debugger;
+
+	this._initCollectData();
+	path = path ? path.concat([this]) : [this];
+	
+	for(let k in this._meta.map){if(this._meta.map.hasOwnProperty(k)){
+		let map = this._meta.map[k];
+		let relatedObject = this._values[k];
+		if(relatedObject && path.indexOf(relatedObject) != -1) continue;
+
+		if(map.inverse && map.inverse.isOwner){ // belong to relatedObject, and owner not in path
+			continue;		// 不收集 owner 对象
+		}
+
+		var removed = false;
+		if(relatedObject && relatedObject._isEntity && this._lastState == 'remove'){
+			removed = true;
+		} else if(relatedObject == null) {
+			var prevObject = this._associatedObjects.find(v => v.map == map);
+			if(prevObject && prevObject._isAlone(map.inverse)){
+				relatedObject = prevObject;
+				removed = true;
+			}
+		}
+		if(relatedObject == null) continue;
+
+		if(removed){
+			if(relatedObject._state == 'new'){
+				continue;
+			}
+			relatedObject._initCollectData();
+			if(map.isOwner){
+				relatedObject._lastState = 'remove';
+			} else {
+				if(map.inverse.relation == 'one'){
+					relatedObject[map.inverse.name] = null;
+					if(relatedObject._lastState == 'none'){
+						relatedObject._lastState = 'edit';
+					}
+				}
+			}
+		} else {
+			if(relatedObject._isEntity) relatedObject._initCollectData();
+		}
+		relatedObject._markChange(path);
+
+		if(relatedObject._isEntity){
+			if(relatedObject._isChanged() == false){
+				relatedObject._cleanCollectData();
+				continue;
+			}
+		}
+
+		this._affected.push(relatedObject);
+	}}
+}
+
+d2js.List.prototype._removeMarkData = function(){
+	this._affected.forEach(e => e._removeMarkData());
+	delete this._affected;
+}
+
+d2js.Entity.prototype._removeMarkData = function(){
+	this._affected.forEach(e => e._removeMarkData());
+	this._cleanCollectData();
+}
+
+d2js.List.prototype._collectChange = function(path){
+	let isStart = this._affected == null;
+	if(isStart) this._markChange(path);
+	var table = null;
+	if(this._affected.length){
+		table = {
+			src : contextPath + this.meta.path,
+			columns : this.meta.columns,
+			rows : this._affected.map(entity => entity._collectChange(path))
+		};
+	}
+	if(isStart) {
+		this._removeMarkData();
+	}
+	return table;
+}
+
+d2js.Entity.prototype._collectChange = function(path){
+	let isStart = this._lastData == null;
+	if(isStart) this._markChange(path);
+	var r = this._lastData;
+	if(this._lastState == 'edit'){
+		r._origin = this._origin;
+	} else if(this._lastState == 'none'){
+		if(this._isChanged()){
+			r = {_state: 'none'};
+		} else {
+			r = null;
+		}
+	}
+	if(r){
+		r._state = this._lastState;
+		if(this._affected.length){
+			r._children = this._affected.map(function(c){
+				if(c._isEntity){
+					return c._collectChangeAsTable();
+				} else {
+					return c._collectChange();
+				}
+			});
+		}
+	}
+	if(isStart) this._removeMarkData();
+	return r;
+}
+
+d2js.Entity.prototype._collectChangeAsTable = function(path){
+	var change = this._collectChange(path);
+	if(change == null) return null;
+	var table = {
+		src : contextPath + this._meta.path,
+		columns : this._meta.columns,
+		rows : [change]
+	};
+	return table;
+}
+
 d2js.Entity.prototype.submit = function(){
 	var Fun = this;
 	
@@ -719,25 +935,6 @@ d2js.Entity.prototype.submit = function(){
 			reject(e);
 		} 	
 	});
-}
-
-d2js.List.prototype._collectChange = function(path = [], state){
-	if(state == null && this.owner && this.map.isOwner && this.owner._state == 'remove'){
-		state = 'remove';
-	}
-	var table = {
-		src : contextPath + this.meta.path,
-		columns : this.meta.columns,
-		rows : this.map(row => row._collectChange(path, state))
-			.concat(this.origin.filter(isRemoved, this).map(row => row._collectChange(path, map.isOwner ? 'remove': undefined)))
-			.filter(r => r != null),
-	};
-	if(table.rows.length == 0) return null;
-	return table;
-
-	function isRemoved(entity){
-		return this.indexOf(entity) == -1 && entity._isAlone(this._map.inverse);
-	}
 }
 
 d2js.List.prototype.submit = function(){
