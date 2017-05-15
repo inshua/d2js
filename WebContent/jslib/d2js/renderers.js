@@ -266,7 +266,20 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 			tBody.rows[0].remove();
 		}
 	}
-	var rows = (table && table.rows) || table || [];
+	
+	var rows = null;
+	if(table){
+		if(table.rows){
+			rows = table.rows;
+		} else if(table.length){
+			rows = table;
+		} else {
+			throw new Error('must be table or array');
+		}
+	} else {
+		rows = [];
+	}
+	
 	if(rows.length == 0){
 		if(tBodyEmpty) tBodyEmpty.style.display = '';
 	} else {
