@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+
+<link href="../../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../../jslib/jquery-1.10.2.js"></script>
+<script src="../../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../../jslib/d2js/dataset.js"></script>
+<script src="../../jslib/d2js/entity-map.js"></script>
+<script src="../../jslib/d2js/render.js"></script>
+<script src="../../jslib/d2js/renderers.js"></script>
+<script src="../../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../../jslib/d2js/collector.js"></script>
+<script src="../../jslib/d2js/pipelines.js"></script>
+<script src="../../jslib/molecule.js"></script>
+
+<script src="../../jslib/date.js/Date.js"></script>
+
+</head>
+<body>
+</body>
+<script>
+	'use strict';
+	var authors = null;
+	(async function(){
+		var c = null;
+		await d2js.meta.load(['/d2js-test/author-entity.d2js', '/d2js-test/book-entity.d2js', '/d2js-test/publisher-entity.d2js']);
+		d2js.root.Author.meta.map.books.isOwner = false;
+		
+		authors = await d2js.root.Author.fetch();
+		console.log(authors);
+		
+		authors[0].name += '名';
+		
+		console.log('name changed', authors[0]._collectChange());
+		authors[0]._accept();
+		console.assert(authors[0]._origin.name == '曹雪芹名');
+		console.assert(authors[0]._collectChange() == null);
+		
+		authors[1].books[0].title += '啊';
+		console.log('a book changed', c = authors[1]._collectChange());
+		authors._accept();
+		console.assert(authors[1].books[0]._origin.title.endsWith('啊'));
+		console.assert(authors[1]._collectChange() == null);
+		
+		var book = authors[2].books[0];
+		book.author = authors[3];
+		console.log('author2', authors[2]._collectChange());	// null，飘移到康德名下，假定会通过康德提交，玛格丽特端认为无变化
+		console.log('author3', authors[3]._collectChange());	// 飘
+		authors[2]._accept();
+		console.assert(book._state == 'edit')
+		authors[3]._accept();
+		console.assert(book._state == 'none')
+		// console.assert(book._associatedObjects.filter(ass => ass.map.name == 'author')[0] == author[3]);
+		console.assert(authors[2].books.origin.indexOf(book) == -1)
+		console.assert(authors[3].books.origin.indexOf(book) != -1)
+		console.assert(book._origin.author == authors[3]);
+		console.assert(authors[3]._collectChange() == null);
+		
+		book = authors[3].books[1];
+		book.author = null;
+		authors[3]._accept();
+		console.assert(authors[3].books.origin.indexOf(book) == -1);
+		console.assert(authors[3].books.indexOf(book) == -1);
+		
+		authors[3]._remove();
+		authors._accept();
+		console.assert(authors.length == 3);
+		console.assert(authors.origin.length == 3);
+	})();
+</script>
+</html>
