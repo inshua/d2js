@@ -321,6 +321,8 @@ d2js.Entity.prototype._getValueBeforeMap = function(columnName){
  * @param value {object} 值
  */
 d2js.Entity.prototype._set = function(attr, newValue){
+	if(this._state == 'phantom') throw new Error('cant set value at phantom entity');
+
 	let isMappedOject = attr in this._meta.map;
 	newValue = (newValue == null ? null : newValue);
 	if(isMappedOject){
@@ -430,56 +432,13 @@ d2js.Entity.prototype._isDirty = function(){
 	return this._state != 'none';
 }
 
-/**
- * 接受变更
- * @returns {Boolean} 确实有变动返回 true，否则返回 false
- */
-d2js.Entity.prototype._accept = function(path = []){
-	// console.log(this + ' accept');
-	path = path.concat([this])
-	this.eachMappedAttribute(function(map, curr){
-		if(map.relation == 'many' && map.inverse && map.inverse.relation == 'one'){
-			curr._accept(path);
 
-		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'one'){
-			var old =  this._origin[map.name];
-			if(Object.equals(old, curr) == false || map.isOwner){
-				if(old && path.indexOf(old) == -1) {
-					old._accept(path);
-				}
-				if(curr && Object.equals(old,curr) == false && path.indexOf(curr) == -1){
-					curr._accept(path);
-				}
-			}
-		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'many'){
-			var old =  this._origin[map.name];
-			if(old){
-				old[map.inverse.name]._accept(path);
-			}
-			var curr = this._values[map.name];
-			if(curr != null && Object.equals(old,curr) == false){
-				curr[map.inverse.name]._accept(path);
-			}
-		}
-	})
-	if(this._state == 'edit' || this._state == 'new'){
-		this._origin = Object.assign({}, this._values);
-	}
-	this._state = 'none';
-}
-
-/**
- * 回滚变更，退回上一版本
- * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
- */
-d2js.Entity.prototype._reject = function(){
-	
-}
 
 /**
  * 将本数据行状态设为 remove, 并从各关联对象移除。
  */
 d2js.Entity.prototype._remove = function(){
+	if(this._state == 'phantom') throw new Error('cannot remove phantom object')
 	this._state = 'remove';
 	for(let k in this._values){
 		if(this._values.hasOwnProperty(k) && k in this._meta.map){
@@ -641,13 +600,76 @@ d2js.List.prototype.toString = function(){
 	return "[" + this.join(',') + "]";
 }
 
-d2js.List.prototype._accept = function(path = []){
+/**
+ * 接受变更
+ * @returns {Boolean} 确实有变动返回 true，否则返回 false
+ */
+d2js.Entity.prototype._accept = function(path = []){
+	if(this._state == 'phantom') return;
+	// console.log(this + ' accept');
+	path = path.concat([this])
+	this.eachMappedAttribute(function(map, curr){
+		if(map.relation == 'many' && map.inverse && map.inverse.relation == 'one'){
+			curr._accept(path);
+
+		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'one'){
+			var old =  this._origin[map.name];
+			if(Object.equals(old, curr) == false || map.isOwner){
+				if(old && path.indexOf(old) == -1) {
+					old._accept(path);
+				}
+				if(curr && Object.equals(old,curr) == false && path.indexOf(curr) == -1){
+					curr._accept(path);
+				}
+			}
+		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'many'){
+			var old =  this._origin[map.name];
+			if(old){
+				old[map.inverse.name]._accept(path, this);
+			}
+			var curr = this._values[map.name];
+			if(curr != null && Object.equals(old,curr) == false){
+				curr[map.inverse.name]._accept(path, this);
+			}
+		}
+	})
+	if(this._state == 'edit' || this._state == 'new'){
+		this._origin = Object.assign({}, this._values);
+	}
+	if(this._state == 'remove'){
+		this._state = 'phantom';
+	} else { 
+		this._state = 'none';
+	}
+}
+
+d2js.List.prototype._accept = function(path = [], element){
 	// console.log(this + ' accept');
 	if(path.length == 0 && this.owner) path.push(this.owner);
 
+	if(element){
+		var pos = this.indexOf(element), originPos = this.indexOf(element);
+		if(element._state == 'remove' || element._state == 'phantom'){
+			if(pos != -1){
+				this.splice(pos, 1);
+			}
+			if(originPos != -1){
+				this.origin.splice(originPos, 1);
+			}
+		} else if(pos != -1 && originPos == -1){
+			ls.origin.push(element);
+		} else if(pos == -1 && originPos != -1){
+			ls.origin.splice(originPos, 1);
+		}
+		if(path.indexOf(element) == -1){
+			element._accept(path);
+		}
+		return;
+	}
+
 	for(var i=0; i<this.length; ){
 		let child = this[i];
-		if(child._state == 'remove'){
+		if(child._state == 'remove' || child._state == 'phantom'){
 			this.splice(i, 1);
 		} else {
 			if(this.origin.indexOf(child) == -1){
@@ -658,7 +680,7 @@ d2js.List.prototype._accept = function(path = []){
 	}
 	for(var i=0; i<this.origin.length; ){
 		let child = this.origin[i];
-		if(child._state == 'remove' || this.indexOf(child) == -1){
+		if(child._state == 'remove'  || child._state == 'phantom' || this.indexOf(child) == -1){
 			this.origin.splice(i, 1);
 		} else {
 			i++;
@@ -681,8 +703,104 @@ d2js.List.prototype._accept = function(path = []){
 	}, this);
 } 
 
+/**
+ * 回滚变更，退回上一版本
+ * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
+ */
+d2js.Entity.prototype._reject = function(){
+	path = path.concat([this])
+	this.eachMappedAttribute(function(map, curr){
+		if(map.relation == 'many' && map.inverse && map.inverse.relation == 'one'){
+			curr._reject(path);
+
+		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'one'){
+			var old =  this._origin[map.name];
+			if(Object.equals(old, curr) == false || map.isOwner){
+				if(old && path.indexOf(old) == -1) {
+					old._reject(path);
+				}
+				if(curr && Object.equals(old,curr) == false && path.indexOf(curr) == -1){
+					curr._reject(path);
+				}
+			}
+		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'many'){
+			var old =  this._origin[map.name];
+			if(old){
+				old[map.inverse.name]._reject(path, this);
+			}
+			var curr = this._values[map.name];
+			if(curr != null && Object.equals(old, curr) == false){
+				curr[map.inverse.name]._reject(path, this);
+			}
+		}
+	})
+	if(this._state == 'edit' || this._state == 'remove'){
+		this._origin = Object.assign({}, this._values);
+	} 
+	if(this._state == 'new'){
+		this._state = 'phantom';
+	} else {
+		this._state = 'none';
+	}
+}
+
 d2js.List.prototype._reject = function(path = []){
-	this.forEach(e => e._reject(path));
+	if(path.length == 0 && this.owner) path.push(this.owner);
+
+	if(element){
+		var pos = this.indexOf(element), originPos = this.indexOf(element);
+		if(element._state == 'new' || element._state == 'phantom'){
+			if(pos != -1){
+				this.splice(pos, 1);
+			}
+			if(originPos != -1){
+				this.origin.splice(originPos, 1);
+			}
+		} else if(pos != -1 && originPos == -1){
+			ls.splice(pos, 1);
+		} else if(pos == -1 && originPos != -1){
+			ls.push(element);
+		}
+		if(path.indexOf(element) == -1){
+			element._accept(path);
+		}
+		return;
+	}
+
+	for(var i=0; i<this.length; ){
+		let child = this[i];
+		if(child._state == 'new' || child._state == 'phantom'){
+			this.splice(i, 1);
+		} else {
+			if(this.origin.indexOf(child) == -1){
+				this.origin.push(child);
+			}
+			i++;
+		}
+	}
+	for(var i=0; i<this.origin.length; ){
+		let child = this.origin[i];
+		if(child._state == 'new'  || child._state == 'phantom' || this.indexOf(child) == -1){
+			this.origin.splice(i, 1);
+		} else {
+			i++;
+		}
+	}
+
+	var items = this;
+	if(this._map && this._map.isOwner){
+		items = this.slice();
+		this.origin.forEach(function(e){
+			if(this.indexOf(e) == -1 && e._isAlone(this._map.inverse)){
+				items.push(e);
+			}
+		}, this)
+	}
+	items.forEach(function(child){
+		if(path.indexOf(child) == -1){
+			child._accept(path);
+		}
+	}, this);
 } 
 
 d2js.Entity.prototype._isAlone = function(map){
