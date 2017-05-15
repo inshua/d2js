@@ -627,7 +627,6 @@ d2js.Entity.prototype._accept = function(path = []){
 			if(old){
 				old[map.inverse.name]._accept(path, this);
 			}
-			var curr = this._values[map.name];
 			if(curr != null && Object.equals(old,curr) == false){
 				curr[map.inverse.name]._accept(path, this);
 			}
@@ -648,7 +647,7 @@ d2js.List.prototype._accept = function(path = [], element){
 	if(path.length == 0 && this.owner) path.push(this.owner);
 
 	if(element){
-		var pos = this.indexOf(element), originPos = this.indexOf(element);
+		var pos = this.indexOf(element), originPos = this.origin.indexOf(element);
 		if(element._state == 'remove' || element._state == 'phantom'){
 			if(pos != -1){
 				this.splice(pos, 1);
@@ -657,9 +656,9 @@ d2js.List.prototype._accept = function(path = [], element){
 				this.origin.splice(originPos, 1);
 			}
 		} else if(pos != -1 && originPos == -1){
-			ls.origin.push(element);
+			this.origin.push(element);
 		} else if(pos == -1 && originPos != -1){
-			ls.origin.splice(originPos, 1);
+			this.origin.splice(originPos, 1);
 		}
 		if(path.indexOf(element) == -1){
 			element._accept(path);
@@ -707,7 +706,7 @@ d2js.List.prototype._accept = function(path = [], element){
  * 回滚变更，退回上一版本
  * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
  */
-d2js.Entity.prototype._reject = function(){
+d2js.Entity.prototype._reject = function(path = []){
 	path = path.concat([this])
 	this.eachMappedAttribute(function(map, curr){
 		if(map.relation == 'many' && map.inverse && map.inverse.relation == 'one'){
@@ -728,14 +727,13 @@ d2js.Entity.prototype._reject = function(){
 			if(old){
 				old[map.inverse.name]._reject(path, this);
 			}
-			var curr = this._values[map.name];
 			if(curr != null && Object.equals(old, curr) == false){
 				curr[map.inverse.name]._reject(path, this);
 			}
 		}
 	})
 	if(this._state == 'edit' || this._state == 'remove'){
-		this._origin = Object.assign({}, this._values);
+		this._values = Object.assign({}, this._origin);
 	} 
 	if(this._state == 'new'){
 		this._state = 'phantom';
@@ -744,11 +742,11 @@ d2js.Entity.prototype._reject = function(){
 	}
 }
 
-d2js.List.prototype._reject = function(path = []){
+d2js.List.prototype._reject = function(path = [], element){
 	if(path.length == 0 && this.owner) path.push(this.owner);
 
 	if(element){
-		var pos = this.indexOf(element), originPos = this.indexOf(element);
+		var pos = this.indexOf(element), originPos = this.origin.indexOf(element);
 		if(element._state == 'new' || element._state == 'phantom'){
 			if(pos != -1){
 				this.splice(pos, 1);
@@ -757,48 +755,37 @@ d2js.List.prototype._reject = function(path = []){
 				this.origin.splice(originPos, 1);
 			}
 		} else if(pos != -1 && originPos == -1){
-			ls.splice(pos, 1);
+			this.splice(pos, 1);
 		} else if(pos == -1 && originPos != -1){
-			ls.push(element);
+			Array.prototype.push.call(this, element);
 		}
 		if(path.indexOf(element) == -1){
-			element._accept(path);
+			element._reject(path);
 		}
 		return;
 	}
 
 	for(var i=0; i<this.length; ){
 		let child = this[i];
-		if(child._state == 'new' || child._state == 'phantom'){
+		if(child._state == 'new' || child._state == 'phantom' || this.origin.indexOf(child) == -1){
 			this.splice(i, 1);
-		} else {
-			if(this.origin.indexOf(child) == -1){
-				this.origin.push(child);
-			}
-			i++;
-		}
-	}
-	for(var i=0; i<this.origin.length; ){
-		let child = this.origin[i];
-		if(child._state == 'new'  || child._state == 'phantom' || this.indexOf(child) == -1){
-			this.origin.splice(i, 1);
 		} else {
 			i++;
 		}
 	}
 
-	var items = this;
+	var items = this.origin;
 	if(this._map && this._map.isOwner){
-		items = this.slice();
-		this.origin.forEach(function(e){
-			if(this.indexOf(e) == -1 && e._isAlone(this._map.inverse)){
+		items = this.origin.slice();
+		this.forEach(function(e){
+			if(this.origin.indexOf(e) == -1 && e._isAlone(this._map.inverse)){
 				items.push(e);
 			}
 		}, this)
 	}
 	items.forEach(function(child){
 		if(path.indexOf(child) == -1){
-			child._accept(path);
+			child._reject(path);
 		}
 	}, this);
 } 
