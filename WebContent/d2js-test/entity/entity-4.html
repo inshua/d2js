@@ -57,7 +57,7 @@
 		
 		var book = authors[3].books[1];
 		book.author = null;
-		console.log('author3', c = authors[3]._collectChange());	// 判断力批判移除且无新属主,但author并非owner按 remove 提交
+		console.log('author3', c = authors[3]._collectChange());	// 判断力批判移除且无新属主,但author并非owner按 edit 提交
 		console.assert(c._children[0].rows.length == 2);
 		
 		authors[3]._remove();

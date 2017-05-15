@@ -435,6 +435,7 @@ d2js.Entity.prototype._isDirty = function(){
  * @returns {Boolean} 确实有变动返回 true，否则返回 false
  */
 d2js.Entity.prototype._accept = function(path = []){
+	// console.log(this + ' accept');
 	path = path.concat([this])
 	this.eachMappedAttribute(function(map, curr){
 		if(map.relation == 'many' && map.inverse && map.inverse.relation == 'one'){
@@ -453,11 +454,11 @@ d2js.Entity.prototype._accept = function(path = []){
 		} else if(map.relation == 'one' && map.inverse && map.inverse.relation == 'many'){
 			var old =  this._origin[map.name];
 			if(old){
-				old._acceptChildChange(map.inverse, this);
+				old[map.inverse.name]._accept(path);
 			}
 			var curr = this._values[map.name];
 			if(curr != null && Object.equals(old,curr) == false){
-				curr._acceptChildChange(map.inverse, this);
+				curr[map.inverse.name]._accept(path);
 			}
 		}
 	})
@@ -465,15 +466,6 @@ d2js.Entity.prototype._accept = function(path = []){
 		this._origin = Object.assign({}, this._values);
 	}
 	this._state = 'none';
-}
-
-d2js.Entity.prototype._acceptChildChange = function(map, child){
-	var ls = this._values[map.name];
-	if(ls.indexOf(child) != -1 && ls.origin.indexOf(child) == -1){
-		ls.origin.push(child);
-	} else if(child._state == 'remove' || (ls.indexOf(child) == -1 && ls.origin.indexOf(child) != -1)){
-		ls.origin.splice(ls.origin.indexOf(child), 1);
-	}
 }
 
 /**
@@ -650,6 +642,29 @@ d2js.List.prototype.toString = function(){
 }
 
 d2js.List.prototype._accept = function(path = []){
+	// console.log(this + ' accept');
+	if(path.length == 0 && this.owner) path.push(this.owner);
+
+	for(var i=0; i<this.length; ){
+		let child = this[i];
+		if(child._state == 'remove'){
+			this.splice(i, 1);
+		} else {
+			if(this.origin.indexOf(child) == -1){
+				this.origin.push(child);
+			}
+			i++;
+		}
+	}
+	for(var i=0; i<this.origin.length; ){
+		let child = this.origin[i];
+		if(child._state == 'remove' || this.indexOf(child) == -1){
+			this.origin.splice(i, 1);
+		} else {
+			i++;
+		}
+	}
+
 	var items = this;
 	if(this._map && this._map.isOwner){
 		items = this.slice();
@@ -659,7 +674,11 @@ d2js.List.prototype._accept = function(path = []){
 			}
 		}, this)
 	}
-	items.forEach(e => e._accept(path));
+	items.forEach(function(child){
+		if(path.indexOf(child) == -1){
+			child._accept(path);
+		}
+	}, this);
 } 
 
 d2js.List.prototype._reject = function(path = []){
