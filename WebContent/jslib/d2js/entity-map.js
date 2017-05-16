@@ -1019,7 +1019,8 @@ d2js.Entity.prototype._collectChangeAsTable = function(path){
 	var table = {
 		src : contextPath + this._meta.path,
 		columns : this._meta.columns,
-		rows : [change]
+		rows : [change],
+		_object : this
 	};
 	return table;
 }
