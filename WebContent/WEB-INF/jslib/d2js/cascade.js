@@ -127,6 +127,7 @@ D2JS.prototype.update = function(params){
 }
 
 D2JS.prototype.updateTable = function(table, parentRow, isSelf){
+	if(table == null) return;
 	var path = this.request.getServletContext().getContextPath();
 	var src = table.src.replace(path, '');
 	src = this.request.getServletContext().getRealPath(src);
@@ -170,6 +171,8 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 				}
 				err.table = table.name;
 				err.idx = row._idx;
+				err._object_id = row._object_id;
+				err.table_id = table._object_id;
 				throw e;
 			}
 		}

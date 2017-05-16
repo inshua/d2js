@@ -56,17 +56,46 @@ if(Object.equals == null){
 
 d2js.meta = {};
 
-d2js.processResponse = function(response){
+d2js.processResponse = function(response, items){
 	return new Promise(async function(resolve, reject){
 		var s = await response.text();
 		try{
 			var result = JSON.parse(s);
 		} catch(e){
-			throw new Erorr(s);
+			throw new Error(s);
 		}
 		try{
 			if(result.error){
-				reject(Object.assign(new Error(), result.error));
+				var error = Object.assign(new Error(), result.error);
+				if(error._object_id != null){
+					var item = items[error._object_id];
+					if(item){
+						if(item.isList){
+							item.error = error;
+						} else if(item._isEntity){
+							if(error.field){
+								var err;
+								if(error.field.indexOf(',') == -1){
+									err = {};
+									err[error.field] = error;					
+								} else {
+									var arr = error.field.split(',');	// json 类型的字段，错误是一串路径
+									arr.reverse();
+									err = arr.reduce(function(err, fld){
+										var e = {}; e[fld] = err; return e;
+									}, error);
+								}
+								item._error_at = err;
+								item._error = null;
+							} else {
+								item._error = error;
+								item._error_at = null;
+							}
+						}
+						return resolve(error);
+					}
+				} 
+				reject(error);
 			} else {
 				resolve(result);
 			}
@@ -187,14 +216,14 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root){
  * 数据行。
  * @class d2js.Entity
  */
-d2js.Entity = function(values){
+d2js.Entity = function(values, state = 'new'){
 	this._values = {};
 	
 	/**
 	 * 行状态, new edit remove none
 	 * @type {string}
 	 */
-	this._state = 'none';
+	this._state = state;
 	
 	/**
 	 * 行错误
@@ -238,7 +267,7 @@ d2js.Entity = function(values){
 				let ls = this._values[k];
 				let C = ls.meta.Constructor;
 				value.forEach(function(item){
-					let obj = new C(item);
+					let obj = new C(item, state);
 					ls.append(obj);
 					obj._values[map.inverse.name] = obj._origin[map.inverse.name] = this;
 					ls.origin.push(obj);
@@ -255,7 +284,7 @@ d2js.Entity = function(values){
 						value[map.inverse.name] = this;
 					}
 					let Constructor = this._namespace[map.type];
-					let obj = this._values[k] = new Constructor(value);		// if column name == map name, just keep map name, when collect data, will collect fk id.
+					let obj = this._values[k] = new Constructor(value, state);		// if column name == map name, just keep map name, when collect data, will collect fk id.
 					if(map.inverse && map.inverse.relation == 'many'){
 						let ls = obj[map.inverse.name];
 						this._values[k] = obj;
@@ -337,7 +366,7 @@ d2js.Entity.prototype._set = function(attr, newValue){
 		if(this._state == 'none') {
 			this._state = 'edit';
 			if(this._origin == null){
-				this._origin = this._toRow();
+				this._origin = Object.create({}, this._values);
 			}
 		}
 		this._values[attr] = newValue;
@@ -490,19 +519,7 @@ d2js.Entity.fetch = function(method = 'fetch', params, option){
 		try{
 			var response = await fetch(url + '?' + jQuery.param(params));
 			var table = await d2js.processResponse(response);
-			var ls = new d2js.List(Fun.meta);
-			for(let k in table){
-				if(table.hasOwnProperty(k) && k != 'columns' && k != 'rows'){
-					ls[k] = table[k];
-				}
-			}
-			if(ls.total != null){
-				ls.pageIndex = ls.start / ls.pageSize;
-				ls.pageCount = Math.ceil(ls.total / ls.pageSize);
-			}
-
-			ls.setArray(table.rows);
-			resolve(ls);
+			resolve(d2js.tableToList(table, Fun.meta));
 		} catch(e){
 			reject(e);
 		} 	
@@ -528,10 +545,24 @@ d2js.List = function(meta, map){
 	var array = [];
 	var proto = Object.getPrototypeOf(this);
 	var result = Object.setPrototypeOf(array, proto);
-	result._map = map;
-	result.meta = meta || (map && map.meta);
+	if(meta instanceof Function){
+		result.meta = meta.meta;	// meta is constructor
+		result._map = map;
+	} else {
+		result._map = map;
+		result.meta = meta || (map && map.meta);
+	}
 	result.owner = null;
 	result.origin = [];
+	result.page = 0;
+	result.pageSize = d2js.DataTable.DEFAULT_PAGESIZE;
+	/**
+	 * 查询参数。目前实际用到的直接成员有用于分页的 _page : {start:N, limit:N}, 用于排序的  _sorts : {column : 'asc'|'desc'}, 用于查询的 params : {参数}。
+	 * @type {object}
+	 */
+	result.search = {params : {}};
+	EventDispatcher.call(result);
+	result.regEvent(['willload', 'load', 'willsubmit', 'submit', 'rowchange', 'newrow', 'statechange', 'schemachange']);
 	return result;
 }
 
@@ -579,13 +610,13 @@ d2js.List.prototype.drop = function(ele){
 	this.splice(idx,1);
 }
 
-d2js.List.prototype.setArray = function(arr){
+d2js.List.prototype.setArray = function(arr, state='new'){
 	this.length = 0;
 	if(arr == null) return;
 	for(var i=0; i<arr.length; i++){
 		var Constructor = this.meta.Constructor;
 		if(Constructor){
-			var ele = new Constructor(arr[i]);
+			var ele = new Constructor(arr[i], state);
 			this.push(ele);
 			this.origin.push(ele);
 		} else {
@@ -939,7 +970,8 @@ d2js.List.prototype._collectChange = function(path){
 		table = {
 			src : contextPath + this.meta.path,
 			columns : this.meta.columns,
-			rows : this._affected.map(entity => entity._collectChange(path))
+			rows : this._affected.map(entity => entity._collectChange(path)),
+			_object : this
 		};
 	}
 	if(isStart) {
@@ -963,6 +995,7 @@ d2js.Entity.prototype._collectChange = function(path){
 	}
 	if(r){
 		r._state = this._lastState;
+		r._object = this;
 		if(this._affected.length){
 			r._children = this._affected.map(function(c){
 				if(c._isEntity){
@@ -971,6 +1004,9 @@ d2js.Entity.prototype._collectChange = function(path){
 					return c._collectChange();
 				}
 			});
+			if(r._children.length == 0){
+				delete r._children;
+			}
 		}
 	}
 	if(isStart) this._removeMarkData();
@@ -988,48 +1024,146 @@ d2js.Entity.prototype._collectChangeAsTable = function(path){
 	return table;
 }
 
-d2js.Entity.prototype.submit = function(){
-	var Fun = this;
-	
-	var url = contextPath + Fun.meta.path + "?_m=update";
-	var change = this._collectChangeAsTable();
-	var params = {table: change};
+d2js.Entity.prototype._submit = 
+d2js.List.prototype.submit = function(){
+	if(this.isList){
+		var url = contextPath + this.meta.path + "?_m=update";
+		var change = this._collectChange();
+	} else if(this._isEntity){
+		var url = contextPath + this._meta.path + "?_m=update";
+		var change = this._collectChangeAsTable();
+	}
+	if(change == null) return;
+	var items = [], itemId = 0;
+	function collectItems(change){
+		if(change == null) return;
+		items.push(change._object);
+		items._object_id = itemId ++;
+		delete change._object;
+		change.rows.forEach(function(row){
+			items.push(row._object);
+			row._object_id = itemId ++;
+			delete row._object;
+			if(row._children){
+				row._children.forEach(ch => collectItems(ch));
+			}
+		})
+	}
+	collectItems(change);
+
+	let params = {params : JSON.stringify({table: change})};
+
 	return new Promise(async function(resolve, reject){
 		try{
-			var resposne = await fetch(url + '?_m=update', {
+			var response = await fetch(url, {
 							method:'post', 
 							headers: {  
 								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
 							},  
 							body : jQuery.param(params)
 						});
-			var result = await d2js.processResponse(resposne);
+			var result = await d2js.processResponse(response, items);
 			resolve(result);
 		} catch(e){
-			reject(e);
+			resolve(e);
 		} 	
 	});
 }
 
-d2js.List.prototype.submit = function(){
-	var Fun = this;
+d2js.List.prototype.load = 
+d2js.List.prototype.fetch = function(method = 'fetch', params, option){
+	var me = this;
 	
-	var url = contextPath + Fun.meta.path + "?_m=update";
-	var change = this._collectChange();
-	var params = {table: change};
+	var url = contextPath + this.meta.path;
+	var q = {};
+	if(this.search.params){
+		Object.assign(q, this.search.params);
+	} else if(params){
+		Object.assign(q, params);
+	} 
+	if(params && params._sorts){
+		this.search._sorts = q._sorts;
+	} else {
+		q._sorts = this.search._sorts;
+	}
+	q._page = {start : this.page * this.pageSize, limit : this.pageSize};
+
+	params = {_m : method || q._m || 'fetch', params : JSON.stringify(q)};
+	
 	return new Promise(async function(resolve, reject){
 		try{
-			var resposne = await fetch(url + '?_m=update', {
-							method:'post', 
-							headers: {  
-								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
-							},  
-							body : jQuery.param(params)
-						});
-			var result = await d2js.processResponse(resposne);
-			resolve(result);
-		} catch(e){
-			reject(e);
+			me._clearError();
+			me.fireEvent('willload', me);
+			var response = await fetch(url + '?' + jQuery.param(params));
+			var table = await d2js.processResponse(response);
+			d2js.tableToList(table, me);
+			me.fireEvent('load', me);
+			resolve(me);
+		} catch(error){	//TODO 
+			me.fireEvent('load', me);
+			resolve(error);
 		} 	
 	});
 }
+
+d2js.List.prototype.navigatePage = function(pageIndex){
+	this.page = pageIndex;
+	this.search._page = {start : this.page * this.pageSize, limit : this.pageSize};
+	this.load(this.search.params, this.search.option);
+}
+
+d2js.List.prototype.reload = function(){
+	this.load(this.search.params, this.search.option);
+}
+
+d2js.tableToList = function(table, listOrMeta, mergeOrReplace = false){
+	if(listOrMeta == null){throw new Error("list or meta must specified")}
+	var ls = listOrMeta.isList ? listOrMeta : new d2js.List(listOrMeta);
+	if(listOrMeta.isList && mergeOrReplace == false){
+		ls.length = 0;
+		ls.origin.length = 0;
+	}
+	for(let k in table){
+		if(table.hasOwnProperty(k) && k != 'columns' && k != 'rows'){
+			ls[k] = table[k];
+		}
+	}
+	if(ls.total != null){
+		ls.pageIndex = ls.start / ls.pageSize;
+		ls.pageCount = Math.ceil(ls.total / ls.pageSize);
+	}
+	ls.setArray(table.rows, 'none');  // TODO 覆盖重复数据
+	return ls;
+}
+
+d2js.List.prototype._clearError = function(path = []){
+	this.error = null;
+	this.forEach(e => path.indexOf(e) == -1 && e._clearError(path));
+}
+
+d2js.Entity.prototype._clearError = function(path){
+	path = path ? [this] : path.concat([this]);
+	this.error = null;
+	this._error_at = null;
+	this.eachMappedAttribute(function(map, object){
+		if(object && (object.isList || map.isOwner) && path.indexOf(object) == -1){
+			object._clearError(path);
+		}
+	});
+};
+
+
+(function(){
+	[d2js.Entity.prototype, d2js.List.prototype].forEach(function(prototype){
+		for(let k in prototype){if(prototype.hasOwnProperty(k)){
+			let member = prototype[k];
+			if(k.startsWith('_') && member instanceof Function){
+				let s = k.substr(1);
+				if(s in prototype == false){
+					prototype[s] = member;
+				}
+			}
+		}}
+	});
+
+})();

@@ -271,7 +271,7 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 	if(table){
 		if(table.rows){
 			rows = table.rows;
-		} else if(table.length){
+		} else if('length' in table){
 			rows = table;
 		} else {
 			throw new Error('must be table or array');

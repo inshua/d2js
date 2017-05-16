@@ -22,7 +22,6 @@ d2js.fetch = function(params){
 			}
 		.}
 	.}
-	
 	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
 	return r.orm(this, ['Book']);
 }
@@ -35,7 +34,6 @@ d2js.modify = function(row, columns){
 		info : V.attrs(['linkin']),
 		'info,linkin': V.shortest(5)
 	});
-	
 	return this.updateRow('author', row, columns);
 }
 
