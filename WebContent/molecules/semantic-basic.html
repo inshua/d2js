@@ -96,7 +96,7 @@
                         var checked = [];
                         var checkboxes = [];
                         var col = this.$el.attr('col');
-                        this.$el.attr('data-t', 'rows,N,' + col);
+                        this.$el.attr('data-t', col);
 
                         this.$el.attr('check-all-id', this.id);
                         
@@ -366,8 +366,7 @@
 	            			var th = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
 	            			var col = th.attr('col');
 	            			var checked = th.molecule().checked();
-	            			var t = d2js.dataset[table];
-	            			willDeleteRows = checked.map(function(c){return t.find(col,c)}).filter(function(r){return r});
+	            			willDeleteRows = checked.map(function(c){return table.find(col,c)}).filter(function(r){return r});
 	            			if(willDeleteRows.length == 0){
 	            				var a = $('<div class="ui yellow message" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
 	            				setTimeout(function(){a.remove()}, 500);
@@ -376,9 +375,8 @@
 	            			}
             			}
             		}).on('confirm.ok', function(){
-            			var t = d2js.dataset[table];
             			willDeleteRows.forEach(function(row){ row._remove(); });
-            			t.submit(function(error){	    	            				
+            			table.submit(function(error){	    	            				
        	                    if (!error) {
        	                    	this.reload();
        	                    } else {
@@ -641,7 +639,7 @@
         </div>
     </form>
 
-    <!-- 对话框  <div title="title"> -->
+    <!-- 对话框  <div title-text="title"> -->
     <div molecule-def="Dialog" class="ui modal">
 		<div class="header">
 			<h4 class="modal-title" id="myModalLabel"></h4>
@@ -666,7 +664,7 @@
         	].defCss();
             
             function Dialog() {
-                var title = this.$el.attr('title');
+                var title = this.$el.attr('title-text');
                 this.$el.find('.modal-title').html(title);
 
                 EventDispatcher.call(this);
@@ -1076,19 +1074,19 @@
         </table>
     </div>
 
-    <div molecule="Dialog" title="Book" id="dialog1" d2js.root="">	<!-- 留空，防止绑定错误 -->
+    <div molecule="Dialog" title-text="Book" id="dialog1" d2js.root="">	<!-- 留空，防止绑定错误 -->
         <form class="ui form table-form">
             <div molecule="FormItem" col="title" text="Title">
                 <input type="text" molecule="Input">
             </div>
             <div molecule="FormItem" col="kind" text="Kind" dict="book_kind">
-                <select molecule="Select" collector="c|n|s"></select>
+                <select molecule="Select" collector="c|s"></select>
             </div>
             <div molecule="FormItem" col="publish_date" text="Publish Date">
                 <input type="date" molecule="Input" format="yyyy-MM-dd" renderer="date|std" collector="c|d|s">
             </div>
-            <div molecule="FormItem" col="author" text="Author" d2js.root="author" data="rows" renderer="options('name','id',false)" >
-                <select molecule="Select" d2js.root=".."></select>
+            <div molecule="FormItem" col="author" text="Author" d2js.root="author" data="rows" renderer="options('name','id',false)">
+                <select molecule="Select" d2js.root=".."  collector="c|n|s"></select>
             </div>
         </form>
     </div>
