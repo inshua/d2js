@@ -203,7 +203,7 @@ d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
 		if(allowEmpty){
 			var option = document.createElement('option');
 			option.text = "-";
-			option.value = '';
+			option.value = "";
 			sel.options.add(option);
 		}
 		if(!rows) return;

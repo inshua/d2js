@@ -30,6 +30,7 @@ d2js.create = function(rcd){
 }
 
 d2js.modify = function(rcd){
+	$V(this, rcd, {title : [V.notNull]});
 	logger.info('edit book ' + JSON.stringify(rcd));
 	this.updateRow('book', rcd, ['id', 'title', 'author', 'publish_date', 'kind', 'isbn', 'remarks'])
 }
