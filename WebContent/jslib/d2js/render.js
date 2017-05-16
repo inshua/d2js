@@ -282,13 +282,13 @@ d2js.bindRoot = function(element, data, baseElement){
 		if(data.startsWith('..')){
 			var crumb = null;
 			do{
-				var $re = $element.parent('[d2js\\.root]').parent('[d2js\\.root]');
+				var $re = $element.parents('[d2js\\.root]').parents('[d2js\\.root]');
 				if($re.length == 0) {
 					console.error(data, 'cannot found root element for ', element);
 					throw new Error('cannot found root element for ' + data)
 				}
 				if($re.data('d2js.root') == null){
-					if(d2js.bindRoot(re[0]) == false) return false;
+					if(d2js.bindRoot($re[0]) == false) return false;
 				}
 				crumb = $re.data('d2js.crumb');
 				data = data.substr(2);
