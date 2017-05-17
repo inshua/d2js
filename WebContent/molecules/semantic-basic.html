@@ -619,7 +619,7 @@
             
             this.$el.on('d2js.rendered', function(event){
             	if(!inited){
-            		// $(this).dropdown().addClass('compact');
+            		$(this).dropdown();	//.addClass('compact');
             		inited = true;
             	}
             	$(this).dropdown('set selected', $(this).val());
@@ -627,8 +627,70 @@
         }
         // MOLECULE_DEF_END
         Molecule.create(Select);
-    </script>    
-
+    </script>
+    
+    <!-- 
+    	实体选择用的 select, <select> 必须放在 FormItem 内。
+    	<div molecule="FormItem" col="author" text="Author" d2js.root="authors" disp-col="">
+            <select molecule="EntitySelect" collector="m|s" [multiple=""]></select>
+        </div>
+    -->
+    <div molecule-def="EntitySelect" class="ui selection dropdown" renderer="molecule" collector="m|s">
+		<input type="hidden">
+		<i class="dropdown icon"></i>
+		<div class="default text">Select Author</div>
+		<div class="menu" data="this" renderer="repeater">
+		  <div class="item" repeater="true" data="this" renderer="entity_pk|attr('data-value')"><span data="name" renderer="std"></span></div>
+		</div>
+		<script>
+			// MOLECULE_DEF
+			function EntitySelect(){
+				var $fld = this.$el.closest('.field');
+				var col = $fld.attr('col');
+				this.$el.attr("data", col);
+				
+				var d2jsRoot = $fld.attr('d2js.root');
+				$fld[0].removeAttribute('d2js.root');
+				this.$el.find('.menu').attr('d2js.root', d2jsRoot);
+				this.$el.bindRoot();
+				
+				this.$el.find('.item').find('span').attr('data', $fld.attr('disp-col') || 'name');
+				
+				var multiple = this.$el.is('.multiple');
+				
+				this.setValue = function(value){
+					this.value = value;
+					if(value == null) return this.$el.dropdown('set value','');
+					if(multiple){
+						this.$el.dropdown('set selected', value.map(function(e){return e[e._meta.pk]}).join());
+					} else {
+						this.$el.dropdown('set selected', value[value._meta.pk]);
+					}
+				}
+				
+				var me = this;
+				this.$el.on('d2js.rendered', '.menu', function(){
+					me.setValue(me.value);
+				});
+				
+				this.getValue = function(){
+					var v = this.$el.dropdown('get value');
+					if(multiple){
+						return this.$el.find('.item.filtered').toArray().map(function(e){return $(e).findRoot().root});
+					} else {
+						return this.$el.find('.menu').findRoot().root.find(function(row){return row[row._meta.pk] == v});
+					}
+				}
+			}
+			
+			d2js.Renderers.entity_pk = function(element, value){
+				if(value) return value[value._meta.pk];
+			}
+			// MOLECULE_DEF_END
+			Molecule.create(EntitySelect)
+		</script>
+	</div>
+    
 	<!--
 		搜索用的表单，靠右对齐 
 	 -->
@@ -708,8 +770,14 @@
 	        var btn = this.$el;
 	        btn.on('click', function(){
 	        	var tl = $(this).closest('[molecule-obj=TableList]');
-	        	var row = table.newRow();
- 	        	Molecule.of(tl).editRow(row);
+	        	if(table.isList){
+	        		var Constructor = table.meta.Constructor;
+		        	var row = new Constructor();
+		        	Molecule.of(tl).editRow(row);
+	        	} else {
+		        	var row = table.newRow();
+	 	        	Molecule.of(tl).editRow(row);
+	        	}
 	        });	        
 	    }
 	    // MOLECULE_DEF_END
@@ -736,8 +804,7 @@
          	    };
          	    
             function TableList() {
-               	var tname = this.$el.closest('[table]').attr('table');
-               	
+               	var tableList = this;
                	var editDialogId = this.$el.attr('edit-dialog');
                	var newDialogId = this.$el.attr('new-dialog') || editDialogId;
                	
@@ -763,15 +830,15 @@
 	      	        });
 	      	        dialog.on('submit', async function () {
 	      	            $(dialogEle).collect();
-	      	         	var row = $(this.el).findRoot().root;
+	      	         	var row = this.$el.findRoot().root;
 	      	         	if(row._isEntity){
 	      	         		if(dialogEle[0].hasAttribute('trace-submit')){
 		      	            	debugger;
 	      	         		}
-	      	         		var result = await table.submit();
+	      	         		var result = await row.submit();
 		      	            if(result.success){
 		      	            	dialogEle.modal('hide');
-	  	                        this.reload();
+		      	            	tableList.$el.findRoot().root.reload();
 		      	            } else {
 		      	            	d2js.render();
 		      	            }
@@ -800,9 +867,15 @@
            	    	var dialogId = (row._state == 'new') ? newDialogId : editDialogId;
            	    	var $dialog = $('#' + dialogId);
            	    	$dialog.bindRoot(row).render();
-           	    	$dialog.modal('show');
+           	    	$dialog.attr('molecule-auto-dispose', false);
        		        this.$el.trigger('tablelist.edit', [row]);
-       		     	$dialog.modal({onApprove : function(){return false;}}).modal('show');
+       		     	$dialog.modal({
+       		     		onApprove : function(){
+       		     			return false;
+       		     		}, onVisible: function() {
+	       		            	$dialog.attr('molecule-auto-dispose', true);
+	       		          	}
+       		      		}).modal('show');
             	}
             }
             // MOLECULE_DEF_END
@@ -1137,9 +1210,10 @@
             <div molecule="FormItem" col="publish_date" text="Publish Date">
                 <input type="date" molecule="Input" format="yyyy-MM-dd" renderer="date|std" collector="c|d|s">
             </div>
-            <div molecule="FormItem" col="author" text="Author" d2js.root="authors" data="rows" renderer="options('name','id',false)">
-                <select molecule="Select" d2js.root=".."  collector="c|n|s"></select>
-            </div>
+            <div molecule="FormItem" col="author" text="Author" d2js.root="authors" disp-col="name">
+	           	<div molecule="EntitySelect">
+				</div>
+			</div>
         </form>
     </div>
 
@@ -1155,8 +1229,6 @@
         d2js.render(null, this);
     });
 
-    table.load('fetch', {gender : 'F'});
-    
     var author = new d2js.DataTable('author', '../bookstore/author.d2js');
     author.load('listAll', function(error){
    		d2js.render(null, this);
@@ -1169,7 +1241,6 @@
     })
     
     // ----------------- entity ------------------
-    
     $.holdReady(true);
     var authors = null, books = null;
     (async function(){
@@ -1178,8 +1249,9 @@
 		$.holdReady(false);
 		
 		books.on('load', function(){
-			$('[d2js.root=books]').render();
+			$('[d2js\\.root=books]').render();
 		});
+		books.pageSize = 5;
 		await books.fetch();
 		
 		authors = d2js.root.authors = new d2js.List(d2js.root.Author);
@@ -1188,6 +1260,10 @@
 		});
 		await authors.fetch();
     })();
+    
+    $(function(){
+	    table.load('fetch', {gender : 'F'});
+	});
     
 </script>
 </html>
