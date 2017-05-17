@@ -363,14 +363,18 @@ D2JS.prototype.insertRow = function(table, row, columns, pkColumn){
 	}
 	for(var i=0; i<columns.length; i++){
 		var col = columns[i];
-		insertPart.append(col.name || col);
-		
+		var cname = col.name || col;
 		var value = row[col.name || col];
+
+		if(cname == pkColumn && value == null) continue;
+		
+		insertPart.append(cname);
+		
 		if(value && value.SQL){
 			valuesPart.append(value.SQL);
 		} else {
 			valuesPart.append('?');
-			if(col.name){
+			if(col.name && col.type && value != null){
 				var arg = {};
 				arg[col.type] = row[col.name];
 				args.push(arg);
@@ -440,7 +444,7 @@ D2JS.prototype.updateRow = function(table, row, columns, pkColumn){
 			sql.append(value.SQL);
 		} else {
 			sql.append('?');
-			if(col.name){
+			if(col.name && col.type && value != null){
 				var arg = {};
 				arg[col.type] = row[col.name];
 				args.push(arg);
