@@ -175,7 +175,7 @@ Molecule.removeInstance = function($container, instance){
 	if(pos != null && pos != -1){
 		arr.splice(pos, 1);
 	}
-}
+};
 
 +(function ( $ ) {
     $.fn.molecule = function() {
