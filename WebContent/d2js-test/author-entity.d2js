@@ -1,4 +1,4 @@
-d2js.entity_map = {
+d2js.entityMap = {
 	name : 'Author', 
 	table: 'author',		// 提供 table 后可不提供 fetchBy 函数，默认使用 D2JS.prototype 的 fetchBy 函数
 	map: {

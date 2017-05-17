@@ -1,5 +1,5 @@
 // in book.d2js
-d2js.entity_map = {
+d2js.entityMap = {
 	name : 'Book', 
 	table : 'book', 
 	map: {

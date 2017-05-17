@@ -1,4 +1,4 @@
-d2js.entity_map = {
+d2js.entityMap = {
 	name : 'Publisher', 
 	table : 'publisher',
 	map: {

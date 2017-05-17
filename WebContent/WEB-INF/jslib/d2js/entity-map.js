@@ -21,20 +21,24 @@
 // 提供一个简单易用的 ORM 框架
 //------------------------
 D2JS.prototype.mustBeEntity = function(){
-	if(this.entity_map == null)
-		throw new Error('entity_map not defined');
+	if(this.entityMap == null)
+		throw new Error('entityMap not defined');
 	
-	if(this.entity_map.table == null)
-		throw new Error('entity_map.table not defined');
+	if(this.entityMap.table == null)
+		throw new Error('entityMap.table not defined');
 	
+}
+
+D2JS.prototype.needValidate = function(){
+	if(this.validate == null) throw new Error('validate required!')
 }
 
 D2JS.prototype.fetch = function(params){
 	this.mustBeEntity();
 	
-	var sql = 'select * from ' + this.entity_map.table;
+	var sql = 'select * from ' + this.entityMap.table;
 	var defaultSort = {}
-	defaultSort[this.entity_map.pk || 'id'] = 'asc';
+	defaultSort[this.entityMap.pk || 'id'] = 'asc';
 	var r = this.query(this.orderBy(sql, params._sorts, defaultSort), params, params._page);
 	return r.orm(this);
 }
@@ -47,7 +51,7 @@ D2JS.prototype.fetchBy = function(by){
 	}
 	
 	var cond = [];
-	var sql = 'select * from ' + this.entity_map.table + ' where ';
+	var sql = 'select * from ' + this.entityMap.table + ' where ';
 	for(var k in by){
 		if(by.hasOwnProperty(k)){
 			sql += k + ' = ?';
@@ -69,33 +73,36 @@ D2JS.prototype.fetchEntityById = function(params){
 	}
 	
 	var cond = {};
-	cond[this.entity_map.pk] = params.id;
+	cond[this.entityMap.pk] = params.id;
 	
 	return this.fetchBy(cond).orm(this, params.filter);
 }
 
 D2JS.prototype.create = function(rcd, columns){
 	this.mustBeEntity();
+	this.needValidate();
 	
-	this.validate && this.validate(rcd);
+	this.validate(rcd, 'create');
 	
-	return this.insertRow(this.entity_map.table, rcd, columns, this.entity_map.pk)
+	return this.insertRow(this.entityMap.table, rcd, columns, this.entityMap.pk)
 }
 
 D2JS.prototype.modify = function(rcd, columns){
 	this.mustBeEntity();
+	this.needValidate();
 	
-	this.validate && this.validate(rcd);
+	this.validate(rcd, 'modify');
 	
-	return this.updateRow(this.entity_map.table, rcd, columns, this.entity_map.pk)
+	return this.updateRow(this.entityMap.table, rcd, columns, this.entityMap.pk)
 }
 
 D2JS.prototype.destroy = function(rcd, columns){
 	this.mustBeEntity();
+	this.needValidate();
 	
-	this.validate && this.validate(rcd);
+	this.validate(rcd, 'delete');
 	
-	return this.deleteRow(this.entity_map.table, rcd, this.entity_map.pk)
+	return this.deleteRow(this.entityMap.table, rcd, this.entityMap.pk)
 }
 
 D2JS.prototype.getD2jsMeta = function(params){
@@ -107,42 +114,42 @@ D2JS.prototype.getD2jsMeta = function(params){
 			if(params.refreshSchema){
 				d2js.reinitColumns();
 			}
-			result[src] = d2js.entity_map;
+			result[src] = d2js.entityMap;
 		}, this);
 		return result;
 	} else {
-		return this.entity_map;
+		return this.entityMap;
 	}
 }
 
-application['d2js_entity_map'] = new java.util.concurrent.ConcurrentHashMap();
+application['d2js_entityMap'] = new java.util.concurrent.ConcurrentHashMap();
 
 D2JS.prototype.reinitColumns = function(){
 	var cond = {};
-	cond[this.entity_map.pk] = null;
-	this.entity_map.columns = this.fetchBy(cond).columns;
+	cond[this.entityMap.pk] = null;
+	this.entityMap.columns = this.fetchBy(cond).columns;
 }
 
 D2JS.prototype.initD2js = function(){
-	if(! this.entity_map) return;
+	if(! this.entityMap) return;
 	
-	if(this.entity_map.pk == null) this.entity_map.pk = 'id';
+	if(this.entityMap.pk == null) this.entityMap.pk = 'id';
 	this.reinitColumns();
 	
-	var types = application['d2js_entity_map'];
-	types.put(this.entity_map.type, this.entity_map);
+	var types = application['d2js_entityMap'];
+	types.put(this.entityMap.type, this.entityMap);
 	
-	this.entity_map.path = this.path;
+	this.entityMap.path = this.path;
 	this.exports.getD2jsMeta = this.getD2jsMeta;
 	
 	this.exports.fetchEntityById = this.fetchEntityById;
 }
 
 D2JS.prototype.releaseD2js = function(reason){
-	if(! this.entity_map) return;
+	if(! this.entityMap) return;
 	
-	var types = application['d2js_entity_map'];
-	types.remove(this.entity_map.type);
+	var types = application['d2js_entityMap'];
+	types.remove(this.entityMap.type);
 }
 
 /**
@@ -150,7 +157,7 @@ D2JS.prototype.releaseD2js = function(reason){
  * filter 为 {includes : ['Book'], excludes: ['Publisher']}
  */
 D2JS.DataTable.prototype.orm = function(d2js, filter, path){
-	var et = d2js.entity_map;
+	var et = d2js.entityMap;
 	if(et == null) return this;
 	if(path == null) path = [];
 	

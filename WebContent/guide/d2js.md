@@ -36,7 +36,7 @@ mvc 是一种设计思想，很多人错误的把思想当做了程序架构，�
 <head>
 <meta charset="UTF-8">
 <title>d2js</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/date.js/Date.js"></script>
 
 <script src="../jslib/d2js/dataset.js"></script>
