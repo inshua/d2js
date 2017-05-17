@@ -15,12 +15,14 @@ d2js.fetch = function(params){
 		
 			sql{.?(params.kind) and b.kind = :kind  .}
 
-			if(params.author && params.author instanceof Array && params.author.length){
-				params.author = $ARRAY('int', params.author);
-				sql{. and b.author = ANY(:author) .}
-			} else if(params.author && (params.author *= 1)){
-				sql{. and b.author = :author .}
-			}
+			code{.
+				if(params.author && params.author instanceof Array && params.author.length){
+					params.author = $ARRAY('int', params.author);
+					sql{. and b.author = ANY(:author) .}
+				} else if(params.author && (params.author *= 1)){
+					sql{. and b.author = :author .}
+				}
+			.}
 		.}
 	.}
 	sql = this.orderBy(sql, params._sorts, {'b.title' : 'asc'});

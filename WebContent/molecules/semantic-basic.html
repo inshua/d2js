@@ -22,7 +22,6 @@
     
     <script src="../jslib/molecule.js"></script>
 
-
 </head>
 <body>
     <table>
@@ -1190,6 +1189,7 @@
                 	<th molecule="CheckHeader" col="id"></th>
                     <th molecule="Header" col="id" text="ID"></th>
                     <th molecule="Header" col="title" text="Title" sortable="true"></th>
+                    <th molecule="Header" col="author,name" text="Author"></th>
                     <th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
                     <th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
                     <th data-t="rows,N,id" renderer="editLink"></th>
@@ -1248,16 +1248,12 @@
 		books = d2js.root.books = new d2js.List(d2js.root.Book);
 		$.holdReady(false);
 		
-		books.on('load', function(){
-			$('[d2js\\.root=books]').render();
-		});
+		books.on('load', function(){ $('[d2js\\.root=books]').render(); });
 		books.pageSize = 5;
 		await books.fetch();
 		
 		authors = d2js.root.authors = new d2js.List(d2js.root.Author);
-		authors.on('load', function(){
-			$('body').render(this);
-		});
+		authors.on('load', function(){ $('body').render(this); });
 		await authors.fetch();
     })();
     

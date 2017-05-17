@@ -11,14 +11,8 @@ d2js.entityMap = {
 d2js.fetch = function(params){
 	sql{.
 		select b.*, a.name author_name from book b, author a where b.author = a.id
-		code{. 
-			if(params.title){ 
-				sql{. and strpos(b.title, :title) > 0  .}
-			}
-			if(params.author){ 
-				sql{. and author = :author  .}
-			}
-		.}
+		sql{.?(params.title) and strpos(b.title, :title) > 0  .}
+		sql{.?(params.author) and author = :author  .}
 	.}
 	sql = this.orderBy(sql, params._sorts, {'b.title' : 'asc'});
 	return this.query(sql, params, params._page).orm(this);
