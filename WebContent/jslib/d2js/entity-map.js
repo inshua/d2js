@@ -203,8 +203,10 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root){
 				var rmeta = namespace[map.type];
 				if(rmeta) rmeta = rmeta.prototype._meta;
 				var rmap = d2js.findInverseMap(map, rmeta.map);
-				map.inverse = rmap;
-				rmap.inverse = map;
+				if(rmap){
+					map.inverse = rmap;
+					rmap.inverse = map;
+				}
 			}
 		}
 	}}
@@ -269,7 +271,7 @@ d2js.Entity = function(values, state = 'new'){
 				value.forEach(function(item){
 					let obj = new C(item, state);
 					ls.append(obj);
-					obj._values[map.inverse.name] = obj._origin[map.inverse.name] = this;
+					if(map.inverse) obj._values[map.inverse.name] = obj._origin[map.inverse.name] = this;
 					ls.origin.push(obj);
 				}, this);
 			}
@@ -822,7 +824,7 @@ d2js.List.prototype._reject = function(path = [], element){
 } 
 
 d2js.Entity.prototype._isAlone = function(map){
-	if(this[map.name] == null){  // TODO N-N 关系另外考虑
+	if(map == null || this[map.name] == null){  // TODO N-N 关系另外考虑
 		return true;
 	}
 }
@@ -887,7 +889,7 @@ d2js.List.prototype._markChange = function(path = []){
 		if(this._map && this._map.isOwner){
 			entity._lastState = 'remove';
 		} else {
-			entity._lastData[this._map.inverse.name] == null;	// 通常已经是 null
+			if(this._map.inverse) entity._lastData[this._map.inverse.name] == null;	// 通常已经是 null
 			if(entity._state == 'none') entity._lastState = 'edit';
 		}
 		this._affected.push(entity);
@@ -929,7 +931,7 @@ d2js.Entity.prototype._markChange = function(path){
 			if(map.isOwner){
 				relatedObject._lastState = 'remove';
 			} else {
-				if(map.inverse.relation == 'one'){
+				if(map.inverse && map.inverse.relation == 'one'){
 					relatedObject[map.inverse.name] = null;
 					if(relatedObject._lastState == 'none'){
 						relatedObject._lastState = 'edit';
