@@ -60,13 +60,13 @@ d2js.processResponse = function(response, items){
 	return new Promise(async function(resolve, reject){
 		var s = await response.text();
 		try{
-			var result = JSON.parse(s);
+			var result = JSON.parse(s, parseDate);
 		} catch(e){
 			throw new Error(s);
 		}
 		try{
 			if(result.error){
-				var error = Object.assign(new Error(), result.error);
+				var error =  typeof result.error == 'string' ? new Error(result.error) : Object.assign(new Error(), result.error);
 				if(error._object_id != null){
 					var item = items[error._object_id];
 					if(item){
@@ -92,7 +92,7 @@ d2js.processResponse = function(response, items){
 								item._error_at = null;
 							}
 						}
-						return resolve(error);
+						return reject(error);
 					}
 				} 
 				reject(error);
@@ -397,7 +397,7 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 	if(rmap && rmap.relation == 'many'){ 	// 如为 one-many 关系，则从相关联容器移除，并放入新的关联容器
 		let rname = rmap.name;
 		if(old){
-			old[rname].drop(this);	// 不直接移除本元素，等提交时根据是否为owner决定是否体现为移除态
+			old[rname].drop(this);		// 不直接移除本元素，等提交时根据是否为owner决定是否体现为移除态
 		}
 		if(newValue){
 			let ls = newValue[rname];
@@ -406,6 +406,9 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 	}
 	
 	this._values[attr] = newValue;
+	if(map.key in this._meta.map == false){
+		this._values[map.key] = this._reverseMappedObjToRaw(map, newValue);
+	}
 
 	if(rmap && rmap.relation == 'one'){	// 如为 one - one 关系，则对方也解除对我的引用
 		if(old){
@@ -416,7 +419,9 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 		}
 	}
 
-	this._state = 'edit'
+	if(this._state == 'none'){
+		this._state = 'edit'
+	}
 	return this;
 }
 
@@ -1055,8 +1060,9 @@ d2js.List.prototype.submit = function(){
 	collectItems(change);
 
 	let params = {params : JSON.stringify({table: change})};
-
+	let me = this;
 	return new Promise(async function(resolve, reject){
+		me._clearError();
 		try{
 			var response = await fetch(url, {
 							method:'post', 
@@ -1068,6 +1074,7 @@ d2js.List.prototype.submit = function(){
 			var result = await d2js.processResponse(response, items);
 			resolve(result);
 		} catch(e){
+			if(me._isEntity) me._error = e; else me.error = e;
 			resolve(e);
 		} 	
 	});
@@ -1103,6 +1110,7 @@ d2js.List.prototype.fetch = function(method = 'fetch', params, option){
 			me.fireEvent('load', me);
 			resolve(me);
 		} catch(error){	//TODO 
+			me.error = error;
 			me.fireEvent('load', me);
 			resolve(error);
 		} 	
@@ -1145,7 +1153,7 @@ d2js.List.prototype._clearError = function(path = []){
 }
 
 d2js.Entity.prototype._clearError = function(path){
-	path = path ? [this] : path.concat([this]);
+	path = path == null ? [this] : path.concat([this]);
 	this.error = null;
 	this._error_at = null;
 	this.eachMappedAttribute(function(map, object){
