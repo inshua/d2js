@@ -87,6 +87,46 @@ d2js.Renderers.prop = function(attr){
 	}
 }
 
+/**
+ * 将元素的某项data设为value。
+ * 用法
+ * <input type="date" renderer="data('value')">
+ */
+d2js.Renderers.data = function(name){
+	return function(element, value, columnName, row, index, rows, _1, table){
+		$.data(element, name, value);
+		return value;
+	}
+}
+
+/**
+ * 将元素的某项data设为value。
+ * 用法
+ * <input type="date" renderer="attr('value')">
+ */
+d2js.Renderers.attr = function(name){
+	return function(element, value, columnName, row, index, rows, _1, table){
+		$.attr(element, name, value);
+		return value;
+	}
+}
+
+/**
+ * 提取对象的属性
+ */
+d2js.Renderers.member = function(member){
+	return function(element, value){
+		if(typeof value == 'object'){
+			var m = value[member];
+			if(m instanceof Function){
+				return m.call(value, Array.prototype.slice(arguments, 1));
+			} else {
+				return m;
+			}
+		}
+	}
+}
+
 
 /**
  * 表达式渲染器。适用于正文或属性中含有 {{... }} 表达式的渲染器
@@ -209,8 +249,9 @@ d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
 		if(!rows) return;
 		for(var i=0; i<rows.length; i++){
 			var option = document.createElement('option');
-			var dispCell = rows[i][dispCol];
-			var valueCell = rows[i][valueCol];
+			var row = rows[i]
+			var dispCell = row[dispCol];
+			var valueCell = row[valueCol];
 			if(dispCell) option.text = dispCell;
 			if(valueCell) option.value = valueCell;
 			sel.options.add(option);
@@ -420,5 +461,6 @@ d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, v
 	}
 	return value;
 }
+
 
 
