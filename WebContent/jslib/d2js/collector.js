@@ -127,9 +127,9 @@ d2js.Collectors.check = d2js.KNOWN_COLLECTORS['check'] = function(element, value
 d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, attr, obj, index, rows, _1, table){
 	if(newValue === '') newValue = null;
 	if(obj != null){	// dont test attr in obj
-		if(obj.set){
+		if(obj._set){
 			obj.set(attr, newValue);
-		} else if(obj._set){
+		} else if(obj.set){
 			obj._set(attr, newValue);
 		} else {
 			obj[attr] = newValue;
