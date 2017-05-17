@@ -43,7 +43,7 @@ function Molecule(container){
 		
 		me.dispose && me.dispose();
 		if(Molecule.debug) console.info(this.id, ' removed')
-		delete Molecule.instances[me.id];
+		Molecule.removeInstance(this.$el, this);
 	}
 	/**
 	 * molecule类型
@@ -63,7 +63,6 @@ function Molecule(container){
 	 */
 	this.release = function(){
 		this.dispose && this.dispose();
-		delete Molecule.instances[this.id];
 		this.$el.remove();
 	}
 }
@@ -75,8 +74,6 @@ Molecule._nextId = 1;
  * @returns {Number}
  */
 Molecule.nextId = function(){return Molecule._nextId ++; }
-
-Molecule.instances = {};
 
 Molecule._locateContainer = function(currentScript){
 	if(currentScript == null){
@@ -114,16 +111,12 @@ Molecule.create = function(fun){
 	var container = Molecule.currentContainer || Molecule._locateContainer(currentScript);
 	if(container == null) return;
 	if(Molecule.debug) console.info('create molecule ' + fun.name);
-	var existed = container.getAttribute('molecule-id');
-	var obj = null;
-	if(!existed){
+	var obj = Molecule.of(container);
+	if(obj == null || obj.length == 0){
 		var id = Molecule.nextId(); 
 		obj = new Molecule(container);
 		obj.id = id;
-		Molecule.instances[id] = obj;		
-		container.setAttribute('molecule-id', id); 
-	} else {
-		obj = Molecule.instances[existed * 1]
+		Molecule.addInstance($(container), obj);
 	}
 	
 	//fun.prototype = p;
@@ -163,13 +156,26 @@ Molecule.extend = function(fun){
  * @returns {Molecule}
  */
 Molecule.of = function(element){
-	var ids = $(element).attr('molecule-id');
-	if(!ids) return null;
-	if(ids.indexOf(',') != -1){
-		return ids.split(',').map(function(id){return Molecule.instances[id]});;
-	} 
-	return Molecule.instances[ids];
+	var arr = $(element).data('molecule-instances');
+	return arr && arr.length == 1 ? arr[0] : arr;
 };
+
+Molecule.addInstance = function($container, instance){
+	var arr = $container.data('molecule-instances');
+	if(arr){
+		arr.push(instance);
+	} else {
+		$container.data('molecule-instances', [instance]);
+	}
+}
+
+Molecule.removeInstance = function($container, instance){
+	var arr = $container.data('molecule-instances');
+	var pos = arr && arr.indexOf(instance);
+	if(pos != null && pos != -1){
+		arr.splice(pos, 1);
+	}
+}
 
 +(function ( $ ) {
     $.fn.molecule = function() {
@@ -668,11 +674,7 @@ $(document).ready(function(){
 		if(target.tagName){		// 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
 			if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;		// 正在扫描父元素，早晚会扫到它
 			if(Molecule.debug) console.info('DOMNodeInserted ', e.target);
-			//setTimeout(function(){ // 还不太确定为什么 DOMNodeInserted 时，节点不能访问它的子节点(通过 innerHTML = 'xxx'插入的子节点),该问题还有待研究，先使用 setTimeout 化解  
-			/// ！！！ 这个问题貌似并不存在！！！ 并且因为同步变异步会导致其它问题
-				//if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;
 			Molecule.scanMolecules(target);
-			//}, 10);	
 		}
 	});
 	
@@ -681,12 +683,12 @@ $(document).ready(function(){
 		var target = (e.originalEvent.target || e.target);
 		if(target.tagName){		// 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
 			if($(target).is('[molecule-obj]')){
-				var m = $(target).molecule();
-				if(m) m.onDOMNodeRemoved();
+				var m = $(target).data('molecule-instances');
+				if(m) m.forEach(function(m){m.onDOMNodeRemoved();});
 			}
 			$(target).find('[molecule-obj]').toArray().forEach(function(ele){
-				var m = $(ele).molecule();
-				if(m) m.onDOMNodeRemoved();
+				var m = $(ele).data('molecule-instances');
+				if(m) m.forEach(function(m){m.onDOMNodeRemoved();});
 			});
 		}
 	});
