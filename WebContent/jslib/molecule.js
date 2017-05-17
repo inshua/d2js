@@ -174,6 +174,7 @@ Molecule.removeInstance = function($container, instance){
 	var pos = arr && arr.indexOf(instance);
 	if(pos != null && pos != -1){
 		arr.splice(pos, 1);
+		if(arr.length == 0) $container.data('molecule-instances', null);
 	}
 };
 
