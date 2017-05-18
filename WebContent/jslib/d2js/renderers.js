@@ -119,7 +119,7 @@ d2js.Renderers.member = function(member){
 		if(typeof value == 'object'){
 			var m = value[member];
 			if(m instanceof Function){
-				return m.call(value, Array.prototype.slice(arguments, 1));
+				return m.call(value, Array.prototype.slice.call(arguments, 1));
 			} else {
 				return m;
 			}
