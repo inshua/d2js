@@ -14,11 +14,6 @@
   <login-config>
     <auth-method>BASIC</auth-method>
   </login-config>
-  <context-param>
-    <param-name>dataSource</param-name>
-    <param-value>java:comp/env/jdbc/d2js</param-value>
-  </context-param>
-  
   <servlet>
     <servlet-name>D2jsDispatch</servlet-name>
     <servlet-class>org.siphon.d2js.DispatchServlet</servlet-class>
