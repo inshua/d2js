@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>d2js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="../jslib/jquery-3.2.1.js"></script>
+	<link href="../jslib/semantic-ui/semantic.css" rel="stylesheet" media="screen">
+	<script src="../jslib/semantic-ui/semantic.js"></script>
+
+    <script src="../jslib/date.js/Date.js"></script>
+
+    <script src="../jslib/d2js/dataset.js"></script>
+    <script src="../jslib/d2js/entity-map.js"></script>
+    <script src="../jslib/d2js/render.js"></script>
+    <script src="../jslib/d2js/renderers.js"></script>
+    <script src="../jslib/d2js/collector.js"></script>
+    <script src="../jslib/d2js/pipelines.js"></script>
+    
+    <script src="../jslib/d2js/semantic-renderers.js"></script>
+    
+    <script src="../jslib/molecule.js"></script>
+	
+	<script>
+		Molecule.loadHtml('/molecules/semantic-basic.html');
+	</script>
+</head>
+<body>
+     <div molecule="TableList" d2js.root="authors" edit-dialog="dialog2" allow-remove="true">
+        <h1>Author</h1>
+        <div>
+            <form molecule="SearchForm">
+                <div molecule="SearchFormItem" col="name" text="Name">
+                    <input type="text" molecule="SearchInput">
+                </div>
+                <button molecule="SearchButton">Search</button>
+                <button molecule="AddButton">Add</button>
+            </form>
+        </div>
+        
+        <div molecule="TableError"></div>
+
+        <table molecule="List">
+            <thead>
+                <tr>
+                	<th molecule="CheckHeader" col="id"></th>
+                    <th molecule="Header" col="id" text="ID"></th>
+                    <th molecule="Header" col="name" text="Author"></th>
+                    <th molecule="Header" col="email" text="Email"></th>
+                    <th data-t="id" renderer="editLink"></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    
+    <div molecule="Dialog" title-text="Author" id="dialog2" d2js.root="">	<!-- 留空，防止绑定错误 -->
+        <form class="ui form table-form">
+            <div molecule="FormItem" col="name" text="Name">
+                <input type="text" molecule="Input">
+            </div>
+            <div molecule="FormItem" col="email" text="Email">
+                <input type="text" molecule="Input">
+            </div>
+            <div molecule="FormItem" col="gender" text="Gender" dict="gender">
+                <select molecule="Select" collector="c|s"></select>
+            </div>
+            <div molecule="FormItem" col="remarks" text="Remarks">
+                <textarea molecule="TextArea"></textarea>
+            </div>
+        </form>
+    </div>
+
+</body>
+<script>
+	'use strict'
+	Dicts.gender = {M: 'Male', F: 'Female'} 
+    // ----------------- entity ------------------
+    var authors = null;
+	$.holdReady(true);
+    (async function(){
+		await d2js.meta.load(['/bookstore/author-entity.d2js', '/bookstore/book-entity.d2js']);
+		authors = d2js.root.authors = new d2js.List(d2js.root.Author);
+		console.log('meta inited')
+		$.holdReady(false);
+		
+		authors.on('load', function(){ $('[d2js\\.root=authors]').render(); });
+		await authors.fetch();
+    })();
+    
+</script>
+</html>

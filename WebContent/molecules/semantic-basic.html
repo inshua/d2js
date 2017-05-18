@@ -188,7 +188,7 @@
 	                var table = this.$el.closest('[table]').attr('table');
 	                var col = this.$el.attr('col');
 	                var text = this.$el.attr('text');
-	                this.$el.attr('data-t', 'rows,N,' + col);
+	                this.$el.attr('data-t', col);
 	
 	                var a = this.$el.find('a');
                     a.attr('data', '#' + table);
@@ -516,7 +516,7 @@
     <!-- 
     	TextArea, <textarea cols="" rows=""> 必须放在 FormItem 内
     -->
-    <textarea molecule-def="TextArea" class="form-control" renderer="std" collector="c|s"></textarea>
+    <textarea molecule-def="TextArea" class="form-control" renderer="std" collector="c|s" cols="40" rows="8"></textarea>
     <script molecule-for="TextArea">
         // MOLECULE_DEF
         [{$ : '.form-textarea-item > label', 'vertical-align' : 'top'}].defCss();
@@ -1139,7 +1139,7 @@
                     <th molecule="Header" col="title" text="Title" sortable="true"></th>
                     <th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
                     <th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
-                    <th data-t="rows,N,id" renderer="editLink"></th>
+                    <th data-t="id" renderer="editLink"></th>
                     <th molecule="ActionHeader" col="id" text="点击我" onclick="alert(111)">动作</th>
                 </tr>
             </thead>
@@ -1192,7 +1192,7 @@
                     <th molecule="Header" col="author,name" text="Author"></th>
                     <th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
                     <th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
-                    <th data-t="rows,N,id" renderer="editLink"></th>
+                    <th data-t="id" renderer="editLink"></th>
                     <th molecule="ActionHeader" col="id" text="点击我" onclick="alert(111)">动作</th>
                 </tr>
             </thead>

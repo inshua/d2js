@@ -157,6 +157,38 @@ if (typeof Object.assign != 'function') {
   };
 }
 
+/**
+ * override function, in fun can use callSuper() invoke prev function
+ * usage:
+ * ```js
+ * 	d2js.create.override = function(rcd){
+ * 		this.create.applySuper(this, arguments);	// or this.create.callSuper(this, rcd)
+ * 		...
+ * 	}
+ * ```
+ */
+Function.prototype.override = function(fun){
+	var oldFun = this;
+	fun.applySuper = function(thiz, arguments){
+		return oldFun.apply(thiz, arguments);
+	}
+	fun.callSuper = function(thiz){
+		return oldFun.apply(thiz, Array.prototype.slice.call(arguments,1));
+	}
+	return fun;
+}
+
+Object.overrides = function(object, members){
+	for(var k in members){if(members.hasOwnPorperty(k)){
+		var m = members[k];
+		var old = object[k];
+		if(old instanceof Function && m instanceof Function){
+			old.override(m);
+		} else {
+			object[k] = m;
+		}
+	}}
+}
 
 var JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil');
 /**
@@ -164,7 +196,7 @@ var JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil');
  * 很多库，比如activiti，都需要传递 Map<String, Object>等，采取本方式可以写作:
  *   submit({username: xxx, password: ''}.toJava())
  *   
- * 如对象已有 _java_type 说明，则自动取该说明指定的对象类型。如 {_java_type: 'com.my.entity.Person', name:'Mike'}.toJava() 可得到类型为 com.my.entity.Person 的对象。
+ * (未实现)如对象已有 _java_type 说明，则自动取该说明指定的对象类型。如 {_java_type: 'com.my.entity.Person', name:'Mike'}.toJava() 可得到类型为 com.my.entity.Person 的对象。
  * @param [selfType] {Java.type|string} Java.type('') 返回值, or java class name。对数组默认为 ArrayList，对对象默认为 HashMap<String,Object>。
  * @param [elementType] {Java.type|string} Java.type('') 返回值, or java class name. 对数组默认为 ArrayList，对对象默认为 HashMap<String,Object>。
  * @returns {Object} java object
