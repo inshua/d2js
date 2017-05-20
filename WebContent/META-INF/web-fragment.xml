@@ -1,0 +1,53 @@
+<web-fragment metadata-complete="true" version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-fragment_3_0.xsd">
+	<name>d2js-fragment</name>
+	<servlet>
+		<servlet-name>D2jsDispatch</servlet-name>
+		<servlet-class>org.siphon.d2js.DispatchServlet</servlet-class>
+		<init-param>
+			<param-name>JSLIB</param-name>
+			<param-value>/WEB-INF/jslib/</param-value>
+		</init-param>
+		<init-param>
+			<param-name>PRELOADJS</param-name>
+			<param-value>/WEB-INF/jslib/d2js.js</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>D2jsDispatch</servlet-name>
+		<url-pattern>*.d2js</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>D2jsExecutor</servlet-name>
+		<servlet-class>org.siphon.d2js.D2jsExecutor</servlet-class>
+		<init-param>
+			<param-name>JSLIB</param-name>
+			<param-value>/WEB-INF/jslib/</param-value>
+		</init-param>
+		<init-param>
+			<param-name>PRELOADJS</param-name>
+			<param-value>/WEB-INF/jslib/d2js.js</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>Jssp</servlet-name>
+		<servlet-class>org.siphon.jssp.JsspServlet</servlet-class>
+		<init-param>
+			<param-name>JSLIB</param-name>
+			<param-value>/WEB-INF/jslib/</param-value>
+		</init-param>
+		<init-param>
+			<param-name>PRELOADJS</param-name>
+			<param-value>/WEB-INF/jslib/jssp.js</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Jssp</servlet-name>
+		<url-pattern>*.jssp</url-pattern>
+	</servlet-mapping>
+</web-fragment>
+
+
