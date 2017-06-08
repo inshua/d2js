@@ -68,7 +68,7 @@ d2js.processResponse = function(response, items){
 			if(result.error){
 				var error =  typeof result.error == 'string' ? new Error(result.error) : Object.assign(new Error(), result.error);
 				if(error._object_id != null){
-					var item = items[error._object_id];
+					var item = items && items[error._object_id];
 					if(item){
 						if(item.isList){
 							item.error = error;
@@ -106,6 +106,14 @@ d2js.processResponse = function(response, items){
 }
 
 /**
+ * 由任意 d2js 接口提取数据
+ */
+d2js.fetch = async function(url, option){			
+	var response = fetch(url, Object.assign({credentials:true}, option));
+	return await d2js.processResponse(response);
+}
+
+/**
  * 所给字段是否为某项映射的 key
  */
 d2js.isMapKey = function(meta, columnName){
@@ -131,7 +139,7 @@ d2js.meta.load = function(d2jses, namespace){
 		try{
 			var q = {d2jses: d2jses};
 			var s = jQuery.param({_m : 'getD2jsMeta', params : JSON.stringify(q)});
-			var response = await fetch(contextPath + '/meta.d2js?' + s);
+			var response = await fetch(contextPath + '/meta.d2js?' + s, {credentials:'include'});
 			var metas = await d2js.processResponse(response);
 			metas = Object.getOwnPropertyNames(metas).map(k => metas[k])
 			d2js.meta.loadMetas(metas, namespace);
@@ -500,7 +508,7 @@ d2js.Entity.fetchById = function(id, filter){
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var response = await fetch(url + '?' + jQuery.param({_m : 'fetchEntityById', params : JSON.stringify(q)}));
+			var response = await fetch(url + '?' + jQuery.param({_m : 'fetchEntityById', params : JSON.stringify(q)}), {credentials:'include'});
 			var table = await d2js.processResponse(response);
 			var row = table.rows[0];
 			var obj = null;
@@ -524,7 +532,7 @@ d2js.Entity.fetch = function(method = 'fetch', params, option){
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var response = await fetch(url + '?' + jQuery.param(params));
+			var response = await fetch(url + '?' + jQuery.param(params), {credentials:'include'});
 			var table = await d2js.processResponse(response);
 			resolve(d2js.tableToList(table, Fun.meta));
 		} catch(e){
@@ -1065,6 +1073,7 @@ d2js.List.prototype.submit = function(){
 		me._clearError();
 		try{
 			var response = await fetch(url, {
+							credentials:'include',
 							method:'post', 
 							headers: {  
 								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
@@ -1104,7 +1113,7 @@ d2js.List.prototype.fetch = function(method = 'fetch', params, option){
 		try{
 			me._clearError();
 			me.fireEvent('willload', me);
-			var response = await fetch(url + '?' + jQuery.param(params));
+			var response = await fetch(url + '?' + jQuery.param(params), {credentials:'include'});
 			var table = await d2js.processResponse(response);
 			d2js.tableToList(table, me);
 			me.fireEvent('load', me);

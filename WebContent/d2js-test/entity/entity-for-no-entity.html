@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+
+<link href="../../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../../jslib/jquery-3.2.1.js"></script>
+<script src="../../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../../jslib/d2js/dataset.js"></script>
+<script src="../../jslib/d2js/entity-map.js"></script>
+<script src="../../jslib/d2js/render.js"></script>
+<script src="../../jslib/d2js/renderers.js"></script>
+<script src="../../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../../jslib/d2js/collector.js"></script>
+<script src="../../jslib/d2js/pipelines.js"></script>
+<script src="../../jslib/molecule.js"></script>
+
+<script src="../../jslib/date.js/Date.js"></script>
+
+</head>
+<body>
+</body>
+<script>
+	'use strict';
+	var authors = null;
+	(async function(){
+		authors = await d2js.root.Author.fetch();
+		d2js.Entity.fetch
+		
+	})();
+</script>
+</html>
