@@ -128,9 +128,9 @@ d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, att
 	if(newValue === '') newValue = null;
 	if(obj != null){	// dont test attr in obj
 		if(obj._set){
-			obj.set(attr, newValue);
-		} else if(obj.set){
 			obj._set(attr, newValue);
+		} else if(obj.set){
+			obj.set(attr, newValue);
 		} else {
 			obj[attr] = newValue;
 		}
