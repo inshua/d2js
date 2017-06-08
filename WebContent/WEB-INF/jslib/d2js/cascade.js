@@ -167,13 +167,15 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 			} catch(e){
 				var err = e;
 				if(e instanceof Throwable){
-					var err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
+					err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
+				} else if(typeof e == 'string'){
+					err = new Error(e);
 				}
 				err.table = table.name;
 				err.idx = row._idx;
 				err._object_id = row._object_id;
 				err.table_id = table._object_id;
-				throw e;
+				throw err;
 			}
 		}
 	});
