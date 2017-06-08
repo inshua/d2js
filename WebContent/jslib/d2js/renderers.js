@@ -462,5 +462,39 @@ d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, v
 	return value;
 }
 
+/**
+ *hideIfNull 渲染器，当值为 null 时隐藏元素。
+ *usage:
+ *```html
+  <div data="..." renderer="hideIfNull|std"></div>
+ ```
+ */
+d2js.Renderers.hideIfNull = d2js.KNOWN_RENDERERS['hideIfNull'] = function(element, value, columnName, row, index, rows, _1, table){
+	if(value == null){
+		element._d2js_hideIfNull_prevDisplay = element.style.display;
+		element.style.display = 'none';
+	} else {
+		element.style.display = element._d2js_hideIfNull_prevDisplay || 'block';
+	}
+	return value;
+}
+
+/**
+ *hideIfEmpty 渲染器，当值为 [] 时隐藏元素（包含 null)。
+ *usage:
+ *```html
+  <div data="..." renderer="hideIfEmpty|std"></div>
+ ```
+ */
+d2js.Renderers.hideIfEmpty = d2js.KNOWN_RENDERERS['hideIfEmpty'] = function(element, value, columnName, row, index, rows, _1, table){
+	if(value == null || value.length == 0){
+		element._d2js_hideIfEmpty_prevDisplay = element.style.display;
+		element.style.display = 'none';
+	} else {
+		element.style.display = element._d2js_hideIfEmpty_prevDisplay || 'block';
+	}
+	return value;
+}
+
 
 
