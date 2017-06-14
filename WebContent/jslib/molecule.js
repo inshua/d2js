@@ -268,11 +268,14 @@ Molecule.loadModule = function(module){
 }
 
 /**
- * 加载指定 html 文件中的所有 molecule，将使用 extract.jssp。
- * @param html {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
+ * 加载指定 html 文件中的所有 molecule。
+ * @param res {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
+ * @param [parseOnServer=true] {Boolean} 是否由服务器解析后提供定义，取 false 时在浏览器通过 DOMParser 解析, 否则通过 extract.jssp 解析。
  * @returns {Boolean} 是否加载成功
  */
-Molecule.loadHtml = function(res){
+Molecule.loadHtml = function(res, parseOnServer){
+	if(parseOnServer || parseOnServer == null) return Molecule.loadHtmlInBrowser(res);
+	
 	var result = false;
 	var link = document.createElement('a');
 	link.href = res;
@@ -295,6 +298,30 @@ Molecule.loadHtml = function(res){
 					}}
 					Molecule.loadedModules[module] = true;					
 				}};				
+				result = true;
+			}
+		}
+	});
+	return result;
+}
+
+/**
+ * 加载指定 html 文件中的所有 molecule, 使用 DOMParser 实现。
+ * @param res {string} 网址。
+ * @returns {Boolean} 是否加载成功
+ */
+Molecule.loadHtmlInBrowser = function(res){
+	var result = false;
+	var link = document.createElement('a');
+	link.href = res;
+	$.ajax({
+		url : link.href,		
+		method : 'get',
+		async : false, cache : false,
+		complete : function(resp, status){
+			if(status == 'success'){
+				var dom = new DOMParser().parseFromString(resp.responseText, 'text/html');
+				Molecule.scanDefines(dom);				
 				result = true;
 			}
 		}
