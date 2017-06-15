@@ -204,8 +204,9 @@ Molecule.definesByFullname = {};		// defines by fullname
 /**
  * 搜索页面上存在的 molecule 定义（具有 molecule-def 的元素），并将它抽取出去。
  */
-Molecule.scanDefines = function(){
-	$('[molecule-def]').each(function(idx, ele){
+Molecule.scanDefines = function(starter){
+	starter = starter || document.body;
+	$(starter).find('[molecule-def]').each(function(idx, ele){
 		var e = $(ele);
 		var fullname = e.attr('molecule-def');
 		var depends = e.attr('molecule-depends');
@@ -321,7 +322,7 @@ Molecule.loadHtmlInBrowser = function(res){
 		complete : function(resp, status){
 			if(status == 'success'){
 				var dom = new DOMParser().parseFromString(resp.responseText, 'text/html');
-				Molecule.scanDefines(dom);				
+				Molecule.scanDefines(dom.body);				
 				result = true;
 			}
 		}
