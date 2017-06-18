@@ -10,7 +10,7 @@
 		</init-param>
 		<init-param>
 			<param-name>PRELOADJS</param-name>
-			<param-value>/WEB-INF/jslib/d2js.js</param-value>
+			<param-value>/WEB-INF/application.d2js.js</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>
@@ -27,7 +27,7 @@
 		</init-param>
 		<init-param>
 			<param-name>PRELOADJS</param-name>
-			<param-value>/WEB-INF/jslib/d2js.js</param-value>
+			<param-value>/WEB-INF/application.d2js.js</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -41,7 +41,7 @@
 		</init-param>
 		<init-param>
 			<param-name>PRELOADJS</param-name>
-			<param-value>/WEB-INF/jslib/jssp.js</param-value>
+			<param-value>/WEB-INF/application.jssp.js</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>

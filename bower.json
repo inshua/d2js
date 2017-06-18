@@ -1,0 +1,37 @@
+{
+  "name": "d2js",
+  "version": "1.2.0",
+  "authors": [
+    "Inshua <inshua@gmail.com>"
+  ],
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "js/lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "molecule": "latest"
+  },
+  "install": {
+    "options": {
+      "includePackageNameInInstallPath": false
+    },
+    "path": {
+      "js": "WebContent/jslib"
+    },
+    "sources": {
+      "molecule": {
+        "mapping": [
+          {"bower_components/molecule/molecule.js": "molecule.js"}
+        ]
+      }
+    }
+  }
+}
