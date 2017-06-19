@@ -109,7 +109,7 @@ d2js.processResponse = function(response, items){
  * 由任意 d2js 接口提取数据
  */
 d2js.fetch = async function(url, option){			
-	var response = fetch(url, Object.assign({credentials:true}, option));
+	var response = fetch(url, Object.assign({credentials:"same-origin"}, option));
 	return await d2js.processResponse(response);
 }
 
@@ -139,7 +139,7 @@ d2js.meta.load = function(d2jses, namespace){
 		try{
 			var q = {d2jses: d2jses};
 			var s = jQuery.param({_m : 'getD2jsMeta', params : JSON.stringify(q)});
-			var response = await fetch(contextPath + '/meta.d2js?' + s, {credentials:'include'});
+			var response = await fetch(contextPath + '/meta.d2js?' + s, {credentials:"same-origin"});
 			var metas = await d2js.processResponse(response);
 			metas = Object.getOwnPropertyNames(metas).map(k => metas[k])
 			d2js.meta.loadMetas(metas, namespace);
@@ -176,19 +176,24 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root){
 		
 		var maps = [];
 		var names = [];
-		for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
-			(function(name){
-				var map = meta.map[name];
-				map.name = name;
-				maps.push(map);
-				var def = { get: function(){ return this._values[name]} };
-				if(map.relation == 'one') {		// many is readonly
-					def.set = function(value){this._set(name, value); }
-				} 
-				Object.defineProperty(fun.prototype, name, def);
-			})(name);
-		}}
-		meta.maps = maps;
+		if(meta.map){
+			for(var name in meta.map){if(meta.map.hasOwnProperty(name)){
+				(function(name){
+					var map = meta.map[name];
+					map.name = name;
+					maps.push(map);
+					var def = { get: function(){ return this._values[name]} };
+					if(map.relation == 'one') {		// many is readonly
+						def.set = function(value){this._set(name, value); }
+					} 
+					Object.defineProperty(fun.prototype, name, def);
+				})(name);
+			}}
+			meta.maps = maps;
+		} else {
+			meta.maps = [];
+			mea.map = {};
+		}
 
 		meta.columnNames.forEach(function(name){
 			if(name in meta.map == false){
@@ -508,7 +513,7 @@ d2js.Entity.fetchById = function(id, filter){
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var response = await fetch(url + '?' + jQuery.param({_m : 'fetchEntityById', params : JSON.stringify(q)}), {credentials:'include'});
+			var response = await fetch(url + '?' + jQuery.param({_m : 'fetchEntityById', params : JSON.stringify(q)}), {credentials:"same-origin"});
 			var table = await d2js.processResponse(response);
 			var row = table.rows[0];
 			var obj = null;
@@ -532,16 +537,14 @@ d2js.Entity.fetch = function(method = 'fetch', params, option){
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var response = await fetch(url + '?' + jQuery.param(params), {credentials:'include'});
+			var response = await fetch(url + '?' + jQuery.param(params), {credentials:"same-origin"});
 			var table = await d2js.processResponse(response);
-			resolve(d2js.tableToList(table, Fun.meta));
+			resolve(d2js.tableToList(table, new d2js.List(Fun.meta)));
 		} catch(e){
 			reject(e);
 		} 	
 	});
 }
-
-
 
 if(Object.getPrototypeOf == null){
 	Object.getPrototypeOf = function(o) {
@@ -1073,7 +1076,7 @@ d2js.List.prototype.submit = function(){
 		me._clearError();
 		try{
 			var response = await fetch(url, {
-							credentials:'include',
+							credentials:"same-origin",
 							method:'post', 
 							headers: {  
 								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
@@ -1113,7 +1116,7 @@ d2js.List.prototype.fetch = function(method = 'fetch', params, option){
 		try{
 			me._clearError();
 			me.fireEvent('willload', me);
-			var response = await fetch(url + '?' + jQuery.param(params), {credentials:'include'});
+			var response = await fetch(url + '?' + jQuery.param(params), {credentials:"same-origin"});
 			var table = await d2js.processResponse(response);
 			d2js.tableToList(table, me);
 			me.fireEvent('load', me);
@@ -1136,24 +1139,23 @@ d2js.List.prototype.reload = function(){
 	this.load(this.search.params, this.search.option);
 }
 
-d2js.tableToList = function(table, listOrMeta, mergeOrReplace = false){
-	if(listOrMeta == null){throw new Error("list or meta must specified")}
-	var ls = listOrMeta.isList ? listOrMeta : new d2js.List(listOrMeta);
-	if(listOrMeta.isList && mergeOrReplace == false){
-		ls.length = 0;
-		ls.origin.length = 0;
+d2js.tableToList = function(table, list, mergeOrReplace = false){
+	if(list == null){throw new Error("output list must specified")}
+	if(mergeOrReplace == false){
+		list.length = 0;
+		list.origin.length = 0;
 	}
 	for(let k in table){
 		if(table.hasOwnProperty(k) && k != 'columns' && k != 'rows'){
-			ls[k] = table[k];
+			list[k] = table[k];
 		}
 	}
-	if(ls.total != null){
-		ls.pageIndex = ls.start / ls.pageSize;
-		ls.pageCount = Math.ceil(ls.total / ls.pageSize);
+	if(list.total != null){
+		list.pageIndex = list.start / list.pageSize;
+		list.pageCount = Math.ceil(list.total / list.pageSize);
 	}
-	ls.setArray(table.rows, 'none');  // TODO 覆盖重复数据
-	return ls;
+	list.setArray(table.rows, 'none');  // TODO 覆盖重复数据
+	return list;
 }
 
 d2js.List.prototype._clearError = function(path = []){
@@ -1170,6 +1172,77 @@ d2js.Entity.prototype._clearError = function(path){
 			object._clearError(path);
 		}
 	});
+};
+
+d2js.Entity.dynamic = {};
+d2js.Entity.dynamic.fetch = function(url, method='fetch', params, option){
+	url = contextPath + url;
+	var q = {};
+	if(params){
+		Object.assign(q, params);
+	} 
+	q._page = {start : 0, limit : d2js.DataTable.DEFAULT_PAGESIZE};
+
+	params = {_m : method || q._m || 'fetch', params : JSON.stringify(q)};
+	
+	return new Promise(async function(resolve, reject){
+		try{
+			var response = await fetch(url + '?' + jQuery.param(params), {credentials:"same-origin"});
+			var result = await d2js.processResponse(response);
+			if(result == null){
+				return resolve(null);
+			}
+			var columns = Object.getOwnPropertyNames(result).map(function(n){return {"name" : n}});
+
+			var meta = {path : url, name : '<dynamic>', columns : columns, map : null};
+			var ns = {};
+			d2js.meta.loadMetas([meta], ns);
+
+			let Constructor = meta.Constructor;
+			let entity = new Constructor(result);
+			resolve(entity);
+		} catch(error){	//TODO 
+			reject(error);
+		} 	
+	});
+};
+
+d2js.List.dynamic = {};
+d2js.List.dynamic.fetch = function(url, method='fetch', params, option){
+	url = contextPath + url;
+	var q = {};
+	if(params){
+		Object.assign(q, params);
+	} 
+	q._page = {start : 0, limit : d2js.DataTable.DEFAULT_PAGESIZE};
+
+	params = {_m : method || q._m || 'fetch', params : JSON.stringify(q)};
+	
+	return new Promise(async function(resolve, reject){
+		try{
+			var response = await fetch(url + '?' + jQuery.param(params), {credentials:"same-origin"});
+			var table = await d2js.processResponse(response);
+			var columns = table.columns;
+			if(columns == null){
+				if(table.rows.length == 0) return reject(new Error("rows is empty, cannot get columns info from row"));
+				columns = Object.getOwnPropertyNames(table.rows[0]).map(function(n){return {"name" : n}});
+			}
+
+			var meta = {path : url, name : '<dynamic>', columns : columns, map : null};
+			var ns = {};
+			d2js.meta.loadMetas([meta], ns);
+
+			var ls = new d2js.List(meta);
+			Object.assign(ls.search, q);
+
+			d2js.tableToList(table, ls);
+			ls.fireEvent('load', ls);
+			resolve(ls);
+		} catch(error){	//TODO 
+			reject(error);
+		} 	
+	});
+
 };
 
 

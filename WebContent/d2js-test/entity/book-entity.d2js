@@ -10,7 +10,7 @@ d2js.entityMap = {
 
 d2js.fetch = function(params){
 	sql{.
-		select b.*, a.name author_name from book b, author a where b.author = a.id
+		select b.* from book b where 1=1
 		sql{.?(params.title) and strpos(b.title, :title) > 0  .}
 		sql{.?(params.author) and author = :author  .}
 	.}
@@ -37,4 +37,12 @@ d2js.destroy = function(rcd){
 d2js.exports.test =
 d2js.test =  function(){
 	return 'hello';
+}
+
+d2js.exports.getOne = 
+d2js.getOne = function(params){
+	sql{.
+		select b.* from book b where id = :id
+	.}
+	return this.queryRow(sql, params);
 }
