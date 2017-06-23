@@ -36,7 +36,7 @@ function Molecule(container){
 	 * molecule 所附着的 html 元素的 jQuery 包装
 	 * @type {jQueryElement} 
 	 */
-	this.$el = $(container);
+	this.$el = jQuery(container);
 	if(container == null) debugger;
 	var me = this;
 	
@@ -105,7 +105,7 @@ Molecule.definesByFullname = {};		// defines by fullname
 Molecule.loadedModules = {};
 Molecule.loadModule = function(module){
 	var result = false;
-	$.ajax({
+	jQuery.ajax({
 		url : Molecule.ModulesPath + '/' + module + '.json',
 		async : false, type : 'get', cache : false,
 		complete : function(resp, status){
@@ -138,7 +138,7 @@ Molecule.loadHtml = function(res, parseOnServer){
 	var result = false;
 	var link = document.createElement('a');
 	link.href = res;
-	$.ajax({
+	jQuery.ajax({
 		url : Molecule.ModulesPath + '/extract.jssp',		
 		data : {html : res}, processData: true,
 		method : 'post',
@@ -173,7 +173,7 @@ Molecule.loadHtmlInBrowser = function(res){
 	var result = false;
 	var link = document.createElement('a');
 	link.href = res;
-	$.ajax({
+	jQuery.ajax({
 		url : link.href,		
 		method : 'post',
 		async : false, cache : false,
@@ -190,7 +190,7 @@ Molecule.loadHtmlInBrowser = function(res){
 
 Molecule.ready = function(element, handler){
 	if(element.hasAttribute('molecule')) return;
-	$(element).on('molecule-inited', handler);
+	jQuery(element).on('molecule-inited', handler);
 }
 
 Molecule.getModuleName = function(fullname){
@@ -242,29 +242,33 @@ Molecule.registerPrototype = function(el){
 	}
 	console.log('define molecule ' + fullname);
 	
-	var script = el.querySelector('script[constructor]');
-	if(script == null){
-		var next = el.nextElementSibling;
-		if(next && next.hasAttribute('molecule-for')){
-			var moleculeFor =  next.getAttribute('molecule-for');
-			if(moleculeFor == fullname || moleculeFor == r.name){
-				script = next;
+	try{
+		var script = el.querySelector('script[constructor]');
+		if(script == null){
+			var next = el.nextElementSibling;
+			if(next && next.hasAttribute('molecule-for')){
+				var moleculeFor =  next.getAttribute('molecule-for');
+				if(moleculeFor == fullname || moleculeFor == r.name){
+					script = next;
+				}
 			}
 		}
+		if(script){
+			var fun = new Function(script.innerHTML);
+			el.moleculeConstructor = fun;
+			fun.extends = script.getAttribute('extends') || script.hasAttribute('extends');
+			script.remove();
+		}
+		Array.prototype.slice.call(el.querySelectorAll('script')).forEach(script => {
+			document.head.appendChild(script);
+			script.remove();
+		});
+	
+		Molecule.definesByFullname[fullname] = m[r.name] = el;
+		el.moleculeName = r.name;
+	} catch(e){
+		console.error('load ' + fullname + ' failed, ', e);
 	}
-	if(script){
-		var fun = new Function(script.innerHTML);
-		el.moleculeConstructor = fun;
-		fun.extends = script.getAttribute('extends');
-		script.remove();
-	}
-	Array.prototype.slice.call(el.querySelectorAll('script')).forEach(script => {
-		document.head.appendChild(script);
-		script.remove();
-	});
-
-	Molecule.definesByFullname[fullname] = m[r.name] = el;
-	el.moleculeName = r.name;
 }
 
 /**
@@ -396,19 +400,25 @@ Molecule.scanMolecules = function(starter, manual){
 		}
 		Molecule.processing = false;
 		
-		$(target).trigger('molecule-inited', [target, node.fullname]);
+		jQuery(target).trigger('molecule-inited', [target, node.fullname]);
 		
 		function createMoleculeInstance(def){
 			if(def.moleculeConstructor){
-				var exists = target[def.moleculeName];
+				var exists = target['moleculeInstance'];
 				if(exists){
-					if(exists.moleculePrototype = def){
+					if(exists.moleculePrototype == def){
 						throw new Error("already has an instanceof of " + def.moleculeName)
 					}
 				}
-				var m = null;
-				if(def.moleculeConstructor.extends){
-					m = target[def.moleculeConstructor.extends];
+				let m = exists;
+				if(m){
+					if(def.moleculeConstructor.extends){
+						if(def.moleculeConstructor.extends === true){
+							
+						} else if(m.is(def.moleculeConstrutor.extends) == false){
+							throw new Error(def.moleculeName + "should extends on " + def.moleculeConstrutor.extends)
+						}
+					}
 				} else {
 					m = new Molecule(target);
 				}
@@ -524,21 +534,21 @@ Molecule.allOf = function(ele){
 	return r;
 }
 
-$(document).ready(function(){
+jQuery(document).ready(function(){
 	Molecule.scanDefines();
 	Molecule.scanMolecules();
 	
-	$(document).on('DOMNodeInserted', function(e){
+	jQuery(document).on('DOMNodeInserted', function(e){
 		var target = (e.originalEvent.target || e.target);
 		if(target.tagName){		// 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
-			if(Molecule._scanningEle && $.contains(Molecule._scanningEle, target)) return;		// 正在扫描父元素，早晚会扫到它
+			if(Molecule._scanningEle && jQuery.contains(Molecule._scanningEle, target)) return;		// 正在扫描父元素，早晚会扫到它
 			if(Molecule.debug) console.info('DOMNodeInserted ', e.target);
 			Molecule.scanMolecules(target);
 		}
 	});
 	
 	
-	$(document).on('DOMNodeRemoved', function(e){
+	jQuery(document).on('DOMNodeRemoved', function(e){
 		var target = (e.originalEvent.target || e.target);
 		if(target.tagName){		// 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
 			if(target.molecule){
