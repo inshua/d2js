@@ -144,4 +144,9 @@
 
 		<delete dir="${dir.temp}" />
 	</target>
+
+
+	<target name="update-molecule">
+		<copy file="${basedir}/molecule/molecule.js" tofile="${dir.web}/jslib/molecule.js" />
+	</target>
 </project>

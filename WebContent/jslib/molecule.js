@@ -345,7 +345,7 @@ Molecule.scanMolecules = function(starter, manual) {
         if (Molecule.debug) console.log('------------------------------');
         var node = findMoleculeDef(target.getAttribute('molecule'));
 
-        var mirror = target.cloneNode(false);
+        var template = target.cloneNode(false);
 
         var inner = target.innerHTML;
         if (Molecule.debug) console.info(node.name + ' outerHTML', target.outerHTML);
@@ -368,7 +368,7 @@ Molecule.scanMolecules = function(starter, manual) {
                 var attr = node.attributes[i].name;
                 var v = target.getAttribute(attr);
                 if (v) { // 应该覆盖的定义
-                    if (!mirror.hasAttribute(attr)) { // 是父类所赋予的属性而不是用户指定的，应当被子类覆盖
+                    if (!template.hasAttribute(attr)) { // 是父类所赋予的属性而不是用户指定的，应当被子类覆盖
                         target.setAttribute(attr, combineValue(attr, v, node.getAttribute(attr)));
                     } else {
                         target.setAttribute(attr, combineValue(attr, node.getAttribute(attr), v));
@@ -379,21 +379,22 @@ Molecule.scanMolecules = function(starter, manual) {
             }
         }
 
-        var snowball = defs[0].cloneNode(true);
+        var template = defs[0].cloneNode(true);
         for (var d = 1; d < defs.length; d++) { // 逐代设置 innerHTML
-            var node = defs[d];
+            var node = defs[d].cloneNode(true);
             var isBottom = (d == defs.length - 1),
                 isTop = 0;
 
             if (isBottom) {
                 // if(Molecule.debug) console.info(node.name + ' replace with ', node.html);
-                applyTemplate(snowball, node);
+                applyTemplate(node, template);
             } else {
                 // if(Molecule.debug) console.info(node.name + ' replace with ', node.html);
-                applyTemplate(node, snowball);
+                applyTemplate(node, template);
             }
+			template = node;
         }
-        applyTemplate(target, snowball);
+        applyTemplate(target, template);
         // if(Molecule.debug) console.info(node.name + ' become',target.outerHTML);
 
         target.removeAttribute('molecule');
@@ -446,9 +447,8 @@ Molecule.scanMolecules = function(starter, manual) {
             }
         }
 
-        function applyTemplate(target, src) {
-            var mirror = src.cloneNode(true);
-            mirror.querySelectorAll('[molecule-placeholder]').forEach(function(holder) {
+        function applyTemplate(target, templateMirror) {
+            templateMirror.querySelectorAll('[molecule-placeholder]').forEach(function(holder) {
                 var id = holder.getAttribute('molecule-placeholder');
                 var replacer = null;
                 if (id == null) {
@@ -463,8 +463,7 @@ Molecule.scanMolecules = function(starter, manual) {
                     replaceNode(holder, replacer);
                 }
             });
-            mirror.querySelectorAll('[molecule-socket]').forEach(function(socket) {
-                debugger;
+            templateMirror.querySelectorAll('[molecule-socket]').forEach(function(socket) {
                 var id = socket.getAttribute('molecule-socket');
                 var plug = null;
                 if (id == null) {
@@ -477,25 +476,24 @@ Molecule.scanMolecules = function(starter, manual) {
                     if (p.tagName == 'TEMPLATE') {
                         p = plug.content;
                         plug.remove();
-                    }
-                    socket.appendChild(p);
-                    p.removeAttribute('molecule-plug');
-                    //socket.removeAttribute('molecule-socket');
-                    //Array.prototype.slice.call(p.childNodes).forEach(child => socket.appendChild(child));
-                    // plug.remove();
+                    	Array.prototype.slice.call(p.childNodes).forEach(child => socket.appendChild(child));
+					} else {
+                    	socket.appendChild(p);
+                    	p.removeAttribute('molecule-plug');
+					}
                 }
             });
 
-            var p = mirror.querySelector('molecule-placeholder');
+            var p = templateMirror.querySelector('molecule-placeholder');
             if (p) {
                 target.childNodes.forEach(function(child) {
                     p.parentNode.insertBefore(child, p);
                 });
                 p.remove();
             } else {
-                Array.prototype.slice.call(target.childNodes).forEach(child => mirror.appendChild(child));
+                Array.prototype.slice.call(target.childNodes).forEach(child => templateMirror.appendChild(child));
             }
-            Array.prototype.slice.call(mirror.childNodes).forEach(child => target.appendChild(child));
+            Array.prototype.slice.call(templateMirror.childNodes).forEach(child => target.appendChild(child));
         }
 
         function copyAttributes(src, dest, override) {
