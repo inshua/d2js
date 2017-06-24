@@ -25,9 +25,6 @@
 d2js.Renderers = function(){}
 d2js.KNOWN_RENDERERS = {};
 
-d2js.Renderers.EmbedRenderers ={}
-d2js.Renderers.EmbedRenderers.nextId = 1;
-
 (function addcss(){
 	   if(window.ActiveXObject)
 	   {
@@ -66,25 +63,39 @@ d2js.render = function(htmlElement, pattern, customRenders){
 		var embedRenderer = e.querySelector('renderer, .d2js-render');
 		if(embedRenderer){
 			var emb = prepareEmbedRenderer(embedRenderer, e);
-			renderer = renderer ? renderer + '|' + emb : emb;
-			e.setAttribute('renderer', renderer);
+			e['renderObj'] = emb;
 		}
 		
+		var arr = null;
 		if(renderer){
 			if(e.hasAttribute('trace-render')) debugger;
 		
-			var arr = [e].concat(crumb);
+			arr = [e].concat(crumb);
 			var renderers = renderer.split('|');
 			for(var i=0; i<renderers.length; i++){
 				var fun = extractRenderer(renderers[i].trim(), e);
-				if(fun != null) {
-					arr[1] = fun.apply(null, arr);
+				if(fun != null){
+					if(fun instanceof Function){
+						arr[1] = fun.apply(null, arr);
+					} else {
+						arr[1] = fun.render.apply(fun, arr);
+					}
 				} else {
 					console.error(renderers[i] + ' not found, when render', e);
 				}
 			}
-			$(e).trigger('d2js.rendered', arr, renderer);
 		}
+		
+		var renderObj = e['renderObj']
+		if(renderObj){
+			if(arr == null) arr = [e].concat(crumb);
+			if(renderObj instanceof Function){
+				renderObj.apply(null, arr);
+			} else {
+				renderObj.render.apply(renderObj, arr);
+			}
+		}
+		$(e).trigger('d2js.rendered', arr, renderer);
 	}
 	
 	function extractRenderer(rendererDesc, e){
@@ -104,13 +115,8 @@ d2js.render = function(htmlElement, pattern, customRenders){
 	function prepareEmbedRenderer(embedRenderer, e){
 		var code = embedRenderer.innerHTML;
 		embedRenderer.remove();
-		
-		var id = d2js.Renderers.EmbedRenderers.nextId ++;
-		id = '__embed_renderer__' + id;
 		var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
-		d2js._store(e, 'd2js.renderers', id, fun);
-		
-		return id;
+		return fun;
 	}
 }
 /**
