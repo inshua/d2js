@@ -35,13 +35,22 @@
 			Gender: <span data="gender" renderer="gender"></span>
 		</div>
 		
-		<h2>函数与对象充当渲染器<small>函数与对象渲染器都可以代码设置于 element.renderObj(而不通过 attribute)设置</small></h2>
+		<h2>函数与对象充当渲染器<small>函数与对象渲染器都可以代码设置于 element.renderObj，而不通过 attribute设置</small></h2>
 		<div id="test2">
 			Name: <span  data="name" renderer="std"></span>
 			<br>
 			Email: <span  id="email" data="email"></span>
 			<br>
 			Phone: <span  id="phone" data="phone"></span>
+		</div>
+		
+		<h2>函数与对象充当 custom renderer<small>使用工厂方法 createRenderer 使每个 element 得到一个渲染器实例</small></h2>
+		<div id="test3">
+			Name: <span data="name" renderer="letterScale"></span>
+			<br>
+			Email: <span data="email" renderer="letterScale"></span>
+			<br>
+			Phone: <span data="phone" renderer="letterScale"></span>
 		</div>
 	</div>
 </body>
@@ -118,5 +127,42 @@
 			}
 		};
 	$('#test2').bindRoot(person).render();
+	
+	function LetterScale(element){
+		this.running = false;
+		this.index = 0;
+		this.init = function(value){
+			this.prevValue = value;
+			var s = '';
+			for(var i=0; i<value.length; i++){
+				s += '<span>' + value[i] + '</span>';
+			}
+			element.innerHTML = s;
+		}
+		this.render = function(element, value){
+			if(this.running) return;
+			if(this.prevValue != value){
+				this.init(value);
+			}
+			element.children[this.index].style.zoom = 1.0;
+			this.index ++;
+			if(this.index >= element.children.length) this.index = 0;
+			element.children[this.index].style.zoom = 2.0;
+	  		this.running = true;
+	  		var me = this;
+	  		setTimeout(function(){
+	  			me.running = false;
+	  			$(element).render();
+	  		}, 200);
+		}
+	}
+	//工厂方法。
+	//每个 renderer 都需要独立的 scope，需要挂载各自独立的渲染器对象。
+	LetterScale.createRenderer = function(element){return new LetterScale(element)}
+	
+	// $('#test3').bindRoot(person).render(null, {letterScale: LetterScale})
+
+	$('#test3').bindRoot(person).render(null, {letterScale: LetterScale.rendererFactory()})
+
 </script>
 </html>

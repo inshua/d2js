@@ -45,19 +45,18 @@ d2js.KNOWN_RENDERERS = {};
  * ```js
  * $(htmlElement).render(pattern, customRenders)
  * ```
- * @param [htmlElement=document.body] {HTMLElement} html 元素，渲染该元素及其子元素。
- * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生渲染。
- * @param [customRenders] {object} 自定义渲染器（含管道）。如
  * ```js
  * {
  * 	myRender : function(el, value){el.innerHTML = value}
  * }
  * ```
  * 对 htmlElement 及其子元素有指定 renderer="myRender"，该函数会被应用。需要说明的是，在下次渲染时不再需要提供 myRender 函数。
+ * @param [htmlElement=document.body] {HTMLElement} html 元素，渲染该元素及其子元素。
+ * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生渲染。
+ * @param [customRenders] {object} 自定义渲染器（含管道）。如
  */
 d2js.render = function(htmlElement, pattern, customRenders){
 	d2js.travel(htmlElement, pattern, renderElement)
-	
 	function renderElement(e, crumb){
 		var renderer = e.getAttribute('renderer');
 		var embedRenderer = e.querySelector('renderer, .d2js-render');
@@ -102,12 +101,21 @@ d2js.render = function(htmlElement, pattern, customRenders){
 		if($.hasData(e)){
 			var d = $.data(e)['d2js.renderers'];
 			var fun = d && d[rendererDesc];
+			if(fun && fun.createRenderer){
+				fun = fun.createRenderer(e);
+				d2js._store(e, 'd2js.renderers', rendererDesc, fun);
+			}
 			if(fun) return fun;
 		}
 		if(customRenders){
 			var fun = customRenders[rendererDesc];
-			d2js._store(e, 'd2js.renderers', rendererDesc, fun);
-			if(fun) return fun;
+			if(fun){
+				if(fun.createRenderer){
+					fun = fun.createRenderer(e);
+				}
+				d2js._store(e, 'd2js.renderers', rendererDesc, fun);
+				return fun;
+			}
 		}
 		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
 	}
@@ -119,6 +127,39 @@ d2js.render = function(htmlElement, pattern, customRenders){
 		return fun;
 	}
 }
+
+/**
+ * 为渲染器函数构造函数提供工厂方法 createRenderer。
+ * usage:
+ * ```js
+ * function MyRenderer(element){
+ * 	this.render = function(element, value){
+ * 		...
+ * 	}
+ * }
+ * 
+ * $(element).render({my: MyRenderer.rendererFactory())
+ * ```
+ * ```html
+ * <tag renderer="my"></tag>
+ * ```
+ * 相当于插拔
+ * ```js
+ * MyRenderer.rendererFactory = function(element){return new MyRenderer(element)}
+ * ```
+ * 何以要引入该工厂方法。当渲染器只有一个 element 使用时，可使用
+ * ```js
+ * $(element).render({my: new MyRenderer()})
+ * ```
+ * 但当渲染器需要为每个 element 提供独立服务时，就应提供工厂方法，由 render.js 自动创建渲染器实例。
+ */
+Function.prototype.rendererFactory = function(){
+	var T = this;
+	T.createRenderer = function(element){ return new T(element); }
+	return this;
+}
+
+
 /**
  * 内部函数。对符合d2js规则的元素应用 processor 动作。
  */
@@ -441,6 +482,15 @@ d2js.locateData = function(element){
 +(function ( $ ) {
     $.fn.findRoot = function() {
     	return d2js.findRoot(this[0]);
+    };
+}( jQuery ));
+
++(function ( $ ) {
+    $.fn.customRenderer = function(name, renderer) {
+    	this.each(function(){
+    		d2js._store(this, 'd2js.renderers', name, renderer);
+    	});
+    	return this;
     };
 }( jQuery ));
 
