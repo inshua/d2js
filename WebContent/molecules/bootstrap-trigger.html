@@ -75,6 +75,9 @@
     	<div data-value="5" table="author" value-col="id" display-col="name" autocomplete-col="code"></div> 
     -->
     <div molecule-def="DropDownList" molecule="DropDown" select="single" escape-tag="th" collector="m|s" renderer="molecule" class="+ dropdownlist" init-children-first>
+        <style>
+			.dropdownlist > table > tbody.data { height: 200px; overflow: scroll; }
+		</style>
         <div molecule="TableList" class="contaienr dropdownlist"">
             <div molecule="TableError"></div>
            
@@ -86,8 +89,6 @@
         </div>
         <script>
             // MOLECULE_DEF
-            [{$ : '.dropdownlist > table > tbody.data', 'height' : '200px', overflow: 'scroll'}].defCss();
-            
             function DropDownList() {
             	this.isDropDownList = true;
             	var me = this;

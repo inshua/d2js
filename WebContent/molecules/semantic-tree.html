@@ -119,6 +119,10 @@
     -->
     <table molecule-def="Tree" class="ui celled striped table" renderer="tree" checkable="false">
         <!-- {INNER_HTML} -->
+        <style>
+			table.selectable > tbody > tr > td { border-top-width: 0px; }
+			table.selectable > tbody > tr { cursor: pointer; }
+		</style>
         <tfoot>
             <tr>
                 <th width="100%" colspan="1000" class="center aligned">
@@ -133,10 +137,6 @@
         </tfoot>
         <script>
             // MOLECULE_DEF
-            [
-    		 {$ : 'table.selectable > tbody > tr > td', 'border-top': '0px'}, 
-    		 {$ : 'table.selectable > tbody > tr', cursor : 'pointer'}
-    		].defCss();
             function Tree() {
             	var selectedTrClass = 'active';
             	

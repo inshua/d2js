@@ -220,6 +220,14 @@
     	当启用 select应设置 value-col="id"，之后可使用 $(table).data('value') 设置和获取选中的值，当为 multi 模式时，值为数组    	 
     -->
     <table molecule-def="List" class="ui sortable celled striped table" data="this" renderer="table" escape-tag="th">
+        <style>
+			table.table-selectable > tbody > tr > td { border-top-width: 0px; }
+			table.table-selectable > tbody > tr { cursor: pointer; }
+			tbody.empty > tr { height: 300px; }
+			tbody.empty > tr > td { vertical-align: middle; text-align: center; }
+			table.list > thead > tr > th { white-space: nowrap; }
+			.list > tbody + tbody { border-top-width: 0px; }
+		</style>
         <!-- {INNER_HTML} -->
         <tbody class="empty">
         	<tr><td colspan="100%" class="center aligned">没有符合条件的数据</td></tr>
@@ -238,14 +246,6 @@
         </tfoot>
         <script>
             // MOLECULE_DEF
-    		[
-    		 {$ : 'table.table-selectable > tbody > tr > td', 'border-top': '0px'}, 
-    		 {$ : 'table.table-selectable > tbody > tr', cursor : 'pointer'},
-    		 {$ : 'tbody.empty > tr', height : '300px'},
-    		 {$ : 'tbody.empty > tr > td', 'vertical-align' : 'middle', 'text-align' : 'center'},
-    		 {$ : 'table.list > thead > tr > th', 'white-space': 'nowrap'},
-    		 {$ : '.list > tbody + tbody', 'border-top': '0px'}
-    		].defCss();
             function List() {
             	var activeTrClass = 'active';
             	
@@ -403,19 +403,18 @@
 
     <!-- 表单项，<form col="" text=""></form>， 必须放在 form 里，且 form 已指定 table=xxx -->
     <div molecule-def="FormItem" class="inline field form-group">
+        <style>
+			.table-form { display: table !important; }
+			.table-form > .field { display: table-row !important; }
+			.table-form > .field > label { display: table-cell !important; }
+			.table-form > .field > .form-control { margin: 0.3em 0em !important; }
+			.table-form > .field > label { padding-right: 8px; text-align: right; font-weight: normal; vertical-align: middle !important; }
+		</style>
         <label></label>
         <!-- {INNER_HTML} -->
         <div class="ui orange label" renderer="flderr"></div>
         <script>
             // MOLECULE_DEF
-            [{$ : '.table-form', display: 'table !important'},
-        	 {$ : '.table-form > .field', display: 'table-row !important'},
-        	 {$ : '.table-form > .field > label' , display: 'table-cell !important'},
-        	 {$ : '.table-form > .field > .form-control' , margin : '.3em 0em !important'},
-        	 {$ : '.table-form > .field > label', 'padding-right': '8px', 'text-align': 'right', 'font-weight': 'normal', 'vertical-align' : 'middle !important'},
-        	 // {$ : 'form.table-form', 'min-height': '480px',	'max-height': '800px'; overflow: 'scroll'}
-        	].defCss();
-        	
             function FormItem() {
                 var table = this.$el.closest('[table]').attr('table');
                 var col = this.$el.attr('col');
@@ -438,11 +437,13 @@
     </div>
     
     <div molecule-def="FormImageItem" class="+ form-image-item" molecule="FormItem" renderer="molecule" collector="m|s">
+        <style>
+			.form-image-item > label { vertical-align: top; }
+		</style>
         <img id="imgPreview" class="ui medium bordered image form-control">
         <input type="file" accept="images/*" capture="camera" style="display: none">
         <script>
 	        // MOLECULE_DEF
-	        [{$ : '.form-image-item > label', 'vertical-align' : 'top'}].defCss();
 	        function FormImageItem() {
 	            var table = this.$el.closest('[table]').attr('table');
 	            var col = this.$el.closest('.field').attr('col');
@@ -517,9 +518,11 @@
     	TextArea, <textarea cols="" rows=""> 必须放在 FormItem 内
     -->
     <textarea molecule-def="TextArea" class="form-control" renderer="std" collector="c|s" cols="40" rows="8"></textarea>
+    <style molecule-for="TextArea">
+		.form-textarea-item > label { vertical-align: top; }
+	</style>
     <script molecule-for="TextArea">
         // MOLECULE_DEF
-        [{$ : '.form-textarea-item > label', 'vertical-align' : 'top'}].defCss();
         function TextArea() {
             var col = this.$el.closest('.field').attr('col');
 
@@ -702,6 +705,10 @@
 
     <!-- 对话框  <div title-text="title"> -->
     <div molecule-def="Dialog" class="ui modal">
+	    <style>
+			.modal-body { min-height: 320px; max-height: 640px; overflow-y: scroll; }
+			modal { overflow: visible; }
+		</style>
 		<div class="header">
 			<h4 class="modal-title" id="myModalLabel"></h4>
 			<div id="divRowError" data="_error" renderer="stderr"></div>
@@ -717,13 +724,6 @@
 		</div>
         <script>
             // MOLECULE_DEF
-            [{$:'.modal-body',
-        		'min-height': '320px',
-        		'max-height': '640px',
-        		'overflow-y': 'scroll'},
-        	 {$:'modal', 'overflow': 'visible'},
-        	].defCss();
-            
             function Dialog() {
                 var title = this.$el.attr('title-text');
                 this.$el.find('.modal-title').html(title);
@@ -1009,26 +1009,14 @@
     	日期时间控件。从 input type=date 和 input type=time 复合得到的一个 molecule。 
     -->
     <div molecule-def="DateTime" class="datetime" collector="m|s" renderer="molecule">
+		<style>
+			.datetime { display: inline-block; }
+			.datetime > input[type="date"] { border-right-style: none; border-top-right-radius: 0px; border-bottom-right-radius: 0px; padding-right: 0px; }
+			.datetime > input[type="time"] { border-left-style: none; border-top-left-radius: 0px; border-bottom-left-radius: 0px; padding-left: 0px; }
+		</style>
 		<input class="form-control" type="date" format="yyyy-MM-dd"><input class="form-control" type="time" format="HH:mm">
 		<script>
 	        // MOLECULE_DEF
-			[
-			 	{$ : '.datetime', display: 'inline-block'},					
-			
-				{$ : '.datetime > input[type=date]',			
-					'border-right' : 'none',
-					'border-top-right-radius' : '0px', 
-					'border-bottom-right-radius' : '0px',
-					'padding-right' : '0px'
-				},
-				
-				{$ : '.datetime > input[type=time]',			
-					'border-left' : 'none',
-					'border-top-left-radius' : '0px', 
-					'border-bottom-left-radius' : '0px',
-					'padding-left' : '0px'
-				}
-			].defCss();
 	        function DateTime() {
 	        	this.getValue = function(){
 	        		var s = this.$el.find('[type=date]').val() + ' ' + this.$el.find('[type=time]').val();
