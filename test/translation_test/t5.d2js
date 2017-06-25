@@ -1,0 +1,10 @@
+d2js.test = function(){
+	var  s = "abcd\
+			def";
+	return s;
+}
+
+d2js.test2 = function(){
+	/t\"est/.test('abcd');
+	
+}
