@@ -102,7 +102,9 @@ public class D2jsUnitManager extends ServerUnitManager {
 		String code = FileUtils.readFileToString(src, "utf-8");
 		String requestPath = this.localFilePathToRequestPath(srcFile);
 		String covertedCode = this.convertCode(code, src, requestPath);
-		File tmp = new File(srcFile + ".converted.js");
+		
+		File workDirectory = new File(System.getProperty("catalina.base"), "work");
+		File tmp = new File(workDirectory, requestPath.replace('/', '$') + ".converted.js");
 		FileUtils.write(tmp, covertedCode, "utf-8");
 		if (logger.isDebugEnabled())
 			logger.debug(srcFile + " converted as " + tmp.getAbsolutePath());
