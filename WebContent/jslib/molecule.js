@@ -448,7 +448,7 @@ Molecule.scanMolecules = function(starter, manual) {
         }
 
         function applyTemplate(target, templateMirror) {
-            templateMirror.querySelectorAll('[molecule-placeholder]').forEach(function(holder) {
+            Array.prototype.forEach.call(templateMirror.querySelectorAll('[molecule-placeholder]'), function(holder) {
                 var id = holder.getAttribute('molecule-placeholder');
                 var replacer = null;
                 if (id == null) {
@@ -461,9 +461,9 @@ Molecule.scanMolecules = function(starter, manual) {
                     replacer.removeAttribute('molecule-replace');
                     replacer.removeAttribute('molecule-placeholder');
                     replaceNode(holder, replacer);
-                }
+                }   
             });
-            templateMirror.querySelectorAll('[molecule-socket]').forEach(function(socket) {
+            Array.prototype.forEach.call(templateMirror.querySelectorAll('[molecule-socket]'), function(socket) {
                 var id = socket.getAttribute('molecule-socket');
                 var plug = null;
                 if (id == null) {
@@ -573,7 +573,7 @@ jQuery(document).ready(function() {
             if (target.molecule) {
                 Molecule.allOf(target).forEach(function(m) { m.onDOMNodeRemoved(); });
             }
-            target.querySelectorAll('[molecule-obj]').forEach(ele => {
+            Array.prototype.forEach.call(target.querySelectorAll('[molecule-obj]'), ele => {
                 Molecule.allOf(ele).forEach(function(m) { m.onDOMNodeRemoved(); });
             });
         }
