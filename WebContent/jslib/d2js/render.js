@@ -117,7 +117,12 @@ d2js.render = function(htmlElement, pattern, customRenders){
 				return fun;
 			}
 		}
-		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
+		var fun = d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
+		if(fun && fun.createRenderer){
+			fun = fun.createRenderer(e);
+			d2js._store(e, 'd2js.renderers', rendererDesc, fun);
+		}
+		if(fun) return fun;
 	}
 	
 	function prepareEmbedRenderer(embedRenderer, e){
