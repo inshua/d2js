@@ -5,6 +5,6 @@ d2js.test = function(){
 }
 
 d2js.test2 = function(){
-	/t\"est/.test('abcd');
+	var a = /t'est/.test('abcd');
 	
 }

@@ -886,7 +886,7 @@ public class EmbedSqlTranslator {
 					case Token.TOKEN_ANY:
 						if(Character.isJavaIdentifierPart(c)){
 							this.leadRegExp = false;
-						} else if(c == ';'){
+						} else if(";+-*/.=^&|:?%~><,".indexOf(c) != -1){
 							this.leadRegExp = true;
 						}
 						break;
@@ -898,8 +898,6 @@ public class EmbedSqlTranslator {
 					case Token.TOKEN_L_BACKET:
 					case Token.TOKEN_L_CURVE:
 					case Token.TOKEN_L_SQ_BRACKET:
-						this.leadRegExp = false;
-						break;
 					case Token.TOKEN_NEWLINE:
 						this.leadRegExp = true;
 						break;
