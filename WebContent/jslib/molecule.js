@@ -467,20 +467,22 @@ Molecule.scanMolecules = function(starter, manual) {
                 var id = socket.getAttribute('molecule-socket');
                 var plug = null;
                 if (id == null) {
-                    plug = target.querySelector('[molecule-plug]');
+                    plug = target.querySelectorAll('[molecule-plug]');
                 } else {
-                    plug = target.querySelector('[molecule-plug=' + id + ']');
+                    plug = target.querySelectorAll('[molecule-plug=' + id + ']');
                 }
-                if (plug != null) {
-                    var p = plug;
-                    if (p.tagName == 'TEMPLATE') {
-                        p = plug.content;
-                        plug.remove();
-                    	Array.prototype.slice.call(p.childNodes).forEach(child => socket.appendChild(child));
-					} else {
-                    	socket.appendChild(p);
-                    	p.removeAttribute('molecule-plug');
-					}
+                if (plug.length) {
+                	Array.prototype.forEach.call(plug, function(plug){
+	                    var p = plug;
+	                    if (p.tagName == 'TEMPLATE') {
+	                        p = plug.content;
+	                        plug.remove();
+	                    	Array.prototype.slice.call(p.childNodes).forEach(child => socket.appendChild(child));
+						} else {
+	                    	socket.appendChild(p);
+	                    	p.removeAttribute('molecule-plug');
+						}
+                	});
                 }
             });
 
