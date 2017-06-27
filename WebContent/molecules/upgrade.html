@@ -18,8 +18,9 @@
 		<input type="file" name="file" onchange="upgradeFile(this.files[0])">
 	</form>
 	<p>
-		<button onclick="copyToClipboard(document.querySelector('pre'));">Copy</button>
+		<button onclick="copyToClipboard(document.querySelector('#output'));">Copy</button>
 	</p>
+	<textarea id="output" rows="20" cols="80"></textarea>
 </body>
 <script>
 	function upgradeFile(file){
@@ -30,19 +31,34 @@
 				var s = e.target.result;
 				var document = new DOMParser().parseFromString(s, 'text/html');
 				process(document);
+				output.value = document.documentElement.outerHTML
+					.replace(/constructor=""/g, 'constructor')
+					.replace(/extends=""'/g, "extends");
 			};
 		})(file);
 		reader.readAsText(file);
 
 		function process(document){
-			var defs = document.select("[molecule-def]");
+			var defs = $(document).find('[molecule-def]');
+			
+			if(defs.length == 0) return console.error('no molecule def found');
 
-			var template = document.body().prependElement("template");
-			for (var j = 0; j < defs.size(); j++) {
-				var element = defs.get(j);
-				element.remove();
-				template.appendChild(element);
-
+			var template = document.createElement('template');
+			document.body.insertBefore(template, document.body.childNodes[0]);
+			for (var j = 0; j < defs.length; j++) {
+				var element = $(defs[j]);
+				
+				var prevs = [];
+				var foundComment = false;
+				for(var p = element[0].previousSibling; p.nodeName.charAt(0) == '#' ; p = p.previousSibling){
+					prevs.push(p);
+					if(foundComment) break;
+					if(p.nodeName == '#comment'){
+						foundComment = true;
+					}
+				}
+				prevs.reverse().forEach(p => template.content.appendChild(p));
+				
 				var fullname = element.attr("molecule-def");
 				var module = 'noname', name = fullname;
 				if (fullname.lastIndexOf('.') != -1) {
@@ -51,8 +67,13 @@
 					name = name.substr(p + 1);
 				}
 
-				var constructor = findConstructor(element, fullname, name);
+				var constructor = findConstructor($(element), fullname, name);
+				element.remove();
+				template.content.appendChild(element[0]);
 				if (constructor) {
+					if(constructor.attr('molecule-for')){
+						template.content.appendChild(constructor[0]);
+					}
 					constructor.attr('constructor', "");
 					var code = constructor.html();
 					var reg1 = /\/\/\s*MOLECULE_DEF/, reg2 = /\/\/\s*MOLECULE_DEF_END/;
@@ -69,39 +90,65 @@
 						}
 					}
 					code = arr2.join('\r\n');
-					logger.info(code);
 					initCode = arr.slice(i).join('\r\n');
 					if (initCode.indexOf('Molecule.extend') != -1) {
 						constructor.attr('extends', '');
 					}
-					var pattern = java.util.regex.Pattern.compile("function\\s+[\\w]+\\s*\\(.*\\)\\s*\\{", "m");
-					var m = pattern.matcher(code);
-					m.find();
-					code = code.substr(m.end() + 1);
-					code = code.substring(0, code.lastIndexOf('}') - 1);
-					constructor.html(code);
+					var pattern = /function\s+[\w]+\s*\(.*\)\s*\{/m;
+					var match = code.match(pattern);
+					var start = code.indexOf(match[0]) + match[0].length;
+					code  = code.substr(start);
+					var lastCurve = findLastRCurve(code);
+					if(lastCurve == null) debugger;
+					var main = code.substring(0, lastCurve);
+					constructor.html(main);
+					var remain = code.substr(lastCurve + 1);
+					if(remain != '' && (remain = remain.replace(/\/\/\s*MOLECULE_DEF_END/, '')).trim() != ''){
+						var script = document.createElement('script');
+						script.innerHTML = remain;
+						var p = constructor.parent()[0];
+						if(p) {
+							p.appendChild(script);
+						} else {
+							script.setAttribute('molecule-for', fullname);
+							template.content.appendChild(script);
+						}
+					}
 				}
 				
-				Array.prototype.forEach.call(element.parent().select('style[molecule-for=' + fullname + ']'),
+				Array.prototype.forEach.call(element.parent().find('style[molecule-for=' + fullname + ']'),
 					function(style){
 						template.appendChild(style);
 					}
 				);
 				
-				element.html(element.html().replace('<!-- {INNER_HTML} -->', '<molecule-placeholder />'));
+				element[0].innerHTML = element[0].innerHTML
+					.replace('<!-- {INNER_HTML} -->', '<molecule-placeholder></molecule-placeholder>');
 			}
 		}
 		
 	}
+		
+	function findLastRCurve(code){
+		var depth = 0;
+		for(var i=0; i< code.length; i++){
+			if(code[i] == '}'){
+				depth --;
+				if(depth == -1) return i;
+			} else if(code[i] == '{'){
+				depth ++;
+			}
+		}
+	}
 	
 	function findConstructor(element, fullname, name) {
-		var scripts = element.select('script');
-		if (scripts.isEmpty()) {
-			scripts = element.parent().select('script[molecule-for=' + fullname + ']')
+		var scripts = element.find('script');
+		if (scripts.length == 0 || scripts.length == null) {
+			scripts = element.parent().find('script[molecule-for=' + fullname + ']')
 		} 
-		for (var i = 0; i < scripts.size(); i++) {
-			if (/\/\/\s*MOLECULE_DEF/.test(scripts[i].html())) {
-				return scripts[i];
+		for (var i = 0; i < scripts.length; i++) {
+			if (/\/\/\s*MOLECULE_DEF/.test(scripts[i].innerHTML)) {
+				return $(scripts[i]);
 			}
 		}
 	}
