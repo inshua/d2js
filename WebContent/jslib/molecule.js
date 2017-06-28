@@ -237,7 +237,9 @@ Molecule.registerPrototype = function(el) {
     var depends = el.getAttribute('molecule-depends');
     var escapeTag = el.getAttribute('escape-tag');
     if (escapeTag) el.removeAttribute('escape-tag');
-    var styles = Array.prototype.slice.call(el.querySelectorAll('style')).map(function(style) {
+    var styles = Array.prototype.slice.call(el.querySelectorAll('style'));
+    styles = styles.concat(el.parentElement.querySelectorAll('style[molecule-for=' + fullname + ']'));
+    styles = styles.map(function(style) {
         style.remove();
         return style.innerHTML;
     }).join('\r\n');
@@ -258,13 +260,7 @@ Molecule.registerPrototype = function(el) {
     try {
         var script = el.querySelector('script[constructor]');
         if (script == null) {
-            var next = el.nextElementSibling;
-            if (next && next.hasAttribute('molecule-for')) {
-                var moleculeFor = next.getAttribute('molecule-for');
-                if (moleculeFor == fullname || moleculeFor == r.name) {
-                    script = next;
-                }
-            }
+            script = el.parentElement.querySelector('script[molecule-for=' + fullname + ']');
         }
         if (script) {
             var fun = new Function(script.innerHTML);
@@ -272,7 +268,8 @@ Molecule.registerPrototype = function(el) {
             fun.extends = script.getAttribute('extends') || script.hasAttribute('extends');
             script.remove();
         }
-        Array.prototype.slice.call(el.querySelectorAll('script')).forEach(script => {
+        Array.prototype.concat.call(el.querySelectorAll('script'), 
+        		el.parentElement.querySelectorAll('script[molecule-for=' + fullname + ']')).forEach(script => {
             document.head.appendChild(script);
             script.remove();
         });
