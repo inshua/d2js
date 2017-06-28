@@ -87,7 +87,7 @@ Molecule.removeInstance = function(instance) {
 +
 (function($) {
     $.fn.molecule = function() {
-        return this['moleculeInstance'];
+        return Molecule.of(this);
     };
 }(jQuery));
 
@@ -238,12 +238,12 @@ Molecule.registerPrototype = function(el) {
     var escapeTag = el.getAttribute('escape-tag');
     if (escapeTag) el.removeAttribute('escape-tag');
     var styles = Array.prototype.slice.call(el.querySelectorAll('style'));
-    styles = styles.concat(el.parentElement.querySelectorAll('style[molecule-for=' + fullname + ']'));
+    styles = styles.concat(Array.prototype.slice.call(el.parentNode.querySelectorAll('style[molecule-for=' + fullname + ']')));
     styles = styles.map(function(style) {
         style.remove();
         return style.innerHTML;
     }).join('\r\n');
-    if (styles) {
+    if (styles.trim().length) {
         styles = "/*from molecule " + fullname + "*/\r\n" + styles;
         var style = document.createElement('style');
         style.innerHTML = styles;
@@ -260,7 +260,7 @@ Molecule.registerPrototype = function(el) {
     try {
         var script = el.querySelector('script[constructor]');
         if (script == null) {
-            script = el.parentElement.querySelector('script[molecule-for=' + fullname + ']');
+            script = el.parentNode.querySelector('script[molecule-for=' + fullname + ']');
         }
         if (script) {
             var fun = new Function(script.innerHTML);
@@ -268,11 +268,13 @@ Molecule.registerPrototype = function(el) {
             fun.extends = script.getAttribute('extends') || script.hasAttribute('extends');
             script.remove();
         }
-        Array.prototype.concat.call(el.querySelectorAll('script'), 
-        		el.parentElement.querySelectorAll('script[molecule-for=' + fullname + ']')).forEach(script => {
-            document.head.appendChild(script);
-            script.remove();
-        });
+        var scripts = Array.prototype.slice.call(el.querySelectorAll('script'));
+        scripts = scripts.concat( 
+        		Array.prototype.slice.call( el.parentNode.querySelectorAll('script[molecule-for=' + fullname + ']'))
+            ).forEach(script => {
+                document.head.appendChild(script);
+                script.remove();
+            });
 
         Molecule.definesByFullname[fullname] = m[r.name] = el;
         el.moleculeName = r.name;
@@ -485,7 +487,7 @@ Molecule.scanMolecules = function(starter, manual) {
 
             var p = templateMirror.querySelector('molecule-placeholder');
             if (p) {
-                target.childNodes.forEach(function(child) {
+                Array.prototype.forEach.call( target.childNodes, function(child) {
                     p.parentNode.insertBefore(child, p);
                 });
                 p.remove();
@@ -539,15 +541,13 @@ Molecule.scanMolecules = function(starter, manual) {
     }
 }
 
-Molecule.allOf = function(ele) {
-    var r = []
-    for (var k in ele) {
-        if (ele.hasOwnProperty(k) || k != 'moleculeInstance') {
-            var v = ele[k];
-            if (v && v.isMolecule) {
-                r.push(k);
-            }
-        }
+Molecule.of = function(ele) {
+    if(ele.jquery) ele = ele[0];
+    if(ele == null) return;
+    var r = ele.moleculeInstance;
+    if(r == null && ele.hasAttribute('molecule')) {
+        Molecule.scanMolecules(ele);
+        return ele.moleculeInstance;
     }
     return r;
 }
