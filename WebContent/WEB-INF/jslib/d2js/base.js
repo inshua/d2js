@@ -928,10 +928,10 @@ D2JS.prototype.findResource = function(filename){
 		return file.getAbsolutePath();
 	}
 	var abspath = servletContext.getRealPath(filename);
-	if(new java.io.File(abspath).exists()) return abspath;
+	if(abspath != null && new java.io.File(abspath).exists()) return abspath;
 	
 	abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
-	if(new java.io.File(abspath).exists()) return abspath;
+	if(abspath != null && new java.io.File(abspath).exists()) return abspath;
 		
 	var defaults = DEFAULT_IMPORTS_PATHS;
 	for(var i=0; i<defaults.length; i++){
@@ -960,7 +960,9 @@ function init(){
 	}()));
 	
 	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine);
-	sqlExecutor.defaultJsonDbType = 'JSONB';
+	sqlExecutor.defaultJsonDbType = datasourceConfig.defaultJsonDbType || 'JSONB';
+	sqlExecutor.columnNameCase = datasourceConfig.columnNameCase || 0;	// LOWER
+	sqlExecutor.useColumnLabelAsName = datasourceConfig.useColumnLabelAsName || false;	;
 	
 	d2js = handler = new D2JS(sqlExecutor);
 	engine.put('handler', handler);

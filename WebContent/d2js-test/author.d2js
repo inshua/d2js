@@ -1,9 +1,6 @@
 d2js.fetch = function(params){
 	sql{.
-		select * from author where 1 = 1
-		sql{.?(params.name)	
-			 and strpos(name, :name) > 0 
-		.}
+		select name as abc_Def, id, email from author where 1 = 1
 	.}
 
 	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);

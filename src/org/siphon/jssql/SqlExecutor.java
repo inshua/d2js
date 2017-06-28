@@ -105,6 +105,14 @@ public class SqlExecutor {
 	private boolean postgreSQL;
 
 	private boolean mySql;
+	
+	private int columnNameCase = COLUMN_NAME_CASE_LOWER;
+	
+	public final static int COLUMN_NAME_CASE_LOWER = 0;
+	
+	public final static int COLUMN_NAME_CASE_KEEP = 1;
+	
+	public final static int COLUMN_NAME_CASE_UPPER = 2;
 
 	private ScriptEngine jsEngine;
 
@@ -113,6 +121,24 @@ public class SqlExecutor {
 	private JsTypeUtil jsTypeUtil;
 	
 	private String defaultJsonDbType;
+
+	public int getColumnNameCase() {
+		return columnNameCase;
+	}
+
+	public void setColumnNameCase(int columnNameCase) {
+		this.columnNameCase = columnNameCase;
+	}
+
+	public boolean isUseColumnLabelAsName() {
+		return useColumnLabelAsName;
+	}
+
+	public void setUseColumnLabelAsName(boolean useColumnLabelAsName) {
+		this.useColumnLabelAsName = useColumnLabelAsName;
+	}
+
+	private boolean useColumnLabelAsName;
 
 	public SqlExecutor(DataSource dataSource, ScriptEngine jsEngine) throws ScriptException {
 		this.dataSource = dataSource;
@@ -532,8 +558,13 @@ public class SqlExecutor {
 		while (rs.next()) {
 			ScriptObjectMirror item = jsTypeUtil.newObject();
 			for (int i = 1; i <= rsm.getColumnCount(); i++) {
-				String cname = rsm.getColumnName(i).toLowerCase();
-				item.put(cname, fieldValueToNativeObject(rsm.getColumnType(i), rs, cname));
+				String cname = this.useColumnLabelAsName ? rsm.getColumnLabel(i): rsm.getColumnName(i);
+				String label = cname;
+				switch(this.columnNameCase){
+				case 0: label = cname.toLowerCase(); break;
+				case 2: label = cname.toUpperCase(); break;
+				}
+				item.put(label, fieldValueToNativeObject(rsm.getColumnType(i), rs, cname));
 			}
 			//NativeArray.pushObject(narr, item.to(ScriptObject.class));
 			arr.callMember("push", item);
