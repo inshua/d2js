@@ -41,8 +41,6 @@ imports("./d2js/entity-map.js");
 
 imports("./d2js/validation.js");
 
-init();
-
 var ConcurrentHashMap = Java.type('java.util.concurrent.ConcurrentHashMap');
 var allD2js = new ConcurrentHashMap();
 

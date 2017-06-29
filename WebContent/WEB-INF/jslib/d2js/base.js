@@ -949,7 +949,7 @@ D2JS.prototype.findResource = function(filename){
 var d2js = null;
 var handler = null;
 
-function init(){
+D2JS.init = function(){
 	
 	var datasource = application.datasource || (application.datasource = (function(){
 		var properties = new java.util.Properties();
