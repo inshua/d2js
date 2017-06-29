@@ -487,8 +487,10 @@ Molecule.scanMolecules = function(starter, manual) {
 
             var p = templateMirror.querySelector('molecule-placeholder');
             if (p) {
+            	if(target.getAttribute('molecule') == 'SearchForm') debugger;
             	var childNodes = Array.prototype.slice.call(target.childNodes);
             	for(var i=childNodes.length -1; i--; i>=0){
+            		console.log('insert ', childNodes[i])
             		p.parentNode.insertBefore(childNodes[i], p);
             	}
                 p.remove();

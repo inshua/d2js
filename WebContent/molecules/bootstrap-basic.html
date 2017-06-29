@@ -84,7 +84,7 @@
 				var col = this.$el.attr('col');
 				this.$el.attr('data-t', col);
 
-				this.$el.attr('check-all-id', this.id);
+				this.$el.attr('check-all-id', this.id || '');
 
 				var me = this;
 				this.$el.find('#ckAll').on('change', function (e) {
@@ -123,8 +123,12 @@
 			<script>
 				d2js.Renderers.check = function (element, v, table) {
 					var checkAllId = $(element).attr('check-all-id');
-					var checkAll = $(element).closest('table').find('thead').find('th[check-all-id=' + checkAllId + ']').molecule();
-
+					if(checkAllId != null && checkAllId != ''){
+						var checkAll = $(element).closest('table').find('thead').find('th[check-all-id=' + checkAllId + ']').molecule();
+					} else {
+						var checkAll = $(element).closest('table').find('thead').find('th[check-all-id]').molecule();
+					}
+					
 					var checked = checkAll.checked();
 					var checkboxes = checkAll.checkboxes;
 
@@ -314,6 +318,11 @@
 
 				this.$el.closest('.form-group').addClass('form-textarea-item');
 		</script>
+		<style molecule-for="TextArea">
+			.form-textarea-item>label {
+				vertical-align: top;
+			}
+		</style>
 
 
 		<form molecule-def="SearchForm" class="form-inline" style="float:right" d2js.root=",search,params">
@@ -483,6 +492,23 @@
 					this.$el.trigger('tablelist.edit', [row]);
 					$('#' + dialogId).bindRoot(row, this.el).render().modal('show');
 				}
+			</script>
+			<script>
+				d2js.Renderers.editLink = function (element, v) {
+	        		var table = d2js.findArg(arguments, 'table');
+	            	var $e = $(element);
+	     	        $e.html('');
+	     	        var a = $(document.createElement('a')).appendTo($e);
+	     	        a.html('EDIT');
+	     	        a.attr('href', '###');
+	     	        a.data('id', v);
+	     	        var idColumn = arguments[arguments.length-2];
+	     	        a.on('click', function () {
+	     	        	var row = $e.findRoot().root;
+	     	        	var tl = $(this).closest('[molecule-obj=TableList]');
+	     	        	Molecule.of(tl).editRow(row);
+	     	        });
+	     	    };
 			</script>
 		</div>
 
@@ -893,13 +919,6 @@
 
 	</template>
 
-	<style molecule-for="TextArea">
-		.form-textarea-item>label {
-			vertical-align: top;
-		}
-	</style>
-
-
 
 
 	<div molecule="TableList" table="book" edit-dialog="dialog1" allow-remove="true">
@@ -936,15 +955,15 @@
 	</div>
 
 	<div molecule="Dialog" title="Book" id="dialog1">
-		<form>
+		<form class="table-form">
 			<div molecule="FormItem" col="title" text="Title">
 				<input type="text" molecule="Input">
 			</div>
 			<div molecule="FormItem" col="author" text="Author" d2js.root="author" data="rows" renderer="options('name','id',false)">
-				<select molecule="Select"></select>
+				<select molecule="Select" collector="c|n|s"></select>
 			</div>
 			<div molecule="FormItem" col="kind" text="Kind" dict="book_kind">
-				<select molecule="Select" collector="c|n|s"></select>
+				<select molecule="Select" collector="c|s"></select>
 			</div>
 			<div molecule="FormItem" col="publish_date" text="Publish Date">
 				<input type="date" molecule="Input" format="yyyy-MM-dd" renderer="date|std" collector="c|d|s">
@@ -954,26 +973,27 @@
 
 
 	<script>
-				Dicts.book_kind = { f: '小说', k: '武侠', p: '哲学' }
+		debugger;
+			Dicts.book_kind = { f: '小说', k: '武侠', p: '哲学' }
 
-				var table = new d2js.DataTable('book', '../bookstore/book.d2js', { pageSize: 5 });
-				table.search.params = { gender: 'M' };
-				table.on('load', function (error) {
-					d2js.render(null, this);
+			var table = new d2js.DataTable('book', '../bookstore/book.d2js', { pageSize: 5 });
+			table.search.params = { gender: 'M' };
+			table.on('load', function (error) {
+				d2js.render(null, this);
+			});
+
+			table.load('fetch', { gender: 'F' });
+
+			var author = new d2js.DataTable('author', '../bookstore/author.d2js');
+			author.load('listAll', function (error) {
+				d2js.render(null, this);
+			});
+
+			$(document).ready(function () {
+				$('[molecule-obj=List]').on('actionheader.click', function (evt, action, value, table, _1, rows, idx, row) {
+					console.info(row);
 				});
-
-				table.load('fetch', { gender: 'F' });
-
-				var author = new d2js.DataTable('author', '../bookstore/author.d2js');
-				author.load('listAll', function (error) {
-					d2js.render(null, this);
-				});
-
-				$(document).ready(function () {
-					$('[molecule-obj=List]').on('actionheader.click', function (evt, action, value, table, _1, rows, idx, row) {
-						console.info(row);
-					});
-				})
+			})
 	</script>
 </body>
 
