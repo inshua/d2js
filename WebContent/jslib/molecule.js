@@ -487,9 +487,10 @@ Molecule.scanMolecules = function(starter, manual) {
 
             var p = templateMirror.querySelector('molecule-placeholder');
             if (p) {
-                Array.prototype.forEach.call( target.childNodes, function(child) {
-                    p.parentNode.insertBefore(child, p);
-                });
+            	var childNodes = Array.prototype.slice.call(target.childNodes);
+            	for(var i=childNodes.length -1; i--; i>=0){
+            		p.parentNode.insertBefore(childNodes[i], p);
+            	}
                 p.remove();
             } else {
                 Array.prototype.slice.call(target.childNodes).forEach(child => templateMirror.appendChild(child));
