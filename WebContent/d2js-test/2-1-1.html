@@ -35,7 +35,7 @@
 			Gender: <span data="gender" renderer="gender"></span>
 		</div>
 		
-		<h2>函数与对象充当渲染器<small>函数与对象渲染器都可以代码设置于 element.renderObj，而不通过 attribute设置</small></h2>
+		<h2>renderObj<small>函数与对象渲染器都可以代码设置于 element.renderObj，而不通过 attribute设置</small></h2>
 		<div id="test2">
 			Name: <span  data="name" renderer="std"></span>
 			<br>
@@ -44,7 +44,7 @@
 			Phone: <span  id="phone" data="phone"></span>
 		</div>
 		
-		<h2>函数与对象充当 custom renderer<small>使用工厂方法 createRenderer 使每个 element 得到一个渲染器实例</small></h2>
+		<h2>createRenderer 接口<small>支持 createRenderer(element) 函数的对象也可以充当 renderer，它将为每个 element 生成一个独立的渲染器对象</small></h2>
 		<div id="test3">
 			Name: <span data="name" renderer="letterScale"></span>
 			<br>
@@ -163,6 +163,12 @@
 	// $('#test3').bindRoot(person).render(null, {letterScale: LetterScale})
 
 	$('#test3').bindRoot(person).render(null, {letterScale: LetterScale.rendererFactory()})
-
+	
+	// or
+	// $('#test3').bindRoot(person).render(null, {letterScale: {createRenderer: function(e){return new LetterScale(e)}}})
+	// or
+	// $('#test3').bindRoot(person).render(null, {letterScale: {createRenderer: {
+// 			render : function(element, value){}
+// 		}}})
 </script>
 </html>
