@@ -41,7 +41,7 @@ function Molecule(container) {
     var me = this;
 
     this.onDOMNodeRemoved = function() {
-            if (m.dispose) { // 对于不需要关注 dispose 活动的 molecule，无需自动 dispose
+            if (me.dispose) { // 对于不需要关注 dispose 活动的 molecule，无需自动 dispose
                 if (me.$el.closest('[molecule-auto-dispose=false]').length) return; // 不自动删除
 
                 me.dispose();
@@ -235,8 +235,6 @@ Molecule.scanDefines = function(starter) {
 Molecule.registerPrototype = function(el) {
     var fullname = el.getAttribute('molecule-def');
     var depends = el.getAttribute('molecule-depends');
-    var escapeTag = el.getAttribute('escape-tag');
-    if (escapeTag) el.removeAttribute('escape-tag');
     var styles = Array.prototype.slice.call(el.querySelectorAll('style'));
     styles = styles.concat(Array.prototype.slice.call(el.parentNode.querySelectorAll('style[molecule-for=' + fullname + ']')));
     styles = styles.map(function(style) {
@@ -487,11 +485,24 @@ Molecule.scanMolecules = function(starter, manual) {
 
             var p = templateMirror.querySelector('molecule-placeholder');
             if (p) {
-            	if(target.getAttribute('molecule') == 'SearchForm') debugger;
             	var childNodes = Array.prototype.slice.call(target.childNodes);
+                var escapeTag = p.getAttribute("escape-tag");
             	for(var i=childNodes.length -1; i--; i>=0){
-            		console.log('insert ', childNodes[i])
-            		p.parentNode.insertBefore(childNodes[i], p);
+                    var c = childNodes[i];
+                    if(escapeTag) debugger;
+                    if(escapeTag){
+                        if(c.tagName == "M:" +  escapeTag.toUpperCase()){ // cloneNode as another tag
+                            var nd = document.createElement(escapeTag);
+                            copyAttributes(c, nd);
+                            var nodes = Array.prototype.slice.call(c.childNodes);
+                            for(var i = 0;i < nodes.length; i++){
+                                nd.appendChild(nodes[i]);
+                            }
+                            c = nd;
+                        }
+                    }
+            		p.parentNode.insertBefore(c, p);
+                    p = c;
             	}
                 p.remove();
             } else {
@@ -602,10 +613,10 @@ jQuery(document).ready(function() {
         var target = (e.originalEvent.target || e.target);
         if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
             if (target.molecule) {
-                Molecule.allOf(target).forEach(function(m) { m.onDOMNodeRemoved(); });
+                target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
             }
             Array.prototype.forEach.call(target.querySelectorAll('[molecule-obj]'), ele => {
-                Molecule.allOf(ele).forEach(function(m) { m.onDOMNodeRemoved(); });
+                 target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
             });
         }
     });

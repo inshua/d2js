@@ -973,27 +973,26 @@
 
 
 	<script>
-		debugger;
-			Dicts.book_kind = { f: '小说', k: '武侠', p: '哲学' }
+		Dicts.book_kind = { f: '小说', k: '武侠', p: '哲学' }
 
-			var table = new d2js.DataTable('book', '../bookstore/book.d2js', { pageSize: 5 });
-			table.search.params = { gender: 'M' };
-			table.on('load', function (error) {
-				d2js.render(null, this);
+		var table = new d2js.DataTable('book', '../bookstore/book.d2js', { pageSize: 5 });
+		table.search.params = { gender: 'M' };
+		table.on('load', function (error) {
+			d2js.render(null, this);
+		});
+
+		var author = new d2js.DataTable('author', '../bookstore/author.d2js');
+		author.load('listAll', function (error) {
+			d2js.render(null, this);
+		});
+
+		$(document).ready(function () {
+			$('[molecule-obj=List]').on('actionheader.click', function (evt, action, value, table, _1, rows, idx, row) {
+				console.info(row);
 			});
 
 			table.load('fetch', { gender: 'F' });
-
-			var author = new d2js.DataTable('author', '../bookstore/author.d2js');
-			author.load('listAll', function (error) {
-				d2js.render(null, this);
-			});
-
-			$(document).ready(function () {
-				$('[molecule-obj=List]').on('actionheader.click', function (evt, action, value, table, _1, rows, idx, row) {
-					console.info(row);
-				});
-			})
+		})
 	</script>
 </body>
 

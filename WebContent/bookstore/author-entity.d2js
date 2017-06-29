@@ -4,7 +4,7 @@ d2js.entityMap = {
 	map: {
 		books : {
 				type : 'Book',
-				d2js:'/d2js-test/book-entity.d2js',
+				d2js:'book-entity.d2js',
 				relation: 'many', 
 				key: 'id', 
 				fk: 'author',
