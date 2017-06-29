@@ -462,8 +462,8 @@ Molecule.scanMolecules = function(starter, manual) {
                     replaceNode(holder, replacer);
                 }   
             });
-            Array.prototype.forEach.call(templateMirror.querySelectorAll('[molecule-socket]'), function(socket) {
-                var id = socket.getAttribute('molecule-socket');
+            Array.prototype.forEach.call(templateMirror.querySelectorAll('[molecule-slot]'), function(slot) {
+                var id = slot.getAttribute('molecule-slot');
                 var plug = null;
                 if (id == null) {
                     plug = target.querySelectorAll('[molecule-plug]');
@@ -476,9 +476,9 @@ Molecule.scanMolecules = function(starter, manual) {
 	                    if (p.tagName == 'TEMPLATE') {
 	                        p = plug.content;
 	                        plug.remove();
-	                    	Array.prototype.slice.call(p.childNodes).forEach(child => socket.appendChild(child));
+	                    	Array.prototype.slice.call(p.childNodes).forEach(child => slot.appendChild(child));
 						} else {
-	                    	socket.appendChild(p);
+	                    	slot.appendChild(p);
 	                    	p.removeAttribute('molecule-plug');
 						}
                 	});
