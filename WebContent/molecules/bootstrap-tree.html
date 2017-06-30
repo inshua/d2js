@@ -130,6 +130,7 @@
 				</tr>
 			</tfoot>
 			<script constructor>
+				var selectedTrClass = 'info';
 				var table = this.$el.closest('[table]').attr('table');
 				this.$el.attr('d2js.root', table).attr('data', 'this');
 				var paging = this.$el.closest('[paging]').attr('paging');
@@ -162,7 +163,7 @@
 
 								me.$el.find('tbody>tr').each(function () {
 									var row = $(this).findRoot().root.row;
-									if (checked.indexOf(row[valueColumn]) != -1) $(this).addClass('info'); else $(this).removeClass('info');
+									if (checked.indexOf(row[valueColumn]) != -1) $(this).addClass(selectedTrClass); else $(this).removeClass('info');
 								});
 
 								me.$el.trigger('valuechange', [checked]);
@@ -175,7 +176,7 @@
 								//console.log('after rendered, set value ', value);
 								me.$el.find('tbody>tr').each(function (idx, tr) {
 									var row = $(this).findRoot().root.row;
-									if (value && value.indexOf(row[valueColumn]) != -1) $(tr).addClass('info'); else $(tr).removeClass('info');
+									if (value && value.indexOf(row[valueColumn]) != -1) $(tr).addClass(selectedTrClass); else $(tr).removeClass('info');
 								});
 								me.$el.find('tbody>tr').each(function (idx, tr) {
 									$(tr).on('click', function (event) {

@@ -561,6 +561,9 @@
 				var tableList = this;
 				var editDialogId = this.$el.attr('edit-dialog');
 				var newDialogId = this.$el.attr('new-dialog') || editDialogId;
+				if(!this.el.hasAttribute('d2js.root')){
+					this.el.setAttribute('d2js.root', this.$el.closest('[table]').attr('table'));
+				}
 
 				if (editDialogId == null || newDialogId == null) return; // 没有提供编辑数据的对话框
 
@@ -1001,7 +1004,7 @@
 								me.$el.find('tbody.data>tr').each(function (idx, tr) {
 									var d = $(tr).findRoot().root;
 									if (!d) return;
-									var row = d && d[0];
+									var row = d;
 									var value = row[valueColumn];
 									if (checked.indexOf(value) != -1) {
 										$(tr).addClass(activeTrClass)

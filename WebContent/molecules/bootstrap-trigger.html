@@ -18,12 +18,12 @@
 
 	<script src="../jslib/d2js/bootstrap-renderers.js"></script>
 
-	<!--<script src="../jslib/molecule.js"></script>
+	<script src="../jslib/molecule.js"></script>
 
 	<script>
 		Molecule.loadHtml('bootstrap-basic.html');
 		Molecule.loadHtml('bootstrap-tree.html');
-	</script>-->
+	</script>
 
 	<style>
 		table.table-selectable>tbody>tr>td {
@@ -84,7 +84,7 @@
 				<table molecule="List">
 					<thead>
 						<tr>
-							<molecule-placeholder escape-tag="th"></molecule-placeholder>
+							<template molecule-placeholder></template>
 						</tr>
 					</thead>
 				</table>
@@ -168,8 +168,8 @@
 
 
 		<!-- 下拉树
-    	<div data-value="5" table="author" value-col="id" display-col=""></div> 
-    -->
+	    	<div data-value="5" table="author" value-col="id" display-col=""></div> 
+	    -->
 		<div molecule-def="DropDownTree" molecule="DropDown" select="single" escape-tag="tr,th" collector="m|s" renderer="molecule">
 			<div molecule="TableList" class="contaienr">
 				<div molecule="TableError"></div>
@@ -177,7 +177,7 @@
 				<table molecule="Tree">
 					<thead>
 						<tr>
-							<molecule-placeholder escape-tag="th"></molecule-placeholder>
+							<template molecule-placeholder></template>
 						</tr>
 					</thead>
 				</table>
@@ -236,46 +236,62 @@
 	</template>
 
 	<div class="container">
-		<label>Test</label>
-		<div molecule="DropDownList" table="author" value-col="id" display-col="name" select="single" show-header="false">
-			<m:th molecule="Header" col="id" text="ID"></m:th>
-			<m:th molecule="Header" col="name" text="Name"></m:th>
-			<m:th molecule="Header" col="email" text="Email"></m:th>
-		</div>
-
+	
+		  <label>Test</label>
+		  <div molecule="DropDownList" table="author" value-col="id" display-col="name" select="single" show-header="true">
+		  		<m:th molecule="Header" col="id" text="ID"></m:th>
+		        <m:th molecule="Header" col="name" text="Name"></m:th>
+		        <m:th molecule="Header" col="email" text="Email"></m:th>
+		  </div>
+		  
+		  <label>Test</label>
+		  <div molecule="DropDownList" table="author" value-col="id" display-col="name" autocomplete-col="email" select="single" show-header="true">
+		  		<m:th molecule="Header" col="id" text="ID"></m:th>
+		        <m:th molecule="Header" col="name" text="Name"></m:th>
+		        <m:th molecule="Header" col="email" text="Email"></m:th>
+		  </div>
+		  
+		  <label>Test</label>
+		  <div molecule="DropDownTree" table="author" value-col="id" display-col="name" parent-col="parent_id" select="single" show-header="true">
+				<m:th molecule="TreeNode" col="name" text="Name"></m:th>		  
+		  		<m:th molecule="Header" col="id" text="ID"></m:th>
+		        <m:th molecule="Header" col="name" text="Name"></m:th>
+		        <m:th molecule="Header" col="email" text="Email"></m:th>
+		  </div>
+		  
 	</div>
 
 </body>
 <script>
-	// d2js.Renderers.testLink = function (element, v, table) {
-    //     var e = $(element).html('');
-    //     var a = $(document.createElement('a')).appendTo(e);
-    //     a.html('CLICK').attr('href', '###').data('id', v).on('click', function () {
-    //         console.log('u clicked ' + v);
-    //         Molecule.of($(this).closest('[molecule-obj=DropDown]')).toggle();
+	d2js.Renderers.testLink = function (element, v, table) {
+        var e = $(element).html('');
+        var a = $(document.createElement('a')).appendTo(e);
+        a.html('CLICK').attr('href', '###').data('id', v).on('click', function () {
+            console.log('u clicked ' + v);
+            Molecule.of($(this).closest('[molecule-obj=DropDown]')).toggle();
 
-    //         var checked = Molecule.of($('table>thead>tr>th[molecule-obj=CheckHeader]')).checked()
-    //         console.log('checked ' + checked);
-    //     });
-    // };
+            var checked = Molecule.of($('table>thead>tr>th[molecule-obj=CheckHeader]')).checked()
+            console.log('checked ' + checked);
+        });
+    };
 
-    // var table = new d2js.DataTable('author', '../d2js_test/test.d2js', { pageSize: 5 });
-    // table.on('load', function (error) {
-    //     d2js.render(null, this);
-    // });
+    var table = new d2js.DataTable('author', '../d2js_test/test.d2js', { pageSize: 5 });
+    table.on('load', function (error) {
+        d2js.render(null, this);
+    });
 
-    // $(function () {
-    //     table.fill([
-	//         { id: 1, name: '东方航空', email: 'dh@xxx.com', parent_id: null },
-	//         { id: 2, name: '东方航空华东公司', email: 'hd@xxx.com', parent_id: 1 },
-	//         { id: 8, name: '空管部', email: 'kg@xxx.com', parent_id: 2 },
-	//         { id: 3, name: '信息部', email: 'xx@xxx.com', parent_id: 2 },
-	//         { id: 4, name: '东方航空华北公司', email: 'dhhb@xxx.com', parent_id: 1 },
-	//         { id: 5, name: '厦门航空', email: 'xm@xxx.com', },
-	//         { id: 6, name: '厦门航空华南公司', email: 'xmhn@xxx.com', parent_id: 5 },
-	//         { id: 7, name: '吉祥航空', email: 'jx@xxx.com' },
-    //     ], true);
-    // });
+    $(function () {
+        table.fill([
+	        { id: 1, name: '东方航空', email: 'dh@xxx.com', parent_id: null },
+	        { id: 2, name: '东方航空华东公司', email: 'hd@xxx.com', parent_id: 1 },
+	        { id: 8, name: '空管部', email: 'kg@xxx.com', parent_id: 2 },
+	        { id: 3, name: '信息部', email: 'xx@xxx.com', parent_id: 2 },
+	        { id: 4, name: '东方航空华北公司', email: 'dhhb@xxx.com', parent_id: 1 },
+	        { id: 5, name: '厦门航空', email: 'xm@xxx.com', },
+	        { id: 6, name: '厦门航空华南公司', email: 'xmhn@xxx.com', parent_id: 5 },
+	        { id: 7, name: '吉祥航空', email: 'jx@xxx.com' },
+        ], true);
+    });
 
 </script>
 

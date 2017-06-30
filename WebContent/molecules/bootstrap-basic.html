@@ -717,6 +717,7 @@
     		当启用 select应设置 value-col="id"，之后可使用 $(table).data('value') 设置和获取选中的值，当为 multi 模式时，值为数组    	 
     	-->
 		<table molecule-def="List" class="table table-striped list" renderer="table" escape-tag="th">
+			<template molecule-placeholder></template>			
 			<tbody class="empty">
 				<tr>
 					<td colspan="100%"></td>
@@ -807,7 +808,7 @@
 								me.$el.find('tbody.data>tr').each(function (idx, tr) {
 									var d = $(tr).findRoot().root;
 									if (!d) return;
-									var row = d && d[0];
+									var row = d;
 									var value = row[valueColumn];
 									if (checked.indexOf(value) != -1) {
 										$(tr).addClass('info')
