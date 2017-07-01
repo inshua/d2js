@@ -54,6 +54,10 @@ if(Object.equals == null){
 	}
 }
 
+/**
+ * entity 元信息 
+ * @namespace
+ */
 d2js.meta = {};
 
 d2js.processResponse = function(response, items){
@@ -106,7 +110,11 @@ d2js.processResponse = function(response, items){
 }
 
 /**
- * 由任意 d2js 接口提取数据
+ * 由任意 d2js 接口提取数据。
+ * 用于非 entity 类的服务器响应信息，这个函数可以处理服务器异常。
+ * @param url {string} url
+ * @param option {string} option for fetch
+ * @return {Object} object from JSON.parse(response, parseDate) 
  */
 d2js.fetch = async function(url, option){			
 	var response = fetch(url, Object.assign({credentials:"same-origin"}, option));
@@ -134,6 +142,36 @@ d2js.findInverseMap = function(map, metaMaps){
 	}}
 }
 
+/**
+从服务器 d2js 加载 meta 信息。
+usage:
+```js
+ 		await d2js.meta.load(['/d2js-test/entity/author-entity.d2js', '/d2js-test/entity/book-entity.d2js', '/d2js-test/entity/publisher-entity.d2js']);
+```
+需要服务器声明 meta 信息。
+该接口对服务器的 meta.d2js 批量发起调用，不是逐个调用 d2js，所以url为去除 context path 的绝对路径。
+
+命名空间是 meta 的存储空间。
+当提供字符串时，在 d2js.root 下开辟 d2js.root.namespace 的存储空间。
+当提供对象时，以该对象为存储空间。
+当不提供时，以 d2js.root 为存储空间。
+以 Author 为例：
+```js
+await d2js.meta.load(['author.d2js']);
+var author = new d2js.root.Author();
+
+await d2js.meta.load(['author.d2js'], 'bookstore');
+var author = new d2js.root.bookstore.Author();
+
+var bookstore = {};
+await d2js.meta.load(['author.d2js'], bookstore);
+var author = new bookstore.Author();
+
+```
+命名空间可以控制对象的范围，在单页面应用中，可以轻松实现退出某个部件让 GC 回收其下的所有对象。
+* @param d2jses {Array of url} d2js url 
+* @param [namespace=d2js.root] {string|object} 命名空间。
+ */
 d2js.meta.load = function(d2jses, namespace){
 	return new Promise(async function(resolve, reject){
 		try{
@@ -151,6 +189,36 @@ d2js.meta.load = function(d2jses, namespace){
 	
 }
 
+/**
+ 通常通过 await d2js.meta.load([url]) 从服务器加载。也可通过 d2js.meta.loadMetas([meta]) 手工注入。
+ meta info 结构举例如下：
+ ```js
+ {
+		name: 'Author',
+		pk : 'id',
+		columns : [{name: 'id', type: 'INTEGER'}, {name: 'name', type: 'STRING'}, ...],
+		map : {
+			books : {
+	 			 type: 'Book',  	// 另一 meta 名
+				 d2js: '/path/to/book.d2js',
+				 relation: 'many', 	// many | one
+				 key: 'id',			// optional 
+				 fk: 'author',		// from books.author to author.id
+				 isOwner: true		// true | false. 强持有关系，先存在本对象再存在关系对象，本对象移除则关系对象追随移除。否则仅解除关系。
+			}, 
+		},
+
+		maps: [all value in map],	// map 的 value 的数组, loadMetas 创建
+		Constructor : Function,		// 实体构造函数, loadMetas 创建
+		columnNames: ['id', 'name'],// 列名数组, loadMetas 创建
+ }
+ ```
+ 构造函数存放在 namespace[meta name] 中。
+ 通过 new namespace.MetaName 可以创建 Entity 对象，其为 d2js.Entity 对象的子类。
+ 通过 namespace.MetaName.meta 可访问上面的 meta 对象。
+ @param metas {array of meta info} meta info 数组
+ @param [namespace=d2js.root] {string|object} 命名空间
+ */
 d2js.meta.loadMetas = function(metas, namespace = d2js.root){
 	if(namespace == null){
 		namespace = d2js.root;
@@ -228,29 +296,44 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root){
 
 
 /**
- * 数据行。
+ * 实体。所有实体类的基类。
+ * 使用该类的子类。不要直接使用该类。
  * @class d2js.Entity
+ * @param values {object} 值数据
+ * @param [state='new'] {string} 初始状态
  */
 d2js.Entity = function(values, state = 'new'){
+
 	this._values = {};
 	
 	/**
-	 * 行状态, new edit remove none
+	 * 状态, new edit remove none
 	 * @type {string}
 	 */
 	this._state = state;
 	
 	/**
-	 * 行错误
+	 * 错误
 	 * @type {string|Error|null}
 	 */
 	this._error = null;
 	
 	/**
-	 * 字段错误，如 `row._error_at['name']` 可读取 name 字段的错误
+	 * 属性错误，如 `entity._error_at['name']` 可读取 name 字段的错误
 	 * @type {object}
 	 */
 	this._error_at = null;
+
+	/**
+	 * meta 信息。
+	 * meta 的 columns 映射为同名 attributes。
+	 * 对于 meta 的 map:
+	 * 1. relation = one  映射为类型为 d2js.Entity 的 attribute
+	 * 1. relation = many	映射为类型为 d2js.List 的 attribute
+	 * 当 map 与 column 同名时，map 覆盖 column。
+	 * @type {meta}
+	 */
+	this._meta = null;
 
 	// 初始化列表成员
 	for(let k in this._meta.map){
@@ -321,6 +404,11 @@ d2js.Entity.prototype._setInverse = function(map, value){
 	return value;
 }
 
+/**
+ * 比较2个Entity是否相同。判断依据是同一个 meta 且 pk 值相同。不判断每个成员。
+ * @param another {d2js.Entity} 另一个实体
+ * @return {bool} 
+ */
 d2js.Entity.prototype.equals = function(another){
 	if(this == another) return true;
 	return another != null && another._isEntity 
@@ -328,6 +416,11 @@ d2js.Entity.prototype.equals = function(another){
 			&& this._values[this._meta.pk] == another._values[this._meta.pk];
 }
 
+/**
+ * 对每个 map 属性执行 callback。
+ * @param callback {Function} function(map, value){}, scope = Entity
+ * @return {void} 
+ */
 d2js.Entity.prototype.eachMappedAttribute = function(callback){
 	for(var k in this._meta.map){if(this._meta.map.hasOwnProperty(k)){
 		var map = this._meta.map[k]
@@ -335,6 +428,11 @@ d2js.Entity.prototype.eachMappedAttribute = function(callback){
 	}}
 }
 
+/**
+ * 对每个 map 属性执行 callback。
+ * @param callback {Function} function(map, value){}, scope = Entity
+ * @return {void} 
+ */
 d2js.Entity.prototype._isEntity = true;
 
 /**
@@ -360,9 +458,10 @@ d2js.Entity.prototype._getValueBeforeMap = function(columnName){
 }
 
 /**
- * 设置字段的值，如果当前行状态为 none，则新的行状态为 edit
+ * 设置属性的值，如果当前状态为 none，则新状态为 edit
  * @param column {string} 字段名
  * @param value {object} 值
+ * @return {d2js.Entity} return this. chain method.
  */
 d2js.Entity.prototype._set = function(attr, newValue){
 	if(this._state == 'phantom') throw new Error('cant set value at phantom entity');
@@ -440,7 +539,8 @@ d2js.Entity.prototype._setMappedAttribute = function(attr, newValue){
 
 /**
  * 批次设置值，与 _set 相似，只是批次调用
- * @param rowData {object} {col1:val, col2:val, col3:val}
+ * @param rowData {object} {attr:val, attr:val, attr:val}
+ * @return {d2js.Entity} return this, chain method
  */
 d2js.Entity.prototype._setValues = function(rowData){
 	for(let k in rowData){
@@ -453,8 +553,9 @@ d2js.Entity.prototype._setValues = function(rowData){
 
 /**
  * 转换为只包含 column 信息的纯数据对象
+ * @return {object} 
  */
-d2js.Entity.prototype._toRow = function(values){
+d2js.Entity.prototype._toRaw = function(values){
 	values = values || this._values;
 	var obj = {};
 	this._meta.columnNames.forEach(function(k){
@@ -468,9 +569,11 @@ d2js.Entity.prototype._toRow = function(values){
 	return obj;
 }
 
-
+/**
+ * @return {string} 形如 (Author {id:1, name:'Jack'}) 的字符串
+ */
 d2js.Entity.prototype.toString = function(){
-	return `(${this._meta.name} ${JSON.stringify(this._toRow())})`
+	return `(${this._meta.name} ${JSON.stringify(this._toRaw())})`
 }
 
 /**
@@ -482,9 +585,9 @@ d2js.Entity.prototype._isDirty = function(){
 }
 
 
-
 /**
- * 将本数据行状态设为 remove, 并从各关联对象移除。
+ * 将本Entity 状态设为 remove, 并从各关联对象移除。
+ * @return {void}
  */
 d2js.Entity.prototype._remove = function(){
 	if(this._state == 'phantom') throw new Error('cannot remove phantom object')
@@ -502,11 +605,21 @@ d2js.Entity.prototype._remove = function(){
 	}
 }
 
-d2js.Entity.fetchById = function(id, filter){
+/**
+ * 根据 pkValue 提取实体对象。
+ * usage :
+ * ```js
+ * 	var author = await bookstore.Author.fetchById(2);
+ * ```
+ * @param pkValue {any}
+ * @param [filter] {object} 过滤实体。形如 {includes : ['Book'], excludes: ['Publisher']} 这样的结构。用于 orm 中是否提取指定类型实体的完整信息。
+ * @return {d2js.Entity} 实体
+ */
+d2js.Entity.fetchById = function(pkValue, filter){
 	var Fun = this;
 	
 	var url = contextPath + Fun.meta.path;
-	var q = {id: id};
+	var q = {id: pkValue};
 	if(filter){
 		q.filter = filter;
 	}
@@ -527,6 +640,13 @@ d2js.Entity.fetchById = function(id, filter){
 	});
 }
 
+/**
+ * 根据 _meta 提供的信息提取列表数据。
+ * @param [method='fetch'] {string} d2js method
+ * @param [params] {object} 参数对象
+ * @param [option] {object} fetch 参数
+ * @return {d2js.List} 该 Entity 类型的 d2js.List
+ */
 d2js.Entity.fetch = function(method = 'fetch', params, option){
 	var Fun = this;
 	
@@ -537,7 +657,8 @@ d2js.Entity.fetch = function(method = 'fetch', params, option){
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var response = await fetch(url + '?' + jQuery.param(params), {credentials:"same-origin"});
+			var response = await fetch(url + '?' + jQuery.param(params), 
+					Object.assign({credentials:"same-origin"}, option));
 			var table = await d2js.processResponse(response);
 			resolve(d2js.tableToList(table, new d2js.List(Fun.meta)));
 		} catch(e){
@@ -559,6 +680,13 @@ if(Object.setPrototypeOf == null){
 	}
 }
 
+/**
+ * 实体的列表。依赖于meta信息。
+ * 由 Array 派生，支持 Array 所有操作。
+ * @class 
+ * @mixes EventDispatcher
+ * @param meta {meta} 
+ */
 d2js.List = function(meta, map){
 	var array = [];
 	var proto = Object.getPrototypeOf(this);
@@ -570,13 +698,33 @@ d2js.List = function(meta, map){
 		result._map = map;
 		result.meta = meta || (map && map.meta);
 	}
+	/**
+	 * 列表所属的对象。如 author.books.owner = author。
+	 * @type {object}
+	 * @memberof d2js.List
+	 * @readonly
+	 */
 	result.owner = null;
 	result.origin = [];
+
+	/**
+	 * 当前页
+	 * @memberof d2js.List
+	 * @type {number}
+	 */
 	result.page = 0;
+
+	/**
+	 * 页面大小
+	 * @memberof d2js.List
+	 * @type {number}
+	 */
 	result.pageSize = d2js.DataTable.DEFAULT_PAGESIZE;
+
 	/**
 	 * 查询参数。目前实际用到的直接成员有用于分页的 _page : {start:N, limit:N}, 用于排序的  _sorts : {column : 'asc'|'desc'}, 用于查询的 params : {参数}。
 	 * @type {object}
+	 * @memberof d2js.List
 	 */
 	result.search = {params : {}};
 	EventDispatcher.call(result);
@@ -593,6 +741,12 @@ d2js.List.prototype = Object.create(Array.prototype, {
 
 d2js.List.prototype.isList = true;
 
+/**
+ * 添加元素。不修改owner等信息结构。
+ * 如无充分了解，不要直接使用该方法。
+ * @param ele {d2js.Entity}
+ * @return {void}
+ */
 d2js.List.prototype.append = function(ele) {
 	if(ele == null) throw new Error('element cannot be null')
 	if(ele._isEntity == false || ele._meta.name != this.meta.name)
@@ -602,6 +756,15 @@ d2js.List.prototype.append = function(ele) {
 	Array.prototype.push.call(this, ele);
 };
 
+/**
+ * 添加元素。
+ * usage
+ * ```js
+ * 		authors.push(new bookstore.Author({name : 'mike'}))
+ * ```
+ * @param ele {d2js.Entity}
+ * @return {void}
+ */
 d2js.List.prototype.push = function(ele){
 	if(this._map != null){
 		var inverseMap = this._map.inverse;	
@@ -614,6 +777,10 @@ d2js.List.prototype.push = function(ele){
 	}
 }
 
+/**
+ * 移除元素。
+ * @param ele {d2js.Entity} 要移除的元素
+ */
 d2js.List.prototype.remove = function(ele){
 	if(this._map && this._map.inverse){
 		ele._set(this._map.inverse.name, null);
@@ -622,6 +789,11 @@ d2js.List.prototype.remove = function(ele){
 	}
 }
 
+/**
+ * 移除元素。不修改 owner 等信息。
+ * 如无明确了解，不要调用该方法。
+ * @param ele {d2js.Entity}
+ */
 d2js.List.prototype.drop = function(ele){
 	var idx = this.indexOf(ele);
 	if(idx == -1) return;
@@ -691,6 +863,9 @@ d2js.Entity.prototype._accept = function(path = []){
 	}
 }
 
+/**
+ * 接受变更
+ */
 d2js.List.prototype._accept = function(path = [], element){
 	// console.log(this + ' accept');
 	if(path.length == 0 && this.owner) path.push(this.owner);
@@ -753,7 +928,6 @@ d2js.List.prototype._accept = function(path = [], element){
 
 /**
  * 回滚变更，退回上一版本
- * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
  */
 d2js.Entity.prototype._reject = function(path = []){
 	path = path.concat([this])
@@ -791,6 +965,9 @@ d2js.Entity.prototype._reject = function(path = []){
 	}
 }
 
+/**
+ * 回滚变更，退回上一版本
+ */
 d2js.List.prototype._reject = function(path = [], element){
 	if(path.length == 0 && this.owner) path.push(this.owner);
 
@@ -848,7 +1025,7 @@ d2js.Entity.prototype._isAlone = function(map){
 d2js.Entity.prototype._initCollectData = function(){
 	if(this._lastData) return;
 	//console.log('initCollectData ' + this);
-	this._lastData = this._toRow();
+	this._lastData = this._toRaw();
 	this._affected = [];
 	this._lastState = this._state;
 }
@@ -860,10 +1037,18 @@ d2js.Entity.prototype._cleanCollectData = function(){
 	delete this._affected;
 }
 
+/**
+ * 数据是否有变动。
+ * @return {bool}
+ */
 d2js.Entity.prototype._isChanged = function(){
 	return this._lastState != 'none' || this._affected.some(e => e._isChanged());
 }
 
+/**
+ * 数据是否有变动。
+ * @return {bool}
+ */
 d2js.List.prototype._isChanged = function(){
 	return this._affected.some(e => e._isChanged());
 }
@@ -1003,7 +1188,7 @@ d2js.Entity.prototype._collectChange = function(path){
 	if(isStart) this._markChange(path);
 	var r = this._lastData;
 	if(this._lastState == 'edit'){
-		r._origin = this._toRow(this._origin);
+		r._origin = this._toRaw(this._origin);
 	} else if(this._lastState == 'none'){
 		if(this._isChanged()){
 			r = {_state: 'none'};
@@ -1043,8 +1228,13 @@ d2js.Entity.prototype._collectChangeAsTable = function(path){
 	return table;
 }
 
+/**
+ * 根据 _meta 提交到服务器.
+ * @param option {object} fetch 参数 
+ * @return {bool}
+ */
 d2js.Entity.prototype._submit = 
-d2js.List.prototype.submit = function(){
+d2js.List.prototype.submit = function(option){
 	if(this.isList){
 		var url = contextPath + this.meta.path + "?_m=update";
 		var change = this._collectChange();
@@ -1075,14 +1265,14 @@ d2js.List.prototype.submit = function(){
 	return new Promise(async function(resolve, reject){
 		me._clearError();
 		try{
-			var response = await fetch(url, {
+			var response = await fetch(url, Object.assign({
 							credentials:"same-origin",
 							method:'post', 
 							headers: {  
 								"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
 							},  
 							body : jQuery.param(params)
-						});
+						}, option));
 			var result = await d2js.processResponse(response, items);
 			resolve(result);
 		} catch(e){
@@ -1092,6 +1282,12 @@ d2js.List.prototype.submit = function(){
 	});
 }
 
+/**
+ * 提取数据。
+ * @param [method='fetch'] {string} d2js method
+ * @param [params] {object} 查询参数。对于 d2js.List 与 d2js.List.search.params 合并。
+ * @param [option] {object} fetch 参数
+ */
 d2js.List.prototype.load = 
 d2js.List.prototype.fetch = function(method = 'fetch', params, option){
 	var me = this;
@@ -1116,7 +1312,7 @@ d2js.List.prototype.fetch = function(method = 'fetch', params, option){
 		try{
 			me._clearError();
 			me.fireEvent('willload', me);
-			var response = await fetch(url + '?' + jQuery.param(params), {credentials:"same-origin"});
+			var response = await fetch(url + '?' + jQuery.param(params), Object.assign({credentials:"same-origin"}, option));
 			var table = await d2js.processResponse(response);
 			d2js.tableToList(table, me);
 			me.fireEvent('load', me);
@@ -1129,14 +1325,21 @@ d2js.List.prototype.fetch = function(method = 'fetch', params, option){
 	});
 }
 
+/**
+ * 跳到指定页
+ * @param pageIndex {number} 页码
+ */
 d2js.List.prototype.navigatePage = function(pageIndex){
 	this.page = pageIndex;
 	this.search._page = {start : this.page * this.pageSize, limit : this.pageSize};
 	this.load(this.search.params, this.search.option);
 }
 
+/**
+ * 跳到第 0 页。重新加载。
+ */
 d2js.List.prototype.reload = function(){
-	this.load(this.search.params, this.search.option);
+	this.navigatePage(0);
 }
 
 d2js.tableToList = function(table, list, mergeOrReplace = false){
@@ -1158,11 +1361,17 @@ d2js.tableToList = function(table, list, mergeOrReplace = false){
 	return list;
 }
 
+/**
+ * 清除错误。
+ */
 d2js.List.prototype._clearError = function(path = []){
 	this.error = null;
 	this.forEach(e => path.indexOf(e) == -1 && e._clearError(path));
 }
 
+/**
+ * 清除错误。
+ */
 d2js.Entity.prototype._clearError = function(path){
 	path = path == null ? [this] : path.concat([this]);
 	this.error = null;
@@ -1174,7 +1383,17 @@ d2js.Entity.prototype._clearError = function(path){
 	});
 };
 
+/**
+ * 动态加载。无meta信息加载实体，根据返回信息自动创建 meta。
+ * @namespace
+ */
 d2js.Entity.dynamic = {};
+/**
+ * 提取实体。
+ * @param [method='fetch'] {string} d2js method
+ * @param [params] {object} 查询条件参数。
+ * @param [option] {object} fetch 参数
+ */
 d2js.Entity.dynamic.fetch = function(url, method='fetch', params, option){
 	url = contextPath + url;
 	var q = {};
@@ -1187,7 +1406,8 @@ d2js.Entity.dynamic.fetch = function(url, method='fetch', params, option){
 	
 	return new Promise(async function(resolve, reject){
 		try{
-			var response = await fetch(url + '?' + jQuery.param(params), {credentials:"same-origin"});
+			var response = await fetch(url + '?' + jQuery.param(params), 
+					Object.assign({credentials:"same-origin"}, option));
 			var result = await d2js.processResponse(response);
 			if(result == null){
 				return resolve(null);
@@ -1207,7 +1427,17 @@ d2js.Entity.dynamic.fetch = function(url, method='fetch', params, option){
 	});
 };
 
+/**
+ * 动态加载。无meta信息加载 d2js.List，根据返回信息自动创建 meta。
+ * @namespace
+ */
 d2js.List.dynamic = {};
+/**
+ * 提取列表数据。
+ * @param [method='fetch'] {string} d2js method
+ * @param [params] {object} 查询参数
+ * @param [option] {object} fetch 参数
+ */
 d2js.List.dynamic.fetch = function(url, method='fetch', params, option){
 	url = contextPath + url;
 	var q = {};
