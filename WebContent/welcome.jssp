@@ -9,5 +9,6 @@
 </head>
 <body class="container">
 	<h1>welcome to [%= website %]! you are in d2js!!!</h1>	
+	[%= new Date() %]
 </body>
 </html>
