@@ -21,14 +21,29 @@
 
 </head>
 <body>
+	<div class="container" d2js.root="">
+		<h1>author, books, publisher</h1>
+		
+		<h1><span data="name" renderer="std"></span><small data=email renderer="std"></small></h1>
+		<hr>
+		<div data="books" renderer="repeater">
+			<div repeater=true>
+				<h2 data="title" renderer=std></h2>
+				<p data="publisher,name" renderer=std></p>
+			</div>
+		</div>
+		
+	</div>
+
 </body>
 <script>
 	'use strict';
-	var authors = null;
+	
 	(async function(){
-		authors = await d2js.root.Author.fetch();
-		d2js.Entity.fetch
+		await d2js.meta.load(['/d2js-test/entity/author-entity.d2js', '/d2js-test/entity/book-entity.d2js', '/d2js-test/entity/publisher-entity.d2js']);
 		
+		let author2 = await d2js.root.Author.fetchById(2);
+		$('.container').bindRoot(author2).render();
 	})();
 </script>
 </html>

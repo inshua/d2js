@@ -231,7 +231,6 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root){
 
 	metas.forEach(function(meta){
 		meta.namespace = namespace;
-		if(meta.map == null) meta.map = {};
 		meta.columnNames = meta.columns.map(function(column){return column.name});
 
 		var code = 'd2js.Entity.apply(this, arguments)'
@@ -259,8 +258,8 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root){
 			}}
 			meta.maps = maps;
 		} else {
+			meta.map = {};
 			meta.maps = [];
-			mea.map = {};
 		}
 
 		meta.columnNames.forEach(function(name){
@@ -333,7 +332,7 @@ d2js.Entity = function(values, state = 'new'){
 	 * 当 map 与 column 同名时，map 覆盖 column。
 	 * @type {meta}
 	 */
-	this._meta = null;
+	this._meta = this._meta || null;
 
 	// 初始化列表成员
 	for(let k in this._meta.map){
