@@ -87,6 +87,46 @@ d2js.Renderers.prop = function(attr){
 	}
 }
 
+/**
+ * 将元素的某项data设为value。
+ * 用法
+ * <input type="date" renderer="data('value')">
+ */
+d2js.Renderers.data = function(name){
+	return function(element, value, columnName, row, index, rows, _1, table){
+		$.data(element, name, value);
+		return value;
+	}
+}
+
+/**
+ * 将元素的某项data设为value。
+ * 用法
+ * <input type="date" renderer="attr('value')">
+ */
+d2js.Renderers.attr = function(name){
+	return function(element, value, columnName, row, index, rows, _1, table){
+		$.attr(element, name, value);
+		return value;
+	}
+}
+
+/**
+ * 提取对象的属性
+ */
+d2js.Renderers.member = function(member){
+	return function(element, value){
+		if(typeof value == 'object'){
+			var m = value[member];
+			if(m instanceof Function){
+				return m.call(value, Array.prototype.slice.call(arguments, 1));
+			} else {
+				return m;
+			}
+		}
+	}
+}
+
 
 /**
  * 表达式渲染器。适用于正文或属性中含有 {{... }} 表达式的渲染器
@@ -203,14 +243,15 @@ d2js.Renderers.options = function(dispCol, valueCol, allowEmpty){
 		if(allowEmpty){
 			var option = document.createElement('option');
 			option.text = "-";
-			option.value = '';
+			option.value = "";
 			sel.options.add(option);
 		}
 		if(!rows) return;
 		for(var i=0; i<rows.length; i++){
 			var option = document.createElement('option');
-			var dispCell = rows[i][dispCol];
-			var valueCell = rows[i][valueCol];
+			var row = rows[i]
+			var dispCell = row[dispCol];
+			var valueCell = row[valueCol];
 			if(dispCell) option.text = dispCell;
 			if(valueCell) option.value = valueCell;
 			sel.options.add(option);
@@ -266,7 +307,20 @@ d2js.Renderers.table = d2js.KNOWN_RENDERERS['table'] = function(hTable, table){
 			tBody.rows[0].remove();
 		}
 	}
-	var rows = (table && table.rows) || table || [];
+	
+	var rows = null;
+	if(table){
+		if(table.rows){
+			rows = table.rows;
+		} else if('length' in table){
+			rows = table;
+		} else {
+			throw new Error('must be table or array');
+		}
+	} else {
+		rows = [];
+	}
+	
 	if(rows.length == 0){
 		if(tBodyEmpty) tBodyEmpty.style.display = '';
 	} else {
@@ -407,5 +461,40 @@ d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, v
 	}
 	return value;
 }
+
+/**
+ *hideIfNull 渲染器，当值为 null 时隐藏元素。
+ *usage:
+ *```html
+  <div data="..." renderer="hideIfNull|std"></div>
+ ```
+ */
+d2js.Renderers.hideIfNull = d2js.KNOWN_RENDERERS['hideIfNull'] = function(element, value, columnName, row, index, rows, _1, table){
+	if(value == null){
+		element._d2js_hideIfNull_prevDisplay = element.style.display;
+		element.style.display = 'none';
+	} else {
+		element.style.display = element._d2js_hideIfNull_prevDisplay || 'block';
+	}
+	return value;
+}
+
+/**
+ *hideIfEmpty 渲染器，当值为 [] 时隐藏元素（包含 null)。
+ *usage:
+ *```html
+  <div data="..." renderer="hideIfEmpty|std"></div>
+ ```
+ */
+d2js.Renderers.hideIfEmpty = d2js.KNOWN_RENDERERS['hideIfEmpty'] = function(element, value, columnName, row, index, rows, _1, table){
+	if(value == null || value.length == 0){
+		element._d2js_hideIfEmpty_prevDisplay = element.style.display;
+		element.style.display = 'none';
+	} else {
+		element.style.display = element._d2js_hideIfEmpty_prevDisplay || 'block';
+	}
+	return value;
+}
+
 
 

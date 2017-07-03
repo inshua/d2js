@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>d2js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="../jslib/jquery-3.2.1.js"></script>
+	<link href="../jslib/semantic-ui/semantic.css" rel="stylesheet" media="screen">
+	<script src="../jslib/semantic-ui/semantic.js"></script>
+
+    <script src="../jslib/date.js/Date.js"></script>
+
+    <script src="../jslib/d2js/dataset.js"></script>
+    <script src="../jslib/d2js/entity-map.js"></script>
+    <script src="../jslib/d2js/render.js"></script>
+    <script src="../jslib/d2js/renderers.js"></script>
+    <script src="../jslib/d2js/collector.js"></script>
+    <script src="../jslib/d2js/pipelines.js"></script>
+    
+    <script src="../jslib/d2js/semantic-renderers.js"></script>
+    
+    <script src="../jslib/molecule.js"></script>
+	<script>
+		Molecule.loadHtml('../molecules/semantic-basic.html');
+	</script>
+</head>
+<body>
+     <div molecule="TableList" d2js.root="books" edit-dialog="dialog2" allow-remove="true">
+        <h1>Book (Entity)</h1>
+        <div>
+            <form molecule="SearchForm">
+                <div molecule="SearchFormItem" col="title" text="Name">
+                    <input type="text" molecule="SearchInput">
+                </div>
+                <div molecule="SearchFormSelectItem" col="kind" text="Kind" dict="book_kind">                    
+                </div>
+                <div molecule="SearchFormItem" col="author" text="Author" d2js.root="authors" data="this" renderer="options('name','id',true)">
+                    <select molecule="SearchSelect" d2js.root=".."></select>
+                </div>
+                <button molecule="SearchButton">Search</button>
+                <button molecule="AddButton">Add</button>
+            </form>
+        </div>
+        
+        <div molecule="TableError"></div>
+
+        <table molecule="List">
+            <thead>
+                <tr>
+                	<th molecule="CheckHeader" col="id"></th>
+                    <th molecule="Header" col="id" text="ID"></th>
+                    <th molecule="Header" col="title" text="Title" sortable="true"></th>
+                    <th molecule="Header" col="author,name" text="Author"></th>
+                    <th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
+                    <th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
+                    <th data-t="id" renderer="editLink"></th>
+                    <th molecule="ActionHeader" col="id" text="点击我" onclick="alert(111)">动作</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    
+    <div molecule="Dialog" title-text="Book" id="dialog2" d2js.root="">	<!-- 留空，防止绑定错误 -->
+        <form class="ui form table-form">
+            <div molecule="FormItem" col="title" text="Title">
+                <input type="text" molecule="Input">
+            </div>
+            <div molecule="FormItem" col="kind" text="Kind" dict="book_kind">
+                <select molecule="Select" collector="c|s"></select>
+            </div>
+            <div molecule="FormItem" col="publish_date" text="Publish Date">
+                <input type="date" molecule="Input" format="yyyy-MM-dd" renderer="date|std" collector="c|d|s">
+            </div>
+            <div molecule="FormItem" col="author" text="Author" d2js.root="authors" disp-col="name">
+	           	<div molecule="EntitySelect">
+				</div>
+			</div>
+        </form>
+    </div>
+
+</body>
+<script>
+	'use strict'
+	
+	Dicts.book_kind = {f :'小说', k : '武侠', p : '哲学'} 
+    // ----------------- entity ------------------
+    $.holdReady(true);
+    var authors = null, books = null;
+    (async function(){
+		await d2js.meta.load(['/bookstore/author-entity.d2js', '/bookstore/book-entity.d2js', '/bookstore/publisher-entity.d2js']);
+		books = d2js.root.books = new d2js.List(d2js.root.Book);
+		$.holdReady(false);
+		
+		books.on('load', function(){ $('[d2js\\.root=books]').render(); });
+		books.pageSize = 5;
+		await books.fetch();
+		
+		authors = d2js.root.authors = new d2js.List(d2js.root.Author);
+		authors.on('load', function(){ $('body').render(this); });
+		await authors.fetch();
+    })();
+    
+</script>
+</html>

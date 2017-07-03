@@ -37,9 +37,9 @@ if(datasourceConfig.isMongodb){
 
 imports("./d2js/cascade.js");
 
-imports("./d2js/validation.js");
+imports("./d2js/entity-map.js");
 
-init();
+imports("./d2js/validation.js");
 
 var ConcurrentHashMap = Java.type('java.util.concurrent.ConcurrentHashMap');
 var allD2js = new ConcurrentHashMap();

@@ -1,0 +1,2 @@
+
+d2js.exports.getD2jsMeta = d2js.getD2jsMeta;

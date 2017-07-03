@@ -19,7 +19,7 @@ molecule 框架基于 html 技术本身，实现了 html 的组件化。
 <head>
 <meta charset="UTF-8">
 <title>Molecule</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/molecule.js"></script>
 </head>
 <body>
@@ -48,7 +48,7 @@ molecule 框架基于 html 技术本身，实现了 html 的组件化。
 <head>
 <meta charset="UTF-8">
 <title>Molecule</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/molecule.js"></script>
 </head>
 <body>
@@ -95,7 +95,7 @@ molecule是基于 html 的组件技术，当需要定义 molecule 时，先选�
 <head>
 <meta charset="UTF-8">
 <title>Molecule</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/molecule.js"></script>
 </head>
 <body>
@@ -329,7 +329,7 @@ molecule 的继承思路与 js 的 prototype 原型链相似。实际创建时�
 <head>
 <meta charset="UTF-8">
 <title>Molecule</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/molecule.js"></script>
 <script src="../jslib/d2js/dataset.js"></script>
 <script src="../jslib/d2js/render.js"></script>
@@ -395,7 +395,7 @@ molecule 不但可以用于定义它的网页，也可以作为组件导入到�
 <head>
 <meta charset="UTF-8">
 <title>Molecule</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/molecule.js"></script>
 <script>
 	Molecule.loadHtml('/a.html')
@@ -417,7 +417,7 @@ molecule 不但可以用于定义它的网页，也可以作为组件导入到�
 <head>
 <meta charset="UTF-8">
 <title>Molecule</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/molecule.js"></script>
 </head>
 <body>
@@ -440,7 +440,7 @@ molecule 可以按命名空间组织，只要在组件前加上命名空间即�
 <head>
 <meta charset="UTF-8">
 <title>Molecule</title>
-<script src="../jslib/jquery-1.10.2.js"></script>
+<script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/molecule.js"></script>
 </head>
 <body>
@@ -481,7 +481,7 @@ molecule 可以按命名空间组织，只要在组件前加上命名空间即�
     <meta charset="UTF-8">
     <title>molecule</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../jslib/jquery-1.10.2.js"></script>
+    <script src="../jslib/jquery-3.2.1.js"></script>
 	<link href="../jslib/semantic-ui/semantic.css" rel="stylesheet" media="screen">
 	<script src="../jslib/semantic-ui/semantic.js"></script>
     <script src="../jslib/molecule.js"></script>
@@ -503,7 +503,7 @@ molecule 可以按命名空间组织，只要在组件前加上命名空间即�
     <meta charset="UTF-8">
     <title>molecule</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../jslib/jquery-1.10.2.js"></script>
+    <script src="../jslib/jquery-3.2.1.js"></script>
 	<link href="../jslib/semantic-ui/semantic.css" rel="stylesheet" media="screen">
 	<script src="../jslib/semantic-ui/semantic.js"></script>
     <script src="../jslib/molecule.js"></script>

@@ -40,14 +40,13 @@ public class D2jsExecutor extends JsServlet {
 	@Override
 	public void init() throws ServletException {
 		super.init();
-		String path = this.getServletContext().getRealPath("");
 
 		D2jsInitParams d2jsInitParams = new D2jsInitParams();
 		d2jsInitParams.setLibs(this.getJsLibs());
 		d2jsInitParams.setApplication(JsServlet.application);
 		d2jsInitParams.setPreloadJs(this.getPreloadJs());
 
-		this.d2jsUnitManager = new D2jsUnitManager(path, d2jsInitParams);
+		this.d2jsUnitManager = new D2jsUnitManager(this.getServletContext(), d2jsInitParams);
 
 		instance = this;
 	}

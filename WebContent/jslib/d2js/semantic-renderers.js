@@ -74,7 +74,7 @@ d2js.Renderers.stderr = d2js.KNOWN_RENDERERS['stderr'] = function(element,  valu
 		default :
 			e.addClass('ui red message');
 		}
-		e.html(value.message);
+		e.html(value.message || value);
 		e.show();
 	}
 }

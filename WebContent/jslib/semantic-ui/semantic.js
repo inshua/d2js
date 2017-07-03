@@ -5380,13 +5380,11 @@ $.fn.dropdown = function(parameters) {
                   if(settings.placeholder === 'auto' && value === '') {
                     select.placeholder = name;
                   }
-                  else {
                     select.values.push({
                       name     : name,
                       value    : value,
                       disabled : disabled
                     });
-                  }
                 })
             ;
             if(settings.placeholder && settings.placeholder !== 'auto') {

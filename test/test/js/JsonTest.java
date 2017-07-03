@@ -5,6 +5,9 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Document.OutputSettings;
+import org.jsoup.nodes.Element;
 import org.siphon.common.js.JsEngineUtil;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -20,5 +23,11 @@ public class JsonTest {
 	    System.out.println(jsonm.to(Object.class));
 	    
 	    System.out.println(engine.eval("JSON.parse('\"1975-05-04T16:00:00.000Z\"', parseDate)"));
+	    
+	    Element element;
+	    Document document;
+	    OutputSettings outputSettings =  new OutputSettings();
+	    outputSettings.prettyPrint()
+	    document.outerHtml()
 	}
 }

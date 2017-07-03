@@ -1,0 +1,34 @@
+d2js.entityMap = {
+	name : 'Author', 
+	table: 'author',
+	map: {
+		books : {
+				type : 'Book',
+				d2js:'book-entity.d2js',
+				relation: 'many', 
+				key: 'id', 
+				fk: 'author',
+				isOwner : true,
+		}
+	}   
+}
+
+d2js.fetch = function(params){
+	sql{.
+		select * from author where 1 = 1
+		sql{.?(params.name) and strpos(name, :name) > 0 .}
+	.}
+	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
+	return r.orm(this, ['Book']);
+}
+
+d2js.validate = function(row, action){
+	$V(this, row, {
+		name : V.notNull,
+		email : V.email,
+		info : V.attrs(['linkin']),
+		'info,linkin': V.shortest(5)
+	});
+}
+
+

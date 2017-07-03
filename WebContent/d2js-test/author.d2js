@@ -1,21 +1,25 @@
 d2js.fetch = function(params){
 	sql{.
-		select * from author where 1 = 1
-		code{.
-			if(params.name){
-				sql{. and strpos(name, :name) > 0 .}
-			}
-		.}
+		select name as abc_Def, id, email from author where 1 = 1
+	.}
+
+	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
+	return r;
+}
+
+d2js.exports.test =
+d2js.test = function(){
+	sql{.
+		select * from book
 	.}
 	
-	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
-        return r;
+	return this.query(sql);
 }
 
 d2js.modify = function(row, columns){
 	$V(this, row, {
 		name : V.notNull,
-		email : V.email,
+		email : [V.email, V.shortest(10)],
 		info : V.attrs(['linkin']),
 		'info,linkin': V.shortest(5)
 	});
@@ -23,16 +27,4 @@ d2js.modify = function(row, columns){
 	return this.updateRow('author', row, columns);
 }
 
-d2js.number = 1;
-
-d2js.exports.test = d2js.test = function(params, web){
-	//logger.info(web.out);
-	//logger.info(web.request);
-	//logger.info(web.response);
-	//logger.info(d2jsRunner);
-	// Java.type('java.lang.Thread').sleep(200);
-	//logger.info(d2js.number);
-	// logger.debug('run on ' + Java.type('java.lang.Thread').currentThread().name);
-	return "hello " + (d2js.number ++);
-}
 

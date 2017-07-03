@@ -25,9 +25,6 @@
 d2js.Renderers = function(){}
 d2js.KNOWN_RENDERERS = {};
 
-d2js.Renderers.EmbedRenderers ={}
-d2js.Renderers.EmbedRenderers.nextId = 1;
-
 (function addcss(){
 	   if(window.ActiveXObject)
 	   {
@@ -48,71 +45,126 @@ d2js.Renderers.EmbedRenderers.nextId = 1;
  * ```js
  * $(htmlElement).render(pattern, customRenders)
  * ```
- * @param [htmlElement=document.body] {HTMLElement} html 元素，渲染该元素及其子元素。
- * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生渲染。
- * @param [customRenders] {object} 自定义渲染器（含管道）。如
  * ```js
  * {
  * 	myRender : function(el, value){el.innerHTML = value}
  * }
  * ```
  * 对 htmlElement 及其子元素有指定 renderer="myRender"，该函数会被应用。需要说明的是，在下次渲染时不再需要提供 myRender 函数。
+ * @param [htmlElement=document.body] {HTMLElement} html 元素，渲染该元素及其子元素。
+ * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生渲染。
+ * @param [customRenders] {object} 自定义渲染器（含管道）。如
  */
 d2js.render = function(htmlElement, pattern, customRenders){
 	d2js.travel(htmlElement, pattern, renderElement)
-	
 	function renderElement(e, crumb){
 		var renderer = e.getAttribute('renderer');
 		var embedRenderer = e.querySelector('renderer, .d2js-render');
 		if(embedRenderer){
 			var emb = prepareEmbedRenderer(embedRenderer, e);
-			renderer = renderer ? renderer + '|' + emb : emb;
-			e.setAttribute('renderer', renderer);
+			e['renderObj'] = emb;
 		}
 		
+		var arr = null;
 		if(renderer){
 			if(e.hasAttribute('trace-render')) debugger;
 		
-			var arr = [e].concat(crumb);
+			arr = [e].concat(crumb);
 			var renderers = renderer.split('|');
 			for(var i=0; i<renderers.length; i++){
 				var fun = extractRenderer(renderers[i].trim(), e);
-				if(fun != null) {
-					arr[1] = fun.apply(null, arr);
+				if(fun != null){
+					if(fun instanceof Function){
+						arr[1] = fun.apply(null, arr);
+					} else {
+						arr[1] = fun.render.apply(fun, arr);
+					}
 				} else {
 					console.error(renderers[i] + ' not found, when render', e);
 				}
 			}
-			$(e).trigger('d2js.rendered', arr, renderer);
 		}
+		
+		var renderObj = e['renderObj']
+		if(renderObj){
+			if(arr == null) arr = [e].concat(crumb);
+			if(renderObj instanceof Function){
+				renderObj.apply(null, arr);
+			} else {
+				renderObj.render.apply(renderObj, arr);
+			}
+		}
+		$(e).trigger('d2js.rendered', arr, renderer);
 	}
 	
 	function extractRenderer(rendererDesc, e){
 		if($.hasData(e)){
 			var d = $.data(e)['d2js.renderers'];
 			var fun = d && d[rendererDesc];
+			if(fun && fun.createRenderer){
+				fun = fun.createRenderer(e);
+				d2js._store(e, 'd2js.renderers', rendererDesc, fun);
+			}
 			if(fun) return fun;
 		}
 		if(customRenders){
 			var fun = customRenders[rendererDesc];
-			d2js._store(e, 'd2js.renderers', rendererDesc, fun);
-			if(fun) return fun;
+			if(fun){
+				if(fun.createRenderer){
+					fun = fun.createRenderer(e);
+				}
+				d2js._store(e, 'd2js.renderers', rendererDesc, fun);
+				return fun;
+			}
 		}
-		return d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
+		var fun = d2js.extractCachedFunction(rendererDesc, d2js.Renderers, 'd2js.Renderers.', d2js.KNOWN_RENDERERS);
+		if(fun && fun.createRenderer){
+			fun = fun.createRenderer(e);
+			d2js._store(e, 'd2js.renderers', rendererDesc, fun);
+		}
+		if(fun) return fun;
 	}
 	
 	function prepareEmbedRenderer(embedRenderer, e){
 		var code = embedRenderer.innerHTML;
 		embedRenderer.remove();
-		
-		var id = d2js.Renderers.EmbedRenderers.nextId ++;
-		id = '__embed_renderer__' + id;
 		var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
-		d2js._store(e, 'd2js.renderers', id, fun);
-		
-		return id;
+		return fun;
 	}
 }
+
+/**
+ * 为渲染器函数构造函数提供工厂方法 createRenderer。
+ * usage:
+ * ```js
+ * function MyRenderer(element){
+ * 	this.render = function(element, value){
+ * 		...
+ * 	}
+ * }
+ * 
+ * $(element).render({my: MyRenderer.rendererFactory())
+ * ```
+ * ```html
+ * <tag renderer="my"></tag>
+ * ```
+ * 相当于插拔
+ * ```js
+ * MyRenderer.rendererFactory = function(element){return new MyRenderer(element)}
+ * ```
+ * 何以要引入该工厂方法。当渲染器只有一个 element 使用时，可使用
+ * ```js
+ * $(element).render({my: new MyRenderer()})
+ * ```
+ * 但当渲染器需要为每个 element 提供独立服务时，就应提供工厂方法，由 render.js 自动创建渲染器实例。
+ */
+Function.prototype.rendererFactory = function(){
+	var T = this;
+	T.createRenderer = function(element){ return new T(element); }
+	return this;
+}
+
+
 /**
  * 内部函数。对符合d2js规则的元素应用 processor 动作。
  */
@@ -282,13 +334,13 @@ d2js.bindRoot = function(element, data, baseElement){
 		if(data.startsWith('..')){
 			var crumb = null;
 			do{
-				var $re = $element.parent('[d2js\\.root]').parent('[d2js\\.root]');
+				var $re = $element.parents('[d2js\\.root]').parents('[d2js\\.root]');
 				if($re.length == 0) {
 					console.error(data, 'cannot found root element for ', element);
 					throw new Error('cannot found root element for ' + data)
 				}
 				if($re.data('d2js.root') == null){
-					if(d2js.bindRoot(re[0]) == false) return false;
+					if(d2js.bindRoot($re[0]) == false) return false;
 				}
 				crumb = $re.data('d2js.crumb');
 				data = data.substr(2);
@@ -435,6 +487,15 @@ d2js.locateData = function(element){
 +(function ( $ ) {
     $.fn.findRoot = function() {
     	return d2js.findRoot(this[0]);
+    };
+}( jQuery ));
+
++(function ( $ ) {
+    $.fn.customRenderer = function(name, renderer) {
+    	this.each(function(){
+    		d2js._store(this, 'd2js.renderers', name, renderer);
+    	});
+    	return this;
     };
 }( jQuery ));
 

@@ -98,6 +98,8 @@ D2JS.DataTable = function(){}
 
 D2JS.DataTable.prototype = new Object();
 
+D2JS.DataTable.prototype.isDataTable = true;
+
 /**
  *执行SQL查询语句，返回查询结果集。
  *对于不带参数的 sql 语句，args 可以不填， 如
@@ -361,14 +363,18 @@ D2JS.prototype.insertRow = function(table, row, columns, pkColumn){
 	}
 	for(var i=0; i<columns.length; i++){
 		var col = columns[i];
-		insertPart.append(col.name || col);
-		
+		var cname = col.name || col;
 		var value = row[col.name || col];
+
+		if(cname == pkColumn && value == null) continue;
+		
+		insertPart.append(cname);
+		
 		if(value && value.SQL){
 			valuesPart.append(value.SQL);
 		} else {
 			valuesPart.append('?');
-			if(col.name){
+			if(col.name && col.type && value != null){
 				var arg = {};
 				arg[col.type] = row[col.name];
 				args.push(arg);
@@ -438,7 +444,7 @@ D2JS.prototype.updateRow = function(table, row, columns, pkColumn){
 			sql.append(value.SQL);
 		} else {
 			sql.append('?');
-			if(col.name){
+			if(col.name && col.type && value != null){
 				var arg = {};
 				arg[col.type] = row[col.name];
 				args.push(arg);
@@ -919,20 +925,20 @@ D2JS.prototype.getConnection = function(){
 D2JS.prototype.findResource = function(filename){
 	var file = new java.io.File(filename);
 	if(file.exists()){
-		var abspath = file.getAbsolutePath();
-	} else {
-		var abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+		return file.getAbsolutePath();
 	}
-	if(new java.io.File(abspath).exists()){
-		return abspath;
-	} else {
-		var defaults = DEFAULT_IMPORTS_PATHS;
-		for(var i=0; i<defaults.length; i++){
-			var file = new java.io.File(defaults[i]);
-			abspath = new java.io.File(file, filename).getCanonicalPath();
-			if(new java.io.File(abspath).exists()){
-				return abspath;
-			}
+	var abspath = servletContext.getRealPath(filename);
+	if(abspath != null && new java.io.File(abspath).exists()) return abspath;
+	
+	abspath = new java.io.File(this.srcFile, '../' + filename).getCanonicalPath();
+	if(abspath != null && new java.io.File(abspath).exists()) return abspath;
+		
+	var defaults = DEFAULT_IMPORTS_PATHS;
+	for(var i=0; i<defaults.length; i++){
+		var file = new java.io.File(defaults[i]);
+		abspath = new java.io.File(file, filename).getCanonicalPath();
+		if(new java.io.File(abspath).exists()){
+			return abspath;
 		}
 	}
 }
@@ -943,7 +949,7 @@ D2JS.prototype.findResource = function(filename){
 var d2js = null;
 var handler = null;
 
-function init(){
+D2JS.init = function(){
 	
 	var datasource = application.datasource || (application.datasource = (function(){
 		var properties = new java.util.Properties();
@@ -954,7 +960,9 @@ function init(){
 	}()));
 	
 	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine);
-	sqlExecutor.defaultJsonDbType = 'JSONB';
+	sqlExecutor.defaultJsonDbType = datasourceConfig.defaultJsonDbType || 'JSONB';
+	sqlExecutor.columnNameCase = datasourceConfig.columnNameCase || 0;	// LOWER
+	sqlExecutor.useColumnLabelAsName = datasourceConfig.useColumnLabelAsName || false;	;
 	
 	d2js = handler = new D2JS(sqlExecutor);
 	engine.put('handler', handler);

@@ -98,6 +98,25 @@ Array.prototype.distinct = function(){
 }
 
 /**
+ * 得到按属性的索引，如:
+ * 		[{name: 'mike', phone: '12233'}, {name: 'tom', phone: '53332'},].indexOf('phone') 
+ * 得到：
+ * 		{'12233' : {name: 'mike', phone: '12233'}, '53332': {name: 'tom', phone: '53332'}}
+ * 这里值部分为对象引用。
+ */
+Array.prototype.indexBy = function(key){
+	var result = {};
+	for(var i=0; i<this.length; i++){
+		var el = this[i];
+		var v = el[key];
+		if(v){
+			result[v] = el;
+		}
+	}
+	return result;
+}
+
+/**
  * 将当前对象与另一对象合并，另一对象的属性复制到本对象。
  * narshorn 的bug，当使用 JSON.parse(obj, parseDate) 后，随着 merge 的引入，就会出现堆栈溢出
  * 所以采用 defineProperty 的方式声明该成员不可枚举，无法被 JSON.stringify
@@ -114,16 +133,75 @@ Object.defineProperty(Object.prototype, 'merge', {value: function(b, override){
 	return this;
 }, enumerable: false});
 
+if (typeof Object.assign != 'function') {
+  Object.assign = function(target, varArgs) { // .length of function is 2
+    if (target == null) { // TypeError if undefined or null
+      throw new TypeError('Cannot convert undefined or null to object');
+    }
+
+    var to = Object(target);
+
+    for (var index = 1; index < arguments.length; index++) {
+      var nextSource = arguments[index];
+
+      if (nextSource != null) { // Skip over if undefined or null
+        for (var nextKey in nextSource) {
+          // Avoid bugs when hasOwnProperty is shadowed
+          if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+            to[nextKey] = nextSource[nextKey];
+          }
+        }
+      }
+    }
+    return to;
+  };
+}
+
+/**
+ * override function, in fun can use callSuper() invoke prev function
+ * usage:
+ * ```js
+ * 	d2js.create.override = function(rcd){
+ * 		this.create.applySuper(this, arguments);	// or this.create.callSuper(this, rcd)
+ * 		...
+ * 	}
+ * ```
+ */
+Function.prototype.override = function(fun){
+	var oldFun = this;
+	fun.applySuper = function(thiz, arguments){
+		return oldFun.apply(thiz, arguments);
+	}
+	fun.callSuper = function(thiz){
+		return oldFun.apply(thiz, Array.prototype.slice.call(arguments,1));
+	}
+	return fun;
+}
+
+Object.overrides = function(object, members){
+	for(var k in members){if(members.hasOwnPorperty(k)){
+		var m = members[k];
+		var old = object[k];
+		if(old instanceof Function && m instanceof Function){
+			old.override(m);
+		} else {
+			object[k] = m;
+		}
+	}}
+}
+
 var JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil');
 /**
  * 将本对象转为Java对象，为 JsTypeUtil.jsObjectToJava 的包装。
  * 很多库，比如activiti，都需要传递 Map<String, Object>等，采取本方式可以写作:
  *   submit({username: xxx, password: ''}.toJava())
- * @param b 另一对象
- * @param override 仅复制本对象没有的属性。
- * @returns {Object} 当前对象本身
+ *   
+ * (未实现)如对象已有 _java_type 说明，则自动取该说明指定的对象类型。如 {_java_type: 'com.my.entity.Person', name:'Mike'}.toJava() 可得到类型为 com.my.entity.Person 的对象。
+ * @param [selfType] {Java.type|string} Java.type('') 返回值, or java class name。对数组默认为 ArrayList，对对象默认为 HashMap<String,Object>。
+ * @param [elementType] {Java.type|string} Java.type('') 返回值, or java class name. 对数组默认为 ArrayList，对对象默认为 HashMap<String,Object>。
+ * @returns {Object} java object
  */
-Object.defineProperty(Object.prototype, 'toJava', {value: function(){
+Object.defineProperty(Object.prototype, 'toJava', {value: function(selfType, elementType){
 	return JsTypeUtil.jsObjectToJava(this);
 }, enumerable: false});
 

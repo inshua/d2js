@@ -49,6 +49,7 @@ import javax.sql.DataSource;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -67,8 +68,8 @@ public class D2jsUnitManager extends ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
 
-	public D2jsUnitManager(String srcFolder, D2jsInitParams initParams) {
-		super(srcFolder, initParams);
+	public D2jsUnitManager(ServletContext servletContext, D2jsInitParams initParams) {
+		super(servletContext, initParams);
 	}
 
 	@Override
@@ -76,6 +77,8 @@ public class D2jsUnitManager extends ServerUnitManager {
 		ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
 
 		JsEngineUtil.initEngine(engine, initParams.getLibs());
+		
+		engine.put("servletContext", this.servletContext);
 
 		File path = new File(srcFolder);
 
@@ -92,13 +95,16 @@ public class D2jsUnitManager extends ServerUnitManager {
 
 		return engine;
 	}
-
+	
 	@Override
 	protected ScriptObjectMirror createD2js(ScriptEngine engine, String srcFile, String aliasPath) throws Exception {
 		File src = new File(srcFile);
 		String code = FileUtils.readFileToString(src, "utf-8");
-		String covertedCode = this.convertCode(code, src);
-		File tmp = new File(srcFile + ".converted.js");
+		String requestPath = this.localFilePathToRequestPath(srcFile);
+		String covertedCode = this.convertCode(code, src, requestPath);
+		
+		File workDirectory = new File(System.getProperty("catalina.base"), "work");
+		File tmp = new File(workDirectory, requestPath.replace('/', '$') + ".converted.js");
 		FileUtils.write(tmp, covertedCode, "utf-8");
 		if (logger.isDebugEnabled())
 			logger.debug(srcFile + " converted as " + tmp.getAbsolutePath());
@@ -107,14 +113,19 @@ public class D2jsUnitManager extends ServerUnitManager {
 		return d2js;
 	}
 
-	protected String convertCode(String code, File src) throws Exception {
+	protected String convertCode(String code, File src, String requestPath) throws Exception {
 		// return "(function (d2js){" + new EmbedSqlTranslator().translate(code) + "; d2js.cloner = function(){};
 		// d2js.cloner.prototype=d2js; return d2js;})(d2js.clone());";
-		return "(function (d2js, src){"
+		return "(function (d2js, src, path){"
 				+ "d2js.srcFile = src; " 
+				+ "d2js.path = path;"
 				+ new EmbedSqlTranslator().translate(code) + "; "
-				+ "return d2js;})("
-				+ "d2js.clone(), \"" + StringEscapeUtils.escapeJava(src.getAbsolutePath()) + "\");";
+				+ "d2js.initD2js && d2js.initD2js(); return d2js;})"
+				+ "("
+				+ "d2js.clone(), "
+				+ "\"" + StringEscapeUtils.escapeJava(src.getAbsolutePath()) + "\","
+				+ "\"" + (requestPath) + "\""
+				+ ");";
 	}
 
 	// public void scanD2jsUnits() {

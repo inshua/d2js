@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-3.2.1.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h2>对象充当渲染器<small>包含有 render(element, value,... )的对象均可注册在 d2js.Renderers 作为可访问的渲染器</small></h2>
+		<div id="test1">
+			Name: <span data="name" renderer="std|scaleLoop"></span>
+			<br>
+			Email: <span data="email">
+					<renderer>
+						element.innerHTML = '<a href="mailto:' + value + '">' + value +'</a>'
+					</renderer>
+				</span>
+			<br>
+			Phone: <span  data="phone" renderer="phone|std"></span>
+			<br>
+			Gender: <span data="gender" renderer="gender"></span>
+		</div>
+		
+		<h2>renderObj<small>函数与对象渲染器都可以代码设置于 element.renderObj，而不通过 attribute设置</small></h2>
+		<div id="test2">
+			Name: <span  data="name" renderer="std"></span>
+			<br>
+			Email: <span  id="email" data="email"></span>
+			<br>
+			Phone: <span  id="phone" data="phone"></span>
+		</div>
+		
+		<h2>createRenderer 接口<small>支持 createRenderer(element) 函数的对象也可以充当 renderer，它将为每个 element 生成一个独立的渲染器对象</small></h2>
+		<div id="test3">
+			Name: <span data="name" renderer="letterScale"></span>
+			<br>
+			Email: <span data="email" renderer="letterScale"></span>
+			<br>
+			Phone: <span data="phone" renderer="letterScale"></span>
+		</div>
+	</div>
+</body>
+<script>
+	
+	var person  = {name:'Jack', email: 'jack@gmail.com', phone: '13722223333', gender: 'M'}
+	
+	// 对象渲染器，可以保存自己的状态
+	d2js.Renderers.scaleLoop = {
+	  	scale : 1,
+	  	delta : 1.05,
+	  	running : false,
+	  	render : function(element, value){
+	  		if(this.running) return;
+	  		this.scale *= this.delta;
+	  		if(this.scale > 2  || this.scale < .5) this.delta = 1/this.delta;
+	  		element.style.zoom = this.scale;
+	  		this.running = true;
+	  		var me = this;
+	  		setTimeout(function(){
+	  			me.running = false;
+	  			$(element).render();
+	  		}, 20);
+	  	}
+	};
+	
+	$('#test1').bindRoot(person).render(null, {phone:function(e, phone){
+			if(phone) {
+				var arr = [];
+				for(var i=phone.length; i>=0; i-=4){
+					var s = phone.substring(Math.max(i-4,0), i);
+					arr.unshift(s);
+				}
+				return arr.join('-')
+			}
+		}, gender: function(e, v){
+			if(v == 'M'){
+				e.innerHTML = '<font color=blue>♂</font>';
+			} else {
+				e.innerHTML = '<font color=maroon>♀</font>';
+			}
+		}})
+	
+	setTimeout(function(){
+		person.name = 'Mary'
+		person.email = 'mary@yahoo.com'
+		person.phone = '18622226666'
+		person.gender = 'F'
+		$('#test1').render()		// customer renderers stored in $e.data(d2js.renderers), so needn't re-set custom renderers again
+	}, 4000)
+	
+	// 函数充当 renderObj (embed renderer 已自动转为函数)
+	document.querySelector('#test2 > #email')
+		.renderObj = function(element, value){
+			element.innerHTML = '<a href="mailto:' + value + '">' + value +'</a>'
+		}
+	
+	document.querySelector('#test2 > #phone')
+		.renderObj = {
+		    start : 0,
+		    running : false,
+		    render : function(element, value){
+		    	if(this.running) return;
+		    	var s = value.substr(this.start) + value.substr(0, this.start-1);
+		    	this.start ++;
+		    	if(this.start == value.length) this.start = 0;
+		    	element.innerHTML = s;
+		    	this.running = true;
+		  		var me = this;
+		  		setTimeout(function(){
+		  			me.running = false;
+		  			$(element).render();
+		  		}, 400);
+			}
+		};
+	$('#test2').bindRoot(person).render();
+	
+	function LetterScale(element){
+		this.running = false;
+		this.index = 0;
+		this.init = function(value){
+			this.prevValue = value;
+			var s = '';
+			for(var i=0; i<value.length; i++){
+				s += '<span>' + value[i] + '</span>';
+			}
+			element.innerHTML = s;
+		}
+		this.render = function(element, value){
+			if(this.running) return;
+			if(this.prevValue != value){
+				this.init(value);
+			}
+			element.children[this.index].style.zoom = 1.0;
+			this.index ++;
+			if(this.index >= element.children.length) this.index = 0;
+			element.children[this.index].style.zoom = 2.0;
+	  		this.running = true;
+	  		var me = this;
+	  		setTimeout(function(){
+	  			me.running = false;
+	  			$(element).render();
+	  		}, 200);
+		}
+	}
+	//工厂方法。
+	//每个 renderer 都需要独立的 scope，需要挂载各自独立的渲染器对象。
+	LetterScale.createRenderer = function(element){return new LetterScale(element)}
+	
+	// $('#test3').bindRoot(person).render(null, {letterScale: LetterScale})
+
+	$('#test3').bindRoot(person).render(null, {letterScale: LetterScale.rendererFactory()})
+	
+	// or
+	// $('#test3').bindRoot(person).render(null, {letterScale: {createRenderer: function(e){return new LetterScale(e)}}})
+	// or
+	// $('#test3').bindRoot(person).render(null, {letterScale: {createRenderer: {
+// 			render : function(element, value){}
+// 		}}})
+</script>
+</html>

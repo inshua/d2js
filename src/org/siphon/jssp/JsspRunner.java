@@ -46,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JsEngineUtil;
@@ -73,10 +74,11 @@ public class JsspRunner extends D2jsRunner {
 
 	public void run(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 
-		String jsfile = request.getServletContext().getRealPath(getServletPath(request));
+		String requestPath = getServletPath(request);
+		String jsfile = request.getServletContext().getRealPath(requestPath);
 		ScriptObjectMirror d2js = null;
 		try {
-			d2js = d2jsManager.getD2js(jsfile, getServletPath(request));
+			d2js = d2jsManager.getD2js(jsfile, requestPath);
 			if (d2js == null) {
 				response.setStatus(404);
 				PrintWriter out = response.getWriter();
@@ -107,8 +109,22 @@ public class JsspRunner extends D2jsRunner {
 		JsspSession session = new JsspSession(request.getSession());
 
 		try {
-			((Invocable)engine).invokeFunction("processJsspRequest", jsfile, params, jsspRequest, response, session, out);
+			((Invocable) engine).invokeFunction("processJsspRequest", jsfile, params, jsspRequest, response, session, out);
 		} catch (NoSuchMethodException | ScriptException e) {
+			if (out.isDirty()) {
+				response.setStatus(500);
+				for (Throwable throwable = e; throwable != null; throwable = throwable.getCause()) {
+					if( e != throwable){
+						out.print("<br>Caused By: " + throwable.getMessage() + "<br>");
+					} else {
+						out.print("<br>" + throwable.getMessage() + "<br>");
+					}
+					for (StackTraceElement frame : throwable.getStackTrace()) {
+						out.print("&nbsp;&nbsp;&nbsp;&nbsp;at " + frame.getClassName() + "." + frame.getMethodName() + "("
+								+ frame.getFileName() + ":" + frame.getLineNumber() + ")<br>");
+					}
+				}
+			}
 			throw new ServletException(e);
 		}
 	}

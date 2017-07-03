@@ -115,53 +115,7 @@ public class JsspTranslator {
 					output.append(c);
 				}
 				break;
-			case '"':
-			case '\'': // bypass string
-				output.append(c);
-				i++;
-				for (; i < code.length(); i++) {
-					char e = code.charAt(i);
-					output.append(e);
-					if (e == '\\') {
-						i++;
-						output.append(code.substring(i, i + 1));
-					} else if (e == c) {
-						break;
-					}
-				}
-				break;
-
-			case '/': // bypass comment
-				output.append(c);
-				if (code.startsWith("/*", i)) {
-					output.append('*');
-					i += 2;
-					for (; i < code.length(); i++) {
-						c = code.charAt(i);
-						output.append(c);
-						if (c == '*' && code.startsWith("*/", i)) {
-							i++;
-							output.append('/');
-							break;
-						}
-					}
-				} else if (code.startsWith("//", i)) {
-					output.append('/');
-					i += 2;
-					for (; i < code.length(); i++) {
-						c = code.charAt(i);
-						output.append(c);
-						if (c == '\r' || c == '\n') {
-							break;
-						} else if (c == '%' && code.startsWith("%]", i)) {
-							output.setLength(output.length() - 1);
-							i += 2;
-							break till;
-						}
-					}
-				}
-				break;
-
+				
 			default:
 				output.append(c);
 			}

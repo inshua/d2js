@@ -27,7 +27,9 @@ import java.nio.file.WatchEvent.Kind;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.script.ScriptEngine;
+import javax.servlet.ServletContext;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.siphon.d2js.D2jsUnitManager;
 
@@ -39,13 +41,15 @@ public abstract class ServerUnitManager {
 	protected String srcFolder;
 	protected final ScriptEngine engine;
 	private final  ConcurrentHashMap<String, ScriptObjectMirror> allD2js;
+	protected final ServletContext servletContext;
 
 	public ScriptEngine getEngine() {
 		return engine;
 	}
 
-	public ServerUnitManager(final String srcFolder, D2jsInitParams initParams) {
-		this.srcFolder = srcFolder;
+	public ServerUnitManager(ServletContext servletContext, D2jsInitParams initParams) {
+		this.servletContext = servletContext;
+		this.srcFolder = servletContext.getRealPath("");
 		try {
 			this.engine = createEngine(initParams);
 //			this.engine.put("allD2js", allD2js);
@@ -55,6 +59,11 @@ public abstract class ServerUnitManager {
 			logger.error("", e);
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public String localFilePathToRequestPath(String srcFile){
+		String delta = FilenameUtils.separatorsToUnix(srcFile.substring(srcFolder.length()));
+		return (delta.charAt(0) != '/') ? "/" + delta : delta;
 	}
 
 	public ScriptObjectMirror getD2js(final String srcFile, final String aliasPath) throws Exception {
@@ -84,23 +93,40 @@ public abstract class ServerUnitManager {
 	public void onFileChanged(WatchEvent<Path> ev, Path file) {
 		Kind<Path> kind = ev.kind();
 		String filename = file.toString();
-		if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
-			if (allD2js.containsKey(filename)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(filename + " dropped");
+		try {
+			if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+				if (allD2js.containsKey(filename)) {
+					if (logger.isDebugEnabled()) {
+						logger.debug(filename + " dropped");
+					}
+					ScriptObjectMirror d2js = allD2js.get(filename);
+					if(d2js.containsKey("releaseD2js")){
+						d2js.callMember("releaseD2js");
+					}
+					allD2js.remove(filename);
+					//TODO call releaseD2js?
 				}
-				allD2js.remove(filename);
-			}
-		} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-			if (allD2js.containsKey(filename)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(filename + " changed");
+			} else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+				if (allD2js.containsKey(filename)) {
+					if (logger.isDebugEnabled()) {
+						logger.debug(filename + " changed");
+					}
+					ScriptObjectMirror d2js = allD2js.get(filename);
+					if(d2js.containsKey("releaseD2js")){
+						d2js.callMember("releaseD2js");
+					}
+					allD2js.remove(filename);
 				}
-				allD2js.remove(filename);
 			}
+		} catch (Exception e) {
+			logger.error("file synchronize failed on " + filename + " changed ", e);
 		}
 	}
 
 	protected abstract ScriptEngine createEngine(D2jsInitParams initParams) throws Exception;
+
+	public ServletContext getServletContext() {
+		return servletContext;
+	}
 
 }

@@ -20,6 +20,7 @@
 			<fileset dir="${dir.bin}" includes="**">
 				<exclude name="log4j.properties" />
 			</fileset>
+			<metainf dir="${dir.web}/META-INF" />
 		</jar>
 	</target>
 
@@ -63,13 +64,13 @@
 	</patternset>
 
 	<target name="update-d2js">
-		<property name="file.d2js.war" value="${dir.temp}/org.siphon.d2js.war" />
+		<property name="file.d2js.zip" value="${dir.temp}/org.siphon.d2js.zip" />
 		<mkdir dir="${dir.temp}" />
-		<get src="https://github.com/inshua/d2js/archive/master.zip" dest="${file.d2js.war}" />
-		<unzip dest="${dir.temp}" src="${file.d2js.war}">
+		<get src="https://github.com/inshua/d2js/archive/master.zip" dest="${file.d2js.zip}" />
+		<unzip dest="${dir.temp}" src="${file.d2js.zip}">
 			<patternset refid="not-web-content" />
 		</unzip>
-		<delete file="${file.d2js.war}" />
+		<delete file="${file.d2js.zip}" />
 		<copydir src="${dir.temp}/d2js-master/WebContent" dest="${dir.web}" />
 
 		<delete dir="${dir.temp}" />
@@ -142,5 +143,10 @@
 		</copy>
 
 		<delete dir="${dir.temp}" />
+	</target>
+
+
+	<target name="update-molecule">
+		<copy file="${basedir}/molecule/molecule.js" tofile="${dir.web}/jslib/molecule.js" />
 	</target>
 </project>

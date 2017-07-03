@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+
+<link href="../../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../../jslib/jquery-3.2.1.js"></script>
+<script src="../../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../../jslib/d2js/dataset.js"></script>
+<script src="../../jslib/d2js/entity-map.js"></script>
+<script src="../../jslib/d2js/render.js"></script>
+<script src="../../jslib/d2js/renderers.js"></script>
+<script src="../../jslib/d2js/bootstrap-renderers.js"></script>
+<script src="../../jslib/d2js/collector.js"></script>
+<script src="../../jslib/d2js/pipelines.js"></script>
+<script src="../../jslib/molecule.js"></script>
+
+<script src="../../jslib/date.js/Date.js"></script>
+
+</head>
+<body>
+</body>
+<script>
+	'use strict';
+	var authors = null;
+	(async function(){
+		var c = null;
+		await d2js.meta.load(['/d2js-test/entity/author-entity.d2js', '/d2js-test/entity/book-entity.d2js', '/d2js-test/entity/publisher-entity.d2js']);
+
+		authors = await d2js.root.Author.fetch();
+		console.log(authors);
+		
+		authors[0].name += '名';
+		
+		console.log('name changed', authors[0]._collectChange());
+		authors[0]._reject();
+		console.assert(authors[0]._origin.name == '曹雪芹');
+		console.assert(authors[0]._collectChange() == null);
+		
+		authors[1].books[0].title += '啊';
+		console.log('a book changed', c = authors[1]._collectChange());
+		authors._reject();
+		console.assert(authors[1].books[0].title.endsWith('啊') == false);
+		console.assert(authors[1]._collectChange() == null);
+		
+		var book = authors[2].books[0];
+		book.author = authors[3];
+		console.log('author2', authors[2]._collectChange());	
+		console.log('author3', authors[3]._collectChange());	
+		authors[2]._reject();	// 在 author[2], author[3] reject 都会导致 book 回到 author[2]
+		console.assert(book._state == 'none')
+		console.assert(authors[2].books.indexOf(book) != -1)
+		console.assert(authors[3].books.indexOf(book) == -1)
+		console.assert(book._origin.author == authors[2]);
+		console.assert(authors[3]._collectChange() == null);
+		
+		book = authors[3].books[1];
+		book.author = null;
+		authors[3]._reject();
+		console.assert(book.author != null);
+		console.assert(authors[3].books.indexOf(book) != -1);
+		console.assert(authors[3].books.origin.indexOf(book) != -1);
+		
+		authors[3]._remove();
+		authors._reject();
+		console.assert(authors.length == 4);
+		console.assert(authors.origin.length == 4);
+		
+		var book0 = authors[1].books[0];
+		var book1 = authors[1].books[1];
+		console.log(authors[1].books.length); 	// 5
+		book0._remove();
+		book1._remove();
+		console.assert(authors[1].books.length == 3);
+		book0._reject();
+		console.assert(authors[1].books.length == 4);
+		book1._reject();
+		console.assert(authors[1].books.length == 5);
+	})();
+</script>
+</html>

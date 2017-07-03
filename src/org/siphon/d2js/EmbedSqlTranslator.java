@@ -83,6 +83,8 @@ public class EmbedSqlTranslator {
 			generateCode(node);
 			
 			return StringUtils.join( this.code.lines, System.lineSeparator()) + System.lineSeparator() + this.code.currentLine;
+		} catch(LexException e){
+			throw new Exception(e.getMessage() + " near " + getLineNear(code, e.position), e);
 		} catch(UnexceptedTokenException e){			
 			throw new Exception(e.getMessage() + " near " + getLineNear(code, e.getStart()), e);
 		} catch (Exception e) {
@@ -715,14 +717,21 @@ public class EmbedSqlTranslator {
 		public final static int TOKEN_ANY = 11;
 		public final static int TOKEN_COMMENT = 12;
 		public final static int TOKEN_NEWLINE = 13;
+		public final static int TOKEN_REGEXP = 6;
 		
 	}
 	
 	private static class LexException extends Exception{
 		private static final long serialVersionUID = 2286790353377516212L;
+		private int position;
+		
+		public int getPosition(){
+			return position;
+		}
 
-		public LexException(String message){
+		public LexException(String message, int position){
 			super(message);
+			this.position = position;
 		}
 	}
 	
@@ -731,6 +740,8 @@ public class EmbedSqlTranslator {
 
 		private int offset = 0;
 		
+		private boolean leadRegExp = true;
+		
 		public Lexer(String code){
 			this.code = code;
 		}
@@ -738,108 +749,161 @@ public class EmbedSqlTranslator {
 		public Token nextToken() throws LexException{
 			if(offset >= code.length()) return new Token(Token.TOKEN_EOF, offset, code);
 			
+			Token result = null;
 			char c = code.charAt(offset);
-			switch(c){
-			case '"' :
-			case '\'':
-				Token tkString = new Token(Token.TOKEN_STRING, offset, code);
-				char startSymbol = c;
-				offset ++;
-				for(; offset < code.length(); offset ++){
-					c = code.charAt(offset);
-					if(c == '\\') {
-						offset ++;
-						continue;
-					}
-					if(c == startSymbol){
-						tkString.length = offset - tkString.start + 1;
-						offset ++;
-						return tkString;
-					}
-				}
-				throw new LexException("string not ended, from " + tkString.start);
-				
-			case '/' :
-				if(code.startsWith("//", offset)){
-					Token tkLineComment = new Token(Token.TOKEN_COMMENT, offset, code);
+			try{
+				switch(c){
+				case '"' :
+				case '\'':
+					Token tkString = new Token(Token.TOKEN_STRING, offset, code);
+					char startSymbol = c;
+					offset ++;
 					for(; offset < code.length(); offset ++){
 						c = code.charAt(offset);
-						if(c == '\r' || c == '\n') {
-							tkLineComment.length = offset - tkLineComment.start;
-							return tkLineComment;
+						if(c == '\\') {
+							offset ++;
+							// eat nextline
+							char n = code.charAt(offset); 
+							if(n == '\r' || n == '\n'){
+								if(n+2 < code.length() && code.substring(n, n+2) == "\r\n"){
+									offset++;
+								}
+								offset ++;
+							}
+							continue;
+						}
+						if(c == '\r' || c == '\n'){
+							throw new LexException("string not ended", tkString.start);
+						}
+						if(c == startSymbol){
+							tkString.length = offset - tkString.start + 1;
+							offset ++;
+							return result = tkString;
 						}
 					}
-					if(offset == code.length()){	// no more content
-						tkLineComment.length = offset - tkLineComment.start;
-						return tkLineComment;
-					}
-				} else if(code.startsWith("/*", offset)){
-					Token tkComment = new Token(Token.TOKEN_COMMENT, offset, code);
-					for(; offset < code.length() -1; offset ++){
-						c = code.charAt(offset);
-						if(c == '*' && code.startsWith("*/", offset)) {
-							tkComment.length = offset - tkComment.start + 2;
-							offset += 2;
-							return tkComment;
-						}
-					}
-					throw new LexException("commnet not ended, from " + tkComment.start);
-				}
-				break;
-				
-			case 's' :
-				if(code.startsWith("sql{.", offset)){
-					try{
-						return new Token(Token.TOKEN_SQL_START, offset, 5, code);
-					}finally{
-						offset += 5;
-					}
-				}
-				break;
-			case 'c' :
-				if(code.startsWith("code{.", offset)){
-					try{
-						return new Token(Token.TOKEN_CODE_START, offset, 6, code);
-					} finally{
-						offset += 6;
-					}
-				}
-				break;
-			case '.' :
-				if(code.startsWith(".}", offset)){
-					try{
-						return new Token(Token.TOKEN_CLOSE, offset, 2, code);
-					}finally{
-						offset += 2;
-					}
-				}
-				break;
-			case '(' :
-				return new Token(Token.TOKEN_L_BACKET, offset ++, 1, code);
-			case ')' :
-				return new Token(Token.TOKEN_R_BACKET, offset ++, 1, code);
-			case '[' :
-				return new Token(Token.TOKEN_L_SQ_BRACKET, offset ++, 1, code);
-			case ']' :
-				return new Token(Token.TOKEN_R_SQ_BRACKET, offset ++, 1, code);
-			case '{' :
-				return new Token(Token.TOKEN_L_CURVE, offset ++, 1, code);
-			case '}' :
-				return new Token(Token.TOKEN_R_CURVE, offset ++, 1, code);
-			case '\r' :
-			case '\n' :
-				if(code.startsWith("\r\n", offset) || code.startsWith("\n\r", offset)){
-					try{
-					return new Token(Token.TOKEN_NEWLINE, offset, 2, code);
-					}finally{
-						offset +=2;
-					}
-				} else {
-					return new Token(Token.TOKEN_NEWLINE, offset++, 1, code);
-				}
+					throw new LexException("string not ended", tkString.start);
 					
+				case '/' :
+					if(code.startsWith("//", offset)){
+						Token tkLineComment = new Token(Token.TOKEN_COMMENT, offset, code);
+						for(; offset < code.length(); offset ++){
+							c = code.charAt(offset);
+							if(c == '\r' || c == '\n') {
+								tkLineComment.length = offset - tkLineComment.start;
+								return result = tkLineComment;
+							}
+						}
+						if(offset == code.length()){	// no more content
+							tkLineComment.length = offset - tkLineComment.start;
+							return result = tkLineComment;
+						}
+					} else if(code.startsWith("/*", offset)){
+						Token tkComment = new Token(Token.TOKEN_COMMENT, offset, code);
+						for(; offset < code.length() -1; offset ++){
+							c = code.charAt(offset);
+							if(c == '*' && code.startsWith("*/", offset)) {
+								tkComment.length = offset - tkComment.start + 2;
+								offset += 2;
+								return result = tkComment;
+							}
+						}
+						throw new LexException("commnet not ended", tkComment.start);
+					} else if(this.leadRegExp){
+						Token tkRegExp = new Token(Token.TOKEN_REGEXP, offset, code);
+						offset ++;
+						for(; offset < code.length(); offset ++){
+							c = code.charAt(offset);
+							if(c == '\\') {
+								offset ++;
+								continue;
+							}
+							if(c == '/'){
+								tkRegExp.length = offset - tkRegExp.start + 1;
+								offset ++;
+								return result = tkRegExp;
+							}
+						}
+						throw new LexException("regexp not ended", tkRegExp.start);
+					}
+					break;
+					
+				case 's' :
+					if(code.startsWith("sql{.", offset)){
+						try{
+							return result = new Token(Token.TOKEN_SQL_START, offset, 5, code);
+						}finally{
+							offset += 5;
+						}
+					}
+					break;
+				case 'c' :
+					if(code.startsWith("code{.", offset)){
+						try{
+							return result = new Token(Token.TOKEN_CODE_START, offset, 6, code);
+						} finally{
+							offset += 6;
+						}
+					}
+					break;
+				case '.' :
+					if(code.startsWith(".}", offset)){
+						try{
+							return result = new Token(Token.TOKEN_CLOSE, offset, 2, code);
+						}finally{
+							offset += 2;
+						}
+					}
+					break;
+				case '(' :
+					return result = new Token(Token.TOKEN_L_BACKET, offset ++, 1, code);
+				case ')' :
+					return result = new Token(Token.TOKEN_R_BACKET, offset ++, 1, code);
+				case '[' :
+					return result = new Token(Token.TOKEN_L_SQ_BRACKET, offset ++, 1, code);
+				case ']' :
+					return result = new Token(Token.TOKEN_R_SQ_BRACKET, offset ++, 1, code);
+				case '{' :
+					return result = new Token(Token.TOKEN_L_CURVE, offset ++, 1, code);
+				case '}' :
+					return result = new Token(Token.TOKEN_R_CURVE, offset ++, 1, code);
+				case '\r' :
+				case '\n' :
+					if(code.startsWith("\r\n", offset) || code.startsWith("\n\r", offset)){
+						try{
+							
+							return result = new Token(Token.TOKEN_NEWLINE, offset, 2, code);
+						}finally{
+							offset +=2;
+						}
+					} else {
+						return result = new Token(Token.TOKEN_NEWLINE, offset++, 1, code);
+					}
+				}
+				return result = new Token(Token.TOKEN_ANY, offset ++, 1, code);
+			} finally{
+				if(result != null){
+					switch(result.tokenType){
+					case Token.TOKEN_ANY:
+						if(Character.isJavaIdentifierPart(c)){
+							this.leadRegExp = false;
+						} else if(";+-*/.=^&|:?%~><,".indexOf(c) != -1){
+							this.leadRegExp = true;
+						}
+						break;
+					case Token.TOKEN_R_BACKET:
+					case Token.TOKEN_R_CURVE:
+					case Token.TOKEN_R_SQ_BRACKET:
+						this.leadRegExp = false;
+						break;
+					case Token.TOKEN_L_BACKET:
+					case Token.TOKEN_L_CURVE:
+					case Token.TOKEN_L_SQ_BRACKET:
+					case Token.TOKEN_NEWLINE:
+						this.leadRegExp = true;
+						break;
+					}
+				}
 			}
-			return new Token(Token.TOKEN_ANY, offset ++, 1, code);
 		}
 	}
 

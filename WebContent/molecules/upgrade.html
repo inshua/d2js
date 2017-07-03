@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<script src="../jslib/jquery-3.2.1.js"></script>
+	<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+	<script src="../jslib/jquery-3.2.1.js"></script>
+	<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+</head>
+
+<body class=".container">
+	<h1>Upgrade molecule to v1</h1>
+	<p>
+		上一版本的 defCss 已作废。使用 [].defCss() 输出 css 粘贴为 style 即可。
+	</p>
+	<form method="post" enctype="multipart/form-data" action="upgrade.jssp">
+		<input type="file" name="file" onchange="upgradeFile(this.files[0])">
+	</form>
+	<p>
+		<button onclick="copyToClipboard(document.querySelector('#output'));">Copy</button>
+	</p>
+	<textarea id="output" rows="20" cols="80"></textarea>
+</body>
+<script>
+	function upgradeFile(file){
+		var reader = new FileReader();
+
+		reader.onload = (function(file) {
+			return function(e) {
+				var s = e.target.result;
+				var document = new DOMParser().parseFromString(s, 'text/html');
+				process(document);
+				output.value = document.documentElement.outerHTML
+					.replace(/constructor=""/g, 'constructor')
+					.replace(/extends=""'/g, "extends");
+			};
+		})(file);
+		reader.readAsText(file);
+
+		function process(document){
+			var defs = $(document).find('[molecule-def]');
+			
+			if(defs.length == 0) return console.error('no molecule def found');
+
+			var template = document.createElement('template');
+			document.body.insertBefore(template, document.body.childNodes[0]);
+			for (var j = 0; j < defs.length; j++) {
+				var element = $(defs[j]);
+				
+				var prevs = [];
+				var foundComment = false;
+				for(var p = element[0].previousSibling; p.nodeName.charAt(0) == '#' ; p = p.previousSibling){
+					prevs.push(p);
+					if(foundComment) break;
+					if(p.nodeName == '#comment'){
+						foundComment = true;
+					}
+				}
+				prevs.reverse().forEach(p => template.content.appendChild(p));
+				
+				var fullname = element.attr("molecule-def");
+				var module = 'noname', name = fullname;
+				if (fullname.lastIndexOf('.') != -1) {
+					var p = name.lastIndexOf('.');
+					module = name.substring(0, p);
+					name = name.substr(p + 1);
+				}
+
+				var constructor = findConstructor($(element), fullname, name);
+				element.remove();
+				template.content.appendChild(element[0]);
+				if (constructor) {
+					if(constructor.attr('molecule-for')){
+						template.content.appendChild(constructor[0]);
+					}
+					constructor.attr('constructor', "");
+					var code = constructor.html();
+					var reg1 = /\/\/\s*MOLECULE_DEF/, reg2 = /\/\/\s*MOLECULE_DEF_END/;
+					var arr = code.split(/\r\n|\n|\r/g), arr2 = [], initCode = '';
+					var remain = [];
+					for (var i = 0; i < arr.length; i++) {
+						if (reg1.test(arr[i])) {
+							for (i = i + 1; i < arr.length; i++) {
+								arr2.push(arr[i]);
+								if (reg2.test(arr[i])) {
+									i++;
+									break;
+								}
+							}
+						} else {
+							remain.push(arr[i])
+						}
+					}
+					remain = remain.join('\r\n');
+					code = arr2.join('\r\n');
+					initCode = arr.slice(i).join('\r\n');
+					if (initCode.indexOf('Molecule.extend') != -1) {
+						constructor.attr('extends', '');
+					}
+					var pattern = /function\s+[\w]+\s*\(.*\)\s*\{/m;
+					var match = code.match(pattern);
+					var start = code.indexOf(match[0]) + match[0].length;
+					code  = code.substr(start);
+					var lastCurve = findLastRCurve(code);
+					if(lastCurve == null) debugger;
+					var main = code.substring(0, lastCurve);
+					constructor.html(main);
+					remain += '\r\n' + code.substr(lastCurve + 1);
+					if(remain != '' && (remain = remain.replace(/\/\/\s*MOLECULE_DEF_END/, '')).trim() != ''){
+						var script = document.createElement('script');
+						script.innerHTML = remain;
+						var p = constructor.parent()[0];
+						if(p) {
+							p.appendChild(script);
+						} else {
+							script.setAttribute('molecule-for', fullname);
+							template.content.appendChild(script);
+						}
+					}
+				}
+				
+				Array.prototype.forEach.call(element.parent().find('style[molecule-for=' + fullname + ']'),
+					function(style){
+						template.appendChild(style);
+					}
+				);
+				
+				element[0].innerHTML = element[0].innerHTML
+					.replace('<!-- {INNER_HTML} -->', '<molecule-placeholder></molecule-placeholder>');
+			}
+		}
+		
+	}
+		
+	function findLastRCurve(code){
+		var depth = 0;
+		for(var i=0; i< code.length; i++){
+			if(code[i] == '}'){
+				depth --;
+				if(depth == -1) return i;
+			} else if(code[i] == '{'){
+				depth ++;
+			}
+		}
+	}
+	
+	function findConstructor(element, fullname, name) {
+		var scripts = element.find('script');
+		if (scripts.length == 0 || scripts.length == null) {
+			scripts = element.parent().find('script[molecule-for=' + fullname + ']')
+		} 
+		for (var i = 0; i < scripts.length; i++) {
+			if (/\/\/\s*MOLECULE_DEF/.test(scripts[i].innerHTML)) {
+				return $(scripts[i]);
+			}
+		}
+	}
+
+</script>
+
+<script>
+		Array.prototype.defCss = function(container){
+			container = container || document.head;
+			var styleElement = document.createElement("style");
+		    styleElement.type = "text/css";
+		    container.appendChild(styleElement);
+		    
+		    var styleSheet = styleElement.sheet;
+			for(var i=0; i<this.length; i++){
+				var rule = this[i];
+				var selector = rule.$;
+				var rules = '';
+				for(var attr in rule){ if(rule.hasOwnProperty(attr) && attr != '$'){
+					rules += attr.replace(/_/g, '-') + ':' + rule[attr] + ';';
+				}}
+				if (styleSheet.insertRule)
+		            styleSheet.insertRule(selector + ' {' + rules + '}', styleSheet.cssRules.length);
+		        else if (styleSheet.addRule)
+		            styleSheet.addRule(selector, rules);
+		        			
+			}
+		    
+		    return 	"<style>\r\n" + 
+		    			Array.prototype.map.call(styleElement.sheet.rules, rule => '\t' + rule.cssText).join('\r\n') +
+		    	 	"\r\n</style>";
+		}
+		
+		
+		function copyToClipboard(elem) {
+			  // create hidden text element, if it doesn't already exist
+		    var targetId = "_hiddenCopyText_";
+		    var isInput = elem.tagName === "INPUT" || elem.tagName === "TEXTAREA";
+		    var origSelectionStart, origSelectionEnd;
+		    if (isInput) {
+		        // can just use the original source element for the selection and copy
+		        target = elem;
+		        origSelectionStart = elem.selectionStart;
+		        origSelectionEnd = elem.selectionEnd;
+		    } else {
+		        // must use a temporary form element for the selection and copy
+		        target = document.getElementById(targetId);
+		        if (!target) {
+		            var target = document.createElement("textarea");
+		            target.style.position = "absolute";
+		            target.style.left = "-9999px";
+		            target.style.top = "0";
+		            target.id = targetId;
+		            document.body.appendChild(target);
+		        }
+		        target.textContent = elem.innerText;
+		    }
+		    // select the content
+		    var currentFocus = document.activeElement;
+		    target.focus();
+		    target.setSelectionRange(0, target.value.length);
+		    
+		    // copy the selection
+		    var succeed;
+		    try {
+		    	  succeed = document.execCommand("copy");
+		    } catch(e) {
+		        succeed = false;
+		    }
+		    // restore original focus
+		    if (currentFocus && typeof currentFocus.focus === "function") {
+		        currentFocus.focus();
+		    }
+		    
+		    if (isInput) {
+		        // restore prior selection
+		        elem.setSelectionRange(origSelectionStart, origSelectionEnd);
+		    } else {
+		        // clear temporary content
+		        target.textContent = "";
+		    }
+		    return succeed;
+		}
+	</script>
+</html>

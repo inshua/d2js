@@ -506,7 +506,8 @@ d2js.DataTable.prototype.load = function(method, params, option){
 				me.setState('none');
 				me.fireEvent('load');
 			} else {
-				onError(new Error(result.error));
+				var error =  typeof result.error == 'string' ? new Error(result.error) : Object.assign(new Error(), result.error);
+				onError(error);
 			}
 		} else {
 			onError(new Error(text));
@@ -775,15 +776,8 @@ d2js.DataTable.prototype.submit = function(option){
 				me.setState('none');
 				me.fireEvent('submit');
 			} else {
-				if(typeof result.error == 'string'){
-					onError(new Error(result.error));
-				} else {
-					var err = new Error(result.error.message);
-					for(var k in result.error){
-						err[k] = result.error[k];
-					}
-					onError(err);
-				}
+				var error =  typeof result.error == 'string' ? new Error(result.error) : Object.assign(new Error(), result.error);
+				onError(error);
 			}
 		} else {
 			onError(new Error(text));
@@ -1197,14 +1191,6 @@ d2js.DataRow = function(table, rowData){
 	 */
 	this._isDirty = function(){
 		return this._state != 'none';
-	}
-	
-	/**
-	 * 返回所有没有删除的行(行状态不为 remove)
-	 * @returns {DataRow[]}
-	 */
-	this.getRows = function(){
-		return this.rows.filter(function(row){return row._state != 'remove'});
 	}
 	
 	/**

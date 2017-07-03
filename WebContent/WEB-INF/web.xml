@@ -1,71 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:web="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
-  <display-name>d2js</display-name>
-  <welcome-file-list>
-    <welcome-file>index.html</welcome-file>
-    <welcome-file>index.htm</welcome-file>
-    <welcome-file>index.jsp</welcome-file>
-    <welcome-file>index.jssp</welcome-file>
-    <welcome-file>default.html</welcome-file>
-    <welcome-file>default.htm</welcome-file>
-    <welcome-file>default.jsp</welcome-file>
-    <welcome-file>default.jsp</welcome-file>
-  </welcome-file-list>
-  <login-config>
-    <auth-method>BASIC</auth-method>
-  </login-config>
-  <context-param>
-    <param-name>dataSource</param-name>
-    <param-value>java:comp/env/jdbc/d2js</param-value>
-  </context-param>
-  
-  <servlet>
-    <servlet-name>D2jsDispatch</servlet-name>
-    <servlet-class>org.siphon.d2js.DispatchServlet</servlet-class>
-    <init-param>
-      <param-name>JSLIB</param-name>
-      <param-value>/WEB-INF/jslib/</param-value>
-    </init-param>
-    <init-param>
-      <param-name>PRELOADJS</param-name>
-      <param-value>/WEB-INF/jslib/d2js.js</param-value>
-    </init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>D2jsDispatch</servlet-name>
-    <url-pattern>*.d2js</url-pattern>
-  </servlet-mapping>
-  
-  <servlet>
-    <servlet-name>D2jsExecutor</servlet-name>
-    <servlet-class>org.siphon.d2js.D2jsExecutor</servlet-class>
-    <init-param>
-      <param-name>JSLIB</param-name>
-      <param-value>/WEB-INF/jslib/</param-value>
-    </init-param>
-    <init-param>
-      <param-name>PRELOADJS</param-name>
-      <param-value>/WEB-INF/jslib/d2js.js</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  
-  <servlet>
-    <servlet-name>Jssp</servlet-name>
-    <servlet-class>org.siphon.jssp.JsspServlet</servlet-class>
-    <init-param>
-      <param-name>JSLIB</param-name>
-      <param-value>/WEB-INF/jslib/</param-value>
-    </init-param>
-    <init-param>
-      <param-name>PRELOADJS</param-name>
-      <param-value>/WEB-INF/jslib/jssp.js</param-value>
-    </init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Jssp</servlet-name>
-    <url-pattern>*.jssp</url-pattern>
-  </servlet-mapping>
-  
-  
+<web-app version="3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:web="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+	<display-name>d2js</display-name>
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>index.jssp</welcome-file>
+		<welcome-file>default.html</welcome-file>
+		<welcome-file>default.htm</welcome-file>
+		<welcome-file>default.jsp</welcome-file>
+		<welcome-file>default.jsp</welcome-file>
+	</welcome-file-list>
+
+	<web-fragment>
+		<name>d2js-fragment</name>
+	</web-fragment>
+
 </web-app>

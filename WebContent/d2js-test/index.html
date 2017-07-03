@@ -4,7 +4,7 @@
 	<title>d2js samples</title>
 	<meta charset="utf-8">
 	<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
-	<script src="../jslib/jquery-1.10.2.js"></script>
+	<script src="../jslib/jquery-3.2.1.js"></script>
 	<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
 </head>
 <body class="container">
@@ -19,6 +19,9 @@
 	
 	<h1>自定义渲染器</h1>
 	<a href="2-1.html">2-1</a>
+	
+	<h1>对象渲染器</h1>
+	<a href="2-1-1.html">2-1</a>
 	
 	<h1>渲染数据表，收集</h1>
 	<a href="2-2.html">2-2</a>
@@ -48,12 +51,8 @@
 	<h1>使用 Molecule 技术简化列表与表单</h1>
 	<a href="../molecules/bootstrap-basic.html">7</a>
 	
-	<h1>嵌套表</h1>
-	<a href="9.html">嵌套表</a>
-	<p>在服务器端使用 this.query(...).nest(...) 函数级联子表，这样在前端可以通过<b>主表,rows,n,子表名</b>访问子表行(数组)，如 author,rows,0,book，在渲染时可以通过该数据路径渲染，代码可以通过 author.rows[0].book 访问，但 book 行本身仍属于 book.rows，所以提交等不受影响
-	</p>
-	<p>
-		后端为 author-nest.d2js 和 book-nest.d2js
-	</p>
+	<h1>d2js entity map <small>主要基于前端的 ORM 框架</small></h1>
+	
+	<a href="entity">6-2</a>
 </body>
 </html>

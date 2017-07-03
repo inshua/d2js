@@ -51,22 +51,36 @@ d2js.collect = function(htmlElement, pattern, customCollectors){
 		if(e.hasAttribute('no-collect')) return 'stop';
 		
 		var collector = e.getAttribute('collector');
+		var arr = null;
 		if(collector){
 			if(e.hasAttribute('trace-collect')) debugger;
 			
-			
-			var arr = [e].concat(crumb);
+			arr = [e].concat(crumb);
 			var collectors = collector.split('|');
 			for(var i=0; i<collectors.length; i++){
 				var fun = extractCollector(collectors[i].trim(), e);
 				if(fun != null) {
-					arr[1] = fun.apply(null, arr);
+					if(fun instanceof Function){
+						arr[1] = fun.apply(null, arr);
+					} else {
+						arr[1] = fun.collect.apply(fun, arr);
+					}
 				} else {
 					console.error(collectors[i] + ' not found, when collect', e);
 				}
 			}
-			$(e).trigger('d2js.collected', arr, collector);
 		}
+		var collectObj = e['collectObj'];
+		if(collectObj){
+			if(arr == null) arr = [e].concat(crumb);
+			if(collectObj instanceof Function){
+				collectObj.apply(null, arr);
+			} else {
+				collectObj.collect.apply(collectObj, arr);
+			}
+		}
+			
+		$(e).trigger('d2js.collected', arr, collector);
 	}
 	
 	function extractCollector(desc, e){
@@ -127,10 +141,10 @@ d2js.Collectors.check = d2js.KNOWN_COLLECTORS['check'] = function(element, value
 d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue, attr, obj, index, rows, _1, table){
 	if(newValue === '') newValue = null;
 	if(obj != null){	// dont test attr in obj
-		if(obj.set){
-			obj.set(attr, newValue);
-		} else if(obj._set){
+		if(obj._set){
 			obj._set(attr, newValue);
+		} else if(obj.set){
+			obj.set(attr, newValue);
 		} else {
 			obj[attr] = newValue;
 		}

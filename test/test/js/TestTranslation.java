@@ -10,8 +10,8 @@ import org.siphon.jssp.JsspTranslator;
 public class TestTranslation {
 
 	public static void main(String[] args) throws IOException, Exception {
-		EmbedSqlTranslator t =  new EmbedSqlTranslator();
-		System.out.println(t.translate(FileUtils.readFileToString(new File("test/translation_test/t4.d2js"))));
+//		EmbedSqlTranslator t =  new EmbedSqlTranslator();
+//		System.out.println(t.translate(FileUtils.readFileToString(new File("test/translation_test/t4.d2js"))));
 		//System.out.println(t.translate(FileUtils.readFileToString(new File("test/translation_test/login.d2js"))));
 		
 //		JsspTranslator jsspTranslator = new JsspTranslator(FileUtils.readFileToString(new File("test/translation_test/test.jssp")));
@@ -19,5 +19,9 @@ public class TestTranslation {
 //		System.out.println(s);
 //		EmbedSqlTranslator t =  new EmbedSqlTranslator();
 //		System.out.println(t.translate(s));
+		
+		EmbedSqlTranslator t =  new EmbedSqlTranslator();
+		System.out.println(t.translate(FileUtils.readFileToString(new File("test/translation_test/t5.d2js"))));
 	}
+	
 }
