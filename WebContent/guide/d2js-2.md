@@ -14,7 +14,7 @@
 
 ### 禁用收集器
 
-有时有的元素虽然指定了数据路径和收集器，但是暂时不需要收集，此时可指定 'no-collect' 为 true，该属性对子元素有屏蔽作用——除非对子元素收集。
+有时有的元素虽然指定了数据路径和收集器，但是暂时不需要收集，此时可指定 'no-collect' 为 true，该属性对子元素有屏蔽作用——除非从子元素发起收集。
 
 ### d2js 中的词典
 
@@ -111,7 +111,7 @@
 </div>
 ```
 repeater渲染器对所提供的数组类型的数据进行循环，将 `repeater="true"` 的子元素视为模板，不断重复。
-重复得到的克隆体元素，其具有 repeater-copy="true"属性，并获得展开的数据项作为 d2js.root，可以通过  $('[repeater-copy]).data('d2js.root')访问相应的实际数据。如本例中，即可访问 DataRow 对象。
+重复得到的克隆体元素，其具有 repeater-copy="true"属性，并获得展开的数据项作为 d2js.root，可以通过  $('[repeater-copy]).data('d2js.root') 访问相应的 item。如本例中，即可访问 DataRow 对象。元素中的子对象，可通过 $el.findRoot() 查找模板元素绑定的数据。
 
 当数组为空时，子元素中 `repeater-empty="true"` 的子元素会被展示出来。
 
@@ -125,18 +125,18 @@ repeater渲染器对所提供的数组类型的数据进行循环，将 `repeate
 	<div repeater="true" when="gender='M'">
 		<div class="boy header" data="name" renderer="std"></div>
 	</div>
-	<div repeater-empty="true>
+	<div repeater-empty="true">
 		没有符合条件的查询结果
 	</div>
 </div>
 ```
-重复项渲染器中，当然也可以使用 expr 渲染器。此时，expr 元素的数据路径可指定为 `this`：
+重复项渲染器中，可以使用其它渲染器。如 expr 渲染器。此时，expr 元素的数据路径可指定为 `this`：
 ```html
 <div data="person,rows" renderer="repeater">
 	<div repeater="true" data="this" renderer="expr">
 		<div class="header">{{name}}</div>
 	</div>
-	<div repeater-empty="true>
+	<div repeater-empty="true">
 		没有符合条件的查询结果
 	</div>
 </div>
@@ -161,7 +161,7 @@ d2js.test = function(){
 
 ### d2js 日志输出
 
-d2js 现在使用 log4j 框架，每个引擎初始化即带有一个 `logger` 全局对象，可以使用 `logger.info, logger.debug, logger.error` 等日志函数，用法与 log4j 一样。
+d2js 现在使用 log4j 框架，每个引擎初始化即带有一个 `logger` 全局对象，可以使用 `logger.info, logger.debug, logger.error` 等日志函数，用法与 log4j 一致。
 
 可以在日志中使用 `JSON.strigify(js object)` 输出 js 对象，包括数据库查询结果、接收到的参数等等。
 
@@ -282,21 +282,19 @@ d2js.modify = function(rcd){
 		}
 	}
 	
-	d2js.create = function(rcd){
+	d2js.validate = function(rcd){
 		$V(this, rcd, {
 			name : [V.notNull, V.shortest(5), myValidator],
 			gender : [V.inside(['M', 'F'])]
 		});
-		
+	}
+
+	d2js.create = function(rcd){
 		this.insertRow('author', rcd, ['name', 'gender']);
 	}
 	
 	d2js.modify = function(rcd){
-		$V(this, rcd, {
-			name : [V.notNull, V.shortest(5), myValidator],
-			gender : [V.inside(['M', 'F'])]
-		});
-		
+		this.validate(rcd);
 		this.updateRow('author', rcd, ['id', 'name', 'gender']);
 	}
 ```
@@ -403,6 +401,8 @@ d2js.create = function(rcd){
 在调用主表的 `submit` 提交数据时，子表数据也会连带提交。服务器所预备的若干个 d2js 的数据更新函数会陆续发生调用。虽然被调用的函数分散在不同的 d2js 文件中，整个提交过程仍在同一个事务中进行，一旦出错即整体回滚。
 
 尽管 d2js.dataset 支持表间关系，在实践中，d2js.DataTable 的数据来源通常**应当为查询结果集**，与数据库的表**不能**简单的一一对应，页面的d2js.dataset仅仅是RDBMS的一个**剪影(snap)**，千万要遏制把数据库结构照搬到网页上的冲动。
+
+除了使用这种形式，d2js 也提供了 [orm 框架](orm.md)。
 
 
 ### 将d2js后端应用于其它前端框架
@@ -625,6 +625,7 @@ Ext.define('Org.Siphon.DynaStore', {
 ```
 
 其它客户端形式也可以根据自身情况开发接口连接 d2js 服务或开发类似 d2js 的前端框架。
+
 * .net 可以利用现有 ADO.net 的 DataSet 框架，编写 TableAdapter 实现调用服务器 .d2js 的功能，但由于控件无法插拔，较难实现 render 和 collect 体系；
 * java 包括服务器端、Android 端，可以编写类似的 DataSet 框架，同样由于面向对象的控件无法插拔，较难实现 render 与 collect；
 * ios 等其它平台与 java 同理。

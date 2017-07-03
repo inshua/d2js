@@ -6,6 +6,7 @@ d2js 是一套js数据前后端框架.
 
 * d2js 框架提出了独有的数据路径、渲染、收集概念，适合各类 js 对象与 html ui 之间交互
 * d2js 框架借鉴 ado.net 的 dataset-DataTable-DataRow 体系，可以轻松完成批量数据更新、主从表连带更新等特性
+* 除 dataset-DataTable-DataRow 体系外，也提供便利的 orm 形式
 * d2js 框架后端使用 js 语言编写，结合 sql 块设计，可以大大提高开发效率
 * d2js 前后端开发实践都是热插拔式开发，不写配置文件，不写 java 代码
 * d2js 框架允许网页设计与开发分离，先设计再开发
@@ -94,7 +95,7 @@ d2js 主要扩充了 `d2js.root`, `data`, `renderer`, `collector` 4个 html 属�
 
 ### 公用数据根
 
-除了使用 bindRoot，也可以使用公用数据根 `d2js.root`。使用方法如下：
+除了使用 bindRoot，也可以使用 attribute 形式声明的公用数据根 `d2js.root`。使用方法如下：
 ```html
 <section id="info" dj2s.root="person">
 	<p data="name" renderer="std" />
@@ -107,9 +108,9 @@ d2js 主要扩充了 `d2js.root`, `data`, `renderer`, `collector` 4个 html 属�
 	$('#info').render();
 </script>
 ```
-上面, `dj2s.root="person"` 使用路径方式表示根数据，这种表示方式不需要再bindRoot，第一次渲染时会自动由全局变量 d2js.root 出发按路径推导，并自动发生 bindRoot。
+上面, `dj2s.root="person"` 使用路径方式表示根数据，这种表示方式不需要再 bindRoot，第一次渲染时会自动由全局变量 d2js.root 出发按路径推导，并自动发生 bindRoot。
 
-如后来 d2js.root.person 修改为其它对象，则需要手工调用 $e.bindRoot() 重新绑定根数据。
+如后来 d2js.root.person 修改为其它对象，则需要手工调用 $e.bindRoot() 重新绑定根数据。（注意：必须是本元素，不能为子元素重新绑定）
 
 数据路径总是从层次最近的具有根数据的容器元素出发。
 
@@ -157,7 +158,7 @@ d2js 主要扩充了 `d2js.root`, `data`, `renderer`, `collector` 4个 html 属�
 
 ![d2js guide 2](images/d2js-2.png?raw=true)
 
-也可以在渲染时提供自定义的渲染函数，如
+除了使用全局的 d2js.Renderers，也可以在渲染时提供自定义的渲染函数，如
 
 ```html
 <section id="info">
@@ -191,6 +192,18 @@ d2js 主要扩充了 `d2js.root`, `data`, `renderer`, `collector` 4个 html 属�
 </script>
 ```
 
+此外，渲染器还可以是支持 render: function(){...} 的对象，以及渲染器生成器：
+```js
+{
+	createRenderer : function(){
+		return {renderer : function(element, value){
+			...
+		}}
+	}
+}
+```
+
+
 ### 管道
 
 渲染器可以使用管道实现诸如译值之类的行为。
@@ -222,6 +235,8 @@ d2js.Renderers.tomorrow = function(element, value){
 使用 `tomorrow|date|std`可以先获取第二天的日期，再传入管道函数 date 转换为日期格式字符串。
 
 在使用 `$e.render(,自定义渲染器)` 时，自定义渲染器中也可以包含管道函数。
+
+使用管道可以达到在不修改数据的前提下，将数据映射成另一份显示用的数据，达到`数据-显示`的分离。
 
 ## 简单js对象的收集
 
@@ -280,7 +295,7 @@ d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue){
 ```
 可见，`c` 的作用是收集界面输入的数据，`s` 的作用是设置到数据路径所锚定的属性上。
 
-当数据需要加工时，可以串接其它管道函数：
+在 `c|s` 之间可以串接其它管道函数对收集的数据进行更多加工：
 
 ```html
 <section id="info">
@@ -340,7 +355,7 @@ d2js.Collectors.s = d2js.KNOWN_COLLECTORS['s'] = function(element, newValue){
 </div>
 ```
 
-d2js.root使用字符串时，也相当于数据路径，同样可以使用 ,。 但 d2js.root 的相对路径总是从上一个d2js.root开始计算，而与data属性无关。
+d2js.root 使用字符串属性时，规范与数据路径相同，同样可以使用 , 但 d2js.root 的相对路径总是从上一个d2js.root开始计算，而与 data 属性无关。
 
 除了用于延续的 , 还有一种相对路径： .. 。
 
@@ -355,6 +370,11 @@ d2js.root使用字符串时，也相当于数据路径，同样可以使用 ,。
 d2js 具有与关系型数据库同构的 `dataset-DataTable-DataColumn,DataRow` 体系(该设计思想来源于 ADO.net)， 可以与关系型数据库极好的配合。
 
 ![dataset](images/d2js-dataset.png?raw=true)
+
+
+```
+对于习惯使用 ORM 的朋友，d2js 也支持 [orm 方式](orm.md)。
+```
 
 ### DataTable 及其渲染
 

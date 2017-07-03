@@ -33,6 +33,9 @@ D2JS.prototype.needValidate = function(){
 	if(this.validate == null) throw new Error('validate required!')
 }
 
+/**
+ * 默认的 fetch 函数,支持分页，按主键排序。使用 entityMap 提供的 table。
+ */
 D2JS.prototype.fetch = function(params){
 	this.mustBeEntity();
 	
@@ -43,6 +46,10 @@ D2JS.prototype.fetch = function(params){
 	return r.orm(this);
 }
 
+/**
+ * 按条件提取数据行，不做 orm.使用 entityMap 提供的 table。
+ * @param by {object}  {col1: val, col2:val, ...} 的形式提供
+ */
 D2JS.prototype.fetchBy = function(by){
 	this.mustBeEntity();
 	
@@ -65,19 +72,28 @@ D2JS.prototype.fetchBy = function(by){
 	return this.query(sql, cond);
 }
 
+/**
+ * 根据entity的主键值提取实体。使用 entityMap 提供的 table。
+ * @param params {object} 提供 {pk : value} 这样的结构
+ */
 D2JS.prototype.fetchEntityById = function(params){
 	this.mustBeEntity();
 	
-	if(params == null || params.id == null){
-		throw new Error('id cannot be null');
+	var pk = this.entityMap.pk;
+	
+	if(params == null || params[pk] == null){
+		throw new Error(pk + ' cannot be null');
 	}
 	
 	var cond = {};
-	cond[this.entityMap.pk] = params.id;
+	cond[this.entityMap.pk] = params[pk];
 	
 	return this.fetchBy(cond).orm(this, params.filter);
 }
 
+/**
+ * 默认的创建新实体方法。使用 entityMap 提供的 table。
+ */
 D2JS.prototype.create = function(rcd, columns){
 	this.mustBeEntity();
 	this.needValidate();
@@ -87,6 +103,9 @@ D2JS.prototype.create = function(rcd, columns){
 	return this.insertRow(this.entityMap.table, rcd, columns, this.entityMap.pk)
 }
 
+/**
+ * 默认的修改实体方法。使用 entityMap 提供的 table。
+ */
 D2JS.prototype.modify = function(rcd, columns){
 	this.mustBeEntity();
 	this.needValidate();
@@ -96,6 +115,9 @@ D2JS.prototype.modify = function(rcd, columns){
 	return this.updateRow(this.entityMap.table, rcd, columns, this.entityMap.pk)
 }
 
+/**
+ * 默认的移除实体方法。使用 entityMap 提供的 table。
+ */
 D2JS.prototype.destroy = function(rcd, columns){
 	this.mustBeEntity();
 	this.needValidate();
@@ -155,6 +177,12 @@ D2JS.prototype.releaseD2js = function(reason){
 /**
  * 实现ORM映射，可对外键、子表数据关联提取。
  * filter 为 {includes : ['Book'], excludes: ['Publisher']}
+ * usage:
+ * ```js
+ * 	this.query(sql, [args]).orm(this)
+ * ```
+ * @param d2js {D2JS} d2js 对象，通常传 this
+ * @param [filter] {Object} 形如 {includes : ['Book'], excludes: ['Publisher']}，指定在 orm 过程中，相应的 d2js 是否需要执行
  */
 D2JS.DataTable.prototype.orm = function(d2js, filter, path){
 	var et = d2js.entityMap;

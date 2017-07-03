@@ -5,7 +5,8 @@
 ### 后端为 SSH 框架杀手，前端为 angular 杀手
 
 * d2js 框架提出了独有的数据路径、渲染、收集概念，适合各类 js 对象与 html ui 之间交互
-* d2js 框架借鉴 ado.net 的 dataset-DataTable-DataRow 体系，可以轻松完成批量数据更新、主从表连带更新等特性
+* d2js 框架借鉴 ado.net 的 dataset-DataTable-DataRow 体系，可以轻松完成批量数据更新、主从表连带更新等特性，
+* 除 dataset-DataTable-DataRow 体系外，也提供便利的 orm 形式
 * d2js 框架后端使用 js 语言编写，结合 sql 块设计，可以大大提高开发效率
 * d2js 前后端开发实践都是热插拔式开发，不写配置文件，不写 java 代码
 * d2js 框架允许网页设计与开发分离，先设计再开发
