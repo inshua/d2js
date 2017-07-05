@@ -43,7 +43,7 @@ d2js.Renderers.pagination = d2js.KNOWN_RENDERERS['pagination'] = function(elemen
 	a.href = '###';
 	if(!isLastPage){
 		a.on('click', function(){
-			table.navigatePage(table.page + 1);
+			table.navigatePage(table.page * 1 + 1);
 		});
 	}
 	a.html('<i class="right chevron icon"></i>');
