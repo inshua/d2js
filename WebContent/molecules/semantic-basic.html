@@ -83,7 +83,7 @@
 		</th>
 		<!-- 
             	多选列头  <th col="id"> 
-            -->
+        -->
 		<th molecule-def="CheckHeader" renderer="check">
 			<input type="checkbox" id="ckAll">
 			<script constructor>
@@ -125,10 +125,10 @@
 					}
 				}
 
-				var table = this.$el.findRoot().root;
-				table.on(['load', 'submit'], function () {
-					me.checked([]);
-				});
+// 				var table = this.$el.findRoot().root;
+// 				table.on(['load', 'submit'], function () {
+// 					me.checked([]);
+// 				});
 			</script>
 			<script>
 				d2js.Renderers.check = function (element, v, table) {
@@ -1189,7 +1189,7 @@
         </table>
     </div>
 
-    <div molecule="Dialog" title-text="Book" id="dialog2" d2js.root="">
+    <div molecule="Dialog" title-text="Book" id="dialog2" d2js.root="#">
         <!-- 留空，防止绑定错误 -->
         <form class="ui form table-form">
             <div molecule="FormItem" col="title" text="Title">
@@ -1238,9 +1238,9 @@
                 console.info($(evt.target).findRoot().root);
             });
         })
-
-        // ----------------- entity ------------------
-        $.holdReady(true);
+        
+		table.load('fetch', { gender: 'F' });
+//        ----------------- entity ------------------
         var authors = null,
             books = null;
         (async function() {
@@ -1248,7 +1248,6 @@
                 '/bookstore/publisher-entity.d2js'
             ]);
             books = d2js.root.books = new d2js.List(d2js.root.Book);
-            $.holdReady(false);
 
             books.on('load', function() {
                 $('[d2js\\.root=books]').render();
@@ -1263,11 +1262,6 @@
             await authors.fetch();
         })();
 
-        $(function() {
-            table.load('fetch', {
-                gender: 'F'
-            });
-        });
     </script>
 </body>
 

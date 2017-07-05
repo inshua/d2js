@@ -299,6 +299,7 @@ Molecule.scanMolecules = function(starter, manual) {
         starter = starter[0];
     }
     starter = starter || document.body;
+    if(starter == null) return;
     Molecule._scanningEle = starter;
     if (Molecule.debug) console.info('molecule scan', starter);
     var stk = [starter];
@@ -624,29 +625,29 @@ while(Array.prototype.defCss == null){		// i dont known why plug this function a
 	}
 }
 
-jQuery(document).ready(function() {
-    Molecule.scanDefines();
-    Molecule.scanMolecules();
-
-    jQuery(document).on('DOMNodeInserted', function(e) {
-        var target = (e.originalEvent.target || e.target);
-        if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
-            if (Molecule._scanningEle && jQuery.contains(Molecule._scanningEle, target)) return; // 正在扫描父元素，早晚会扫到它
-            if (Molecule.debug) console.info('DOMNodeInserted ', e.target);
-            Molecule.scanMolecules(target);
-        }
-    });
-
-
-    jQuery(document).on('DOMNodeRemoved', function(e) {
-        var target = (e.originalEvent.target || e.target);
-        if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
-            if (target.molecule) {
-                target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
-            }
-            Array.prototype.forEach.call(target.querySelectorAll('[molecule-obj]'), ele => {
-                 target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
-            });
-        }
-    });
+jQuery(document).on('DOMContentLoaded', function(){
+	Molecule.scanDefines();
+	Molecule.scanMolecules();
+	
+	jQuery(document).on('DOMNodeInserted', function(e) {
+	    var target = (e.originalEvent.target || e.target);
+	    if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
+	        if (Molecule._scanningEle && jQuery.contains(Molecule._scanningEle, target)) return; // 正在扫描父元素，早晚会扫到它
+	        if (Molecule.debug) console.info('DOMNodeInserted ', e.target);
+	        Molecule.scanMolecules(target);
+	    }
+	});
+	
+	
+	jQuery(document).on('DOMNodeRemoved', function(e) {
+	    var target = (e.originalEvent.target || e.target);
+	    if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
+	        if (target.molecule) {
+	            target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
+	        }
+	        Array.prototype.forEach.call(target.querySelectorAll('[molecule-obj]'), ele => {
+	             target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
+	        });
+	    }
+	});
 });
