@@ -258,7 +258,7 @@ Molecule.registerPrototype = function(el) {
     try {
         var script = el.querySelector('script[constructor]');
         if (script == null) {
-            script = el.parentNode.querySelector("script[molecule-for='" + fullname + "]");
+            script = el.parentNode.querySelector("script[molecule-for='" + fullname + "']");
         }
         if (script) {
             var fun = new Function(script.innerHTML);
