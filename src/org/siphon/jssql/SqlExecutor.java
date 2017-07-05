@@ -911,6 +911,8 @@ public class SqlExecutor {
 			}
 		} else if (arg instanceof String) {
 			return (String) arg;
+		} else if (arg instanceof ConsString) {
+			return arg.toString();
 		} else if (arg instanceof Double) { // js number always be Double，but if
 											// its came from JSON.parse， since
 											// JSON is jdk given global object,
