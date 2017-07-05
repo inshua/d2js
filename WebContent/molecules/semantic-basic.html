@@ -540,9 +540,8 @@
 		<!-- 增加按钮, 放在 form 里 -->
 		<button molecule-def="AddButton" type="button" class="ui labeled icon green button"><i class="add icon"></i></button>
 		<script molecule-for="AddButton" type="text/javascript" constructor>
-			var table = this.$el.findRoot().root;
-			var btn = this.$el;
-			btn.on('click', function () {
+			this.$el.on('click', function () {
+				var table = $(this).findRoot().root;
 				var tl = $(this).closest('[molecule-obj=TableList]');
 				if (table.isList) {
 					var Constructor = table.meta.Constructor;
