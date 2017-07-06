@@ -30,7 +30,7 @@
 					</renderer>
 				</span>
 			<br>
-			Phone: <span  data="phone" renderer="phone|std"></span>
+			Phone: <span  data="phone" renderer="phone|std" trace-render></span>
 			<br>
 			Gender: <span data="gender" renderer="gender"></span>
 		</div>
@@ -60,7 +60,7 @@
 	
 	// 对象渲染器，可以保存自己的状态
 	d2js.Renderers.scaleLoop = {
-	  	scale : 1,
+	  	scale : 1.5,
 	  	delta : 1.05,
 	  	running : false,
 	  	render : function(element, value){
@@ -77,7 +77,7 @@
 	  	}
 	};
 	
-	$('#test1').bindRoot(person).render(null, {phone:function(e, phone){
+	$('#test1').bindRoot(person).bindRenderers({phone:function(e, phone){
 			if(phone) {
 				var arr = [];
 				for(var i=phone.length; i>=0; i-=4){
@@ -92,7 +92,7 @@
 			} else {
 				e.innerHTML = '<font color=maroon>♀</font>';
 			}
-		}})
+		}}).render();
 	
 	setTimeout(function(){
 		person.name = 'Mary'
@@ -160,9 +160,10 @@
 	//每个 renderer 都需要独立的 scope，需要挂载各自独立的渲染器对象。
 	LetterScale.createRenderer = function(element){return new LetterScale(element)}
 	
-	// $('#test3').bindRoot(person).render(null, {letterScale: LetterScale})
+	$('#test3').bindRoot(person).bindRenderers( {letterScale: LetterScale}).render()
 
-	$('#test3').bindRoot(person).render(null, {letterScale: LetterScale.rendererFactory()})
+	// // 该句与上面 2 句等价
+	// $('#test3').bindRoot(person).bindRenderers({letterScale: LetterScale.rendererFactory()}).render();
 	
 	// or
 	// $('#test3').bindRoot(person).render(null, {letterScale: {createRenderer: function(e){return new LetterScale(e)}}})

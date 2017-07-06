@@ -40,7 +40,8 @@
 	
 	var person  = {name:'Jack', email: 'jack@gmail.com', phone: '13722223333', gender: 'M'} 
 	
-	$('#test').bindRoot(person).render(null, {phone:function(e, phone){
+	$('#test').bindRoot(person).bindRenderers(
+		{phone:function(e, phone){
 			if(phone) {
 				var arr = [];
 				for(var i=phone.length; i>=0; i-=4){
@@ -55,7 +56,8 @@
 			} else {
 				e.innerHTML = '<font color=maroon>♀</font>';
 			}
-		}})
+		}}
+	).render();
 	
 	setTimeout(function(){
 		person.name = 'Mary'
