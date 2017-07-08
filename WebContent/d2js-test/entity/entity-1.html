@@ -44,7 +44,7 @@
 		book1.author = null;
 		console.assert(book1.author == null)
 		console.assert(author2.books.indexOf(book1) == -1);
-		console.assert(author2.books.removed.indexOf(book1) == -1);	 // 原来不属于该列表
+		console.assert(author2.books.origin.indexOf(book1) == -1);	 // 原来不属于该列表
 		
 		var book = author2.books[1];
 		book.author = null;

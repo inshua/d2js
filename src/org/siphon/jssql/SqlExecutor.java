@@ -559,11 +559,7 @@ public class SqlExecutor {
 			ScriptObjectMirror item = jsTypeUtil.newObject();
 			for (int i = 1; i <= rsm.getColumnCount(); i++) {
 				String cname = this.useColumnLabelAsName ? rsm.getColumnLabel(i): rsm.getColumnName(i);
-				String label = cname;
-				switch(this.columnNameCase){
-				case 0: label = cname.toLowerCase(); break;
-				case 2: label = cname.toUpperCase(); break;
-				}
+				String label = convertColumnName(cname);
 				item.put(label, fieldValueToNativeObject(rsm.getColumnType(i), rs, cname));
 			}
 			//NativeArray.pushObject(narr, item.to(ScriptObject.class));
@@ -572,6 +568,14 @@ public class SqlExecutor {
 		result.put("rows", arr);
 		return result;  // JSON.stringify(result)
 	}
+	
+	String convertColumnName(String columnName) {
+		switch(this.columnNameCase){
+		case 0: return columnName.toLowerCase(); 
+		case 2: return columnName.toUpperCase();
+		}
+		return columnName;
+	}
 
 	private ScriptObjectMirror columnListToNativeArray(ResultSetMetaData rsm) throws SQLException, ScriptException {
 		ScriptObjectMirror arr = jsTypeUtil.newArray();
@@ -579,8 +583,9 @@ public class SqlExecutor {
 		// JSON.stringify(arr)
 		for (int i = 1; i <= rsm.getColumnCount(); i++) {
 			ScriptObjectMirror obj = jsTypeUtil.newObject();
-			String cname = rsm.getColumnName(i).toLowerCase();
-			obj.put("name", cname);
+			String cname = this.useColumnLabelAsName ? rsm.getColumnLabel(i): rsm.getColumnName(i);
+			String label = convertColumnName(cname);
+			obj.put("name", label);
 			obj.put("type", translateTypeName(rsm.getColumnType(i), rsm.getColumnTypeName(i)));
 			// NativeArray.pushObject(narr, obj.to(ScriptObject.class));
 			arr.callMember("push", obj);

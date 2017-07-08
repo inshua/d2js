@@ -630,7 +630,7 @@ d2js.Entity.fetchById = function(pkValue, filter){
 			var row = table.rows[0];
 			var obj = null;
 			if(row){
-				obj = new Fun(row);
+				obj = new Fun(row, 'none');
 			}
 			resolve(obj);
 		} catch(e){

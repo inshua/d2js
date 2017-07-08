@@ -937,6 +937,7 @@
 				</tr>
 			</tfoot>
 			<script constructor>
+				'use strict'
 				var activeTrClass = 'active';
 
 				var valueColumn = this.$el.closest('[value-col]').attr('value-col') || 'id'
@@ -1047,40 +1048,57 @@
 
 				var allowRemove = this.$el.closest('[allow-remove]').attr('allow-remove') == 'true';
 				var willDeleteRows = null;
+				this.table  = function(){
+					return this.$el.findRoot().root;
+				}
 				if (allowRemove) {
 					var leftFoot = this.$el.find('#leftFoot');
 					var s = '<button type="button" class="ui button btn-remove" disabled><i class="remove icon"></i>Remove</button>';
 					leftFoot.html(s);
-					leftFoot.on('click', function (evt) {
-						if ($(evt.target).is('.btn-remove')) {
-							var th = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
-							var col = th.attr('col');
-							var checked = th.molecule().checked();
-							willDeleteRows = checked.map(function (c) {
-								return table.find(col, c)
-							}).filter(function (r) {
-								return r
-							});
-							if (willDeleteRows.length == 0) {
-								var a = $('<div class="ui yellow message" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
-								setTimeout(function () {
-									a.remove()
-								}, 500);
+					leftFoot.on('click', '.btn-remove', function (evt) {
+						debugger;
+						var th = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
+						var col = th.attr('col');
+						var checked = th.molecule().checked();
+						willDeleteRows = checked.map(function (c) {
+							var t = me.table();
+							if(t.isList){
+								return t.find(function(entity){return entity[col] == c});
 							} else {
-								leftFoot.html('<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>');
+								return t.find(col, c)
 							}
+						}).filter(function (r) {
+							return r
+						});
+						if (willDeleteRows.length == 0) {
+							var a = $('<div class="ui yellow message" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
+							setTimeout(function () {
+								a.remove()
+							}, 500);
+						} else {
+							leftFoot.html('<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>');
 						}
-					}).on('confirm.ok', function () {
+					}).on('confirm.ok', async function () {
 						willDeleteRows.forEach(function (row) {
 							row._remove();
 						});
-						table.submit(function (error) {
-							if (!error) {
-								this.reload();
+						var t = me.table();
+						if(t.isList){
+							var result = await t.submit();
+							if (result.success) {
+								t.reload();
 							} else {
 								d2js.render();
 							}
-						})
+						} else {
+							t.submit(function (error) {
+								if (!error) {
+									t.reload();
+								} else {
+									d2js.render();
+								}
+							});
+						}
 						leftFoot.html(s);
 					}).on('confirm.cancel', function () {
 						leftFoot.html(s);

@@ -54,6 +54,8 @@
 		console.assert(c._children.length == 1);
 		console.assert(c._children[0].rows[0]._state == 'edit');
 		
+		var author3BookCount = authors[3].books.length;
+
 		authors[3].books[1].author = null;
 		console.log('author3', c = authors[3]._collectChange());	// 判断力批判移除且无新属主,按 remove 提交
 		console.assert(c._children[0].rows.length == 2);
@@ -61,7 +63,7 @@
 		
 		authors[3]._remove();
 		console.log('authors all remove ', c = authors[3]._collectChange());		// 3本都移除
-		console.assert(c._children[0].rows.length == 3);
+		console.assert(c._children[0].rows.length == author3BookCount);
 		console.assert(c._children[0].rows.every(r => r._state == 'remove'));
 	})();
 </script>

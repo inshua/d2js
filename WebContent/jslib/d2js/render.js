@@ -53,9 +53,9 @@ d2js.KNOWN_RENDERERS = {};
  * 对 htmlElement 及其子元素有指定 renderer="myRender"，该函数会被应用。需要说明的是，在下次渲染时不再需要提供 myRender 函数。
  * @param [htmlElement=document.body] {HTMLElement} html 元素，渲染该元素及其子元素。
  * @param [pattern] {object|object[]} 命中的数据，可提供数组。提供该参数后，只有展开数据中包含有 pattern 的对象时才发生渲染。
- * @param [customRenders] {object} 自定义渲染器（含管道）。如
+ * @param [customRenderers] {object} 自定义渲染器（含管道）。如
  */
-d2js.render = function(htmlElement, pattern, customRenders){
+d2js.render = function(htmlElement, pattern, customRenderers){
 	d2js.travel(htmlElement, pattern, renderElement)
 	function renderElement(e, crumb){
 		var renderer = e.getAttribute('renderer');
@@ -107,8 +107,8 @@ d2js.render = function(htmlElement, pattern, customRenders){
 			}
 			if(fun) return fun;
 		}
-		if(customRenders){
-			var fun = customRenders[rendererDesc];
+		if(customRenderers){
+			var fun = customRenderers[rendererDesc];
 			if(fun){
 				if(fun.createRenderer){
 					fun = fun.createRenderer(e);
@@ -130,6 +130,42 @@ d2js.render = function(htmlElement, pattern, customRenders){
 		embedRenderer.remove();
 		var fun = new Function('element', 'value', 'columnName', 'row', 'index', 'rows', '_1', 'table', code);
 		return fun;
+	}
+}
+
+/**
+ * 将自定义渲染器绑定到页面元素。
+ * usage:
+ * ```js
+ * $('#test').bindRoot(person).bindRenderers(
+ *		{red:function(e, value){e.style.color='red'; return value;}
+ * ).render();
+ * ```
+ * ```html
+ * 	<div data="name" renderer="std|red"></div>
+ * ```
+ * @param htmlElement {HTMLElement} DOM元素
+ * @param customRenderers {Object} KV结构，K为渲染器名，V 为渲染器
+ */
+d2js.bindRenderers = function(htmlElement, customRenderers){
+	var elements = htmlElement.querySelectorAll('[renderer]');
+	if(htmlElement.hasAttribute('renderer')){
+		elements = [htmlElement].concat(Array.prototype.slice.call(elements));
+	}
+	for(var i = 0; i< elements.length; i++){
+		var element = elements[i];
+		var renderer = element.getAttribute('renderer');
+		var renderers = renderer.split('|');
+		
+		for(var name in customRenderers){if(customRenderers.hasOwnProperty(name)){
+			if(renderers.indexOf(name) != -1){
+				var fun = customRenderers[name];
+				if(fun.createRenderer){
+					fun = fun.createRenderer(element);
+				}
+				d2js._store(element, 'd2js.renderers', name, fun);
+			}
+		}}
 	}
 }
 
@@ -491,9 +527,17 @@ d2js.locateData = function(element){
 }( jQuery ));
 
 +(function ( $ ) {
-    $.fn.customRenderer = function(name, renderer) {
+    $.fn.bindRenderer = function(name, renderer) {
+		var obj = {};
+		obj[name] = renderer;
+    	return this.bindRenderers(obj);
+    };
+}( jQuery ));
+
++(function ( $ ) {
+    $.fn.bindRenderers = function(renderers) {
     	this.each(function(){
-    		d2js._store(this, 'd2js.renderers', name, renderer);
+    		d2js.bindRenderers(this, renderers);
     	});
     	return this;
     };
