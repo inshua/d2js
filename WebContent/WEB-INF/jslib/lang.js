@@ -317,15 +317,36 @@ function ValidationError(field, validator, message){
 
 var Throwable = Java.type('java.lang.Throwable'), 
 	ScriptException = Java.type('javax.script.ScriptException'),
-	ECMAException = Java.type('jdk.nashorn.internal.runtime.ECMAException');
+	ECMAException = Java.type('jdk.nashorn.internal.runtime.ECMAException'),
+	StackTraceElement = Java.type('java.lang.StackTraceElement');
+
 /**
  * 将 js 错误包装为可用的 java 错误, 以便在 logger.error(msg, warpJsError(error)) 中使用
  * @param e {Error} js error
  * @returns {ECMAException}
  */
 function wrapJsError(e){
-	return new ECMAException(e, null);
+	if(Throwable.class.isInstance(e)) return e;
+	
+	if(e instanceof Error){
+		var ecmaException = ECMAException.create(e, e.fileName, e.lineNumber, e.columnNumber);
+		var stack = e.stack.split(/\r\n|\n|\r/);
+		var javaStack = [];
+		for(var i=0;i<stack.length; i++){
+			var line = stack[i];
+			var match = /at\s(.+)\s\((.*):(\d+)\)/.exec(line);
+			if(match){
+				var stackElement = new StackTraceElement('<nashorn>', match[1], match[2], match[3]);
+				javaStack.push(stackElement);
+			}
+		}
+		ecmaException.setStackTrace(Java.to(javaStack, 'java.lang.StackTraceElement[]'));
+		return ecmaException;
+	} else {
+		return new ECMAException(e, null);
+	}
 }
+
 
 /**
  * 对对象的属性名做映射, 得到一个新对象. 
