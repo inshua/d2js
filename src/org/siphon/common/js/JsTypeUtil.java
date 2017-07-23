@@ -78,6 +78,7 @@ public class JsTypeUtil {
 	
 	private ScriptObjectMirror newRegExp;
 	private CompiledScript newDate;
+	private Object global;
 
 	public JsTypeUtil(ScriptEngine jsEngine) {
 		this.engine = (NashornScriptEngine) jsEngine;
@@ -86,6 +87,7 @@ public class JsTypeUtil {
 			this.arrayConstructor = (ScriptObjectMirror) b.get("Array");
 			this.objectConstructor = (ScriptObjectMirror) b.get("Object");
 			this.newDate = this.engine.compile("new Date()");
+			this.global = JsEngineUtil.getGlobal(jsEngine);
 		} catch (Exception e) {
 			e.printStackTrace();
 			// logger.error("", e);
@@ -499,6 +501,10 @@ public class JsTypeUtil {
 			return m.keySet().iterator().next() instanceof String;
 		}
 		return false;
+	}
+	
+	public Object toScriptObjectMirror(Object object){
+		return ScriptObjectMirror.wrap(object, global);
 	}
 	
 }

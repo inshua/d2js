@@ -22,7 +22,7 @@
 
 imports("./lang.js");
 
-imports("./Date.js");
+imports("./date-helper.js");
 
 imports("../config/website.js");
 

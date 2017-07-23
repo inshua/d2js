@@ -313,14 +313,38 @@ d2js.DataTable.DEFAULT_PAGESIZE = 10;
  */
 function parseDate(key, value) {
     if (typeof value === 'string') {
-        var a = parseDate.reg.exec(value);
-        if (a) {
-            return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[5] || 0, a[6] || 0, +a[7] || 0));
-        }
+    	if(parseDate.reg.test(value)){
+    		return JSJoda.ZonedDateTime.parse(value);
+    	}
+//        var a = parseDate.reg.exec(value);
+//        if (a) {
+//            return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[5] || 0, a[6] || 0, +a[7] || 0));
+//        }
     }
     return value;
 }
-parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z?)?$/;
+// parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d))?)?$/;
+parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d(\[\w+\/\w+\])?))?)?$/;
+
+
+/**
+ * https://stackoverflow.com/questions/31096130/how-to-json-stringify-a-javascript-date-and-preserve-timezone
+ */
+Date.prototype.toJSON = function () {
+  var timezoneOffsetInHours = -(this.getTimezoneOffset() / 60); //UTC minus local time
+  var sign = timezoneOffsetInHours >= 0 ? '+' : '-';
+  var leadingZero = (timezoneOffsetInHours < 10) ? '0' : '';
+
+  //It's a bit unfortunate that we need to construct a new Date instance 
+  //(we don't want _this_ Date instance to be modified)
+  var correctedDate = new Date(this.getFullYear(), this.getMonth(), 
+      this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds(), 
+      this.getMilliseconds());
+  correctedDate.setHours(this.getHours() + timezoneOffsetInHours);
+  var iso = correctedDate.toISOString().replace('Z', '');
+
+  return iso + sign + leadingZero + Math.abs(timezoneOffsetInHours).toString() + ':00';
+}
 
 
 /**
