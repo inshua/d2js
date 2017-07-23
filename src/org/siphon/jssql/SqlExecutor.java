@@ -155,6 +155,8 @@ public class SqlExecutor {
 				this.postgreSQL = true;
 			} else if ("oracle.jdbc.driver.OracleDriver".equals(this.driverClass)) {
 				this.oracle = true;
+			} else if(this.driverClass.contains("mysql")){
+				this.mySql = true;
 			}
 		}
 	}
