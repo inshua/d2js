@@ -372,7 +372,10 @@
 			this.$el.attr('data', 'search,params,' +
 				col);
 			d2js.render(this.$el.parent());
-			this.$el.dropdown();
+			var me = this;
+			this.$el.dropdown({onChange : function(value, text, $choice){
+				me.$el.trigger('dropdown.change', [value, text, $choice])
+		    }});
 		</script>
 
 		<!-- 
@@ -386,18 +389,26 @@
 				var col = this.$el.closest('.field').attr('col');
 				var allowEmpty = (this.$el.closest('[allow-empty]').attr('allow-empty') != 'false');
 				this.$el.find('select').attr('data', 'search,params,' + col);
+				var inited = false;
 				if (this.$el.attr('dict')) {
 					this.$el.attr('d2js.root', 'dicts');
 					this.$el.attr('data', this.$el.attr('dict'));
 					this.$el.attr('renderer', 'dictToList|options(\'name\',\'id\', ' + allowEmpty + ')');
 
 					this.$el.find('select').attr('d2js.root', '..');
+				}
+				this.$el.find('select').on('d2js.rendered', function (event) {
+					if (!inited) {
+						$(this).dropdown(); //.addClass('compact');
+						inited = true;
+					}
+					setTimeout((function(){
+						$(this).dropdown('set selected', this.value);
+					}).bind(this), 50);	// dropdown() 后 menu items 仍没有初始化，并且目前没有找到回调时机
+				});
+				if (this.$el.attr('dict')) {
 					d2js.render(this.$el);
 				}
-
-				this.$el.find('select').on('d2js.rendered', function (event) {
-					$(this).dropdown();
-				});
 			</script>
 		</div>
 
@@ -929,7 +940,7 @@
 					<th width="100%" colspan="1000" class="center aligned">
 						<div style="display: flex;flex-flow: row nowrap;justify-content: space-between;align-items: center;">
 							<div id="leftFoot"></div>
-							<div class="ui pagination menu" data="this" renderer="pagination">
+							<div molecule=Pagination>
 							</div>
 							<div id="rightFoot"></div>
 						</div>
@@ -1114,6 +1125,89 @@
 				}
 			</script>
 		</table>
+	</template>
+	
+	<template>
+		<!-- 分页控件 -->
+		<div molecule-def="Pagination" class="ui pagination menu" page-nearby="3" data="this" renderer="pagination">
+			<a class="icon item" id="prev">
+				<i class="left chevron icon"></i>
+			</a>
+			<a class="icon item" id="next">
+				<i class="right chevron icon"></i>
+			</a>
+			<div class="item">
+			    <div class="ui action input">
+			      <input type="text" placeholder="Page" style="width:80px;">
+			      <div class="ui button">Go</div>
+			    </div>
+			</div>
+			<script constructor>
+				var me = this;
+				this.$el.find('#prev').on('click', function(){
+					if($(this).is('.disabled')) return;
+					var table = me.$el.findRoot().root;
+					table.navigatePage(table.page - 1);
+				})
+				this.$el.find('#next').on('click', function(){
+					if($(this).is('.disabled')) return;
+					var table = me.$el.findRoot().root;
+					table.navigatePage(table.page * 1 + 1);
+				})
+				this.$el.on('click', '.page-num', function(e){
+					if($(this).is('.active')) return;
+					var table = me.$el.findRoot().root;
+					table.navigatePage($(this).data('page'));
+				})
+				this.$el.find('.button').click(function(){
+					var page = me.$el.find('input').val() * 1 - 1;
+					var table = me.$el.findRoot().root;
+					if(isNaN(page) || page < 0) page = 0;
+					if(page > table.pageCount - 1){
+						page = table.pageCount - 1;
+					}
+					table.navigatePage(page);
+				})
+				this.$el.bindRenderers({
+					pagination: function(e, table){
+						var isFirstPage = (table.page == 0);
+						var isLastPage = (table.page >= table.pageCount -1);
+						if(isFirstPage){
+							me.$el.find('#prev').addClass('disabled')
+						} else {
+							me.$el.find('#prev').removeClass('disabled')
+						}
+						if(isLastPage){
+							me.$el.find('#next').addClass('disabled')
+						} else {
+							me.$el.find('#next').removeClass('disabled')
+						}
+						
+						me.$el.find('.page-num').remove();
+						var el = me.$el.find('#prev');
+						var ignoring = false;
+						var NUM = (me.$el.attr('page-nearby') || 3) * 1;
+						for(var i=0; i < table.pageCount; i++){
+							if(i == 0 || i == table.pageCount - 1 || (i > table.page - NUM && i < table.page + NUM)){
+								ignoring = false;
+								var $a = $(document.createElement('a')).insertAfter(el)
+								el = $a;
+								$a.addClass('item page-num').data('page', i).html(i+1);
+								if(i == table.page){
+									$a.addClass('active');
+								}
+							} else {
+								if(ignoring) continue;
+								ignoring = true;
+								var $a = $(document.createElement('a')).insertAfter(el)
+								el = $a;
+								$a.html('...').addClass('item page-num disabled');
+							}
+						}
+					}
+				})
+			</script>
+		</div>
 	</template>
 
 
