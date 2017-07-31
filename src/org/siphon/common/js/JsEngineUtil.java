@@ -411,4 +411,19 @@ public class JsEngineUtil {
 		return null;
 	}
 	
+	public static Object getGlobal(ScriptObjectMirror scriptObjectMirror){
+		Field globalField = null;
+		try {
+			globalField = ScriptObjectMirror.class.getDeclaredField("global");
+			globalField.setAccessible(true);
+			Object global = globalField.get(scriptObjectMirror);
+			return global;
+		} catch (NoSuchFieldException e) {
+		} catch (SecurityException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
+		}
+		return null;
+	}
+	
 }

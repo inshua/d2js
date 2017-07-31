@@ -4,19 +4,6 @@ d2js.fetch = function(params){
 	.}
 
 	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
-	
-	logger.info('start jackson');
-	for(var i=0; i<10000; i++){
-		JSON.stringify(r);
-	}
-	logger.info('complete');
-	
-	logger.info('start native');
-	for(var i=0; i<10000; i++){
-		JSON.oldStringify(r);
-	}
-	logger.info('complete');
-	
 	return r;
 }
 
