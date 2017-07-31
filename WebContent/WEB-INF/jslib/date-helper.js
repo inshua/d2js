@@ -58,5 +58,15 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	}
 })();
 
+Date.prototype.toInstant = function(){
+	return Instant.ofEpochMilli(this.getTime() * 1);
+}
 
-	
+Date.prototype.toZonedDateTime = function(zoneId){
+	if(ZoneId.class.isInstance(zoneId)){
+		//
+	} else {
+		zoneId = ZoneId.of(zoneId);
+	}
+	return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getTime() * 1), zoneId);
+}
