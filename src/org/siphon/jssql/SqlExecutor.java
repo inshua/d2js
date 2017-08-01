@@ -39,9 +39,12 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -155,6 +158,8 @@ public class SqlExecutor {
 				this.postgreSQL = true;
 			} else if ("oracle.jdbc.driver.OracleDriver".equals(this.driverClass)) {
 				this.oracle = true;
+			} else if(this.driverClass.contains("mysql")){
+				this.mySql = true;
 			}
 		}
 	}
@@ -273,7 +278,7 @@ public class SqlExecutor {
 			}
 			return result;
 
-		} catch (SQLException | UnsupportedDataTypeException | ScriptException e) {
+		} catch (SQLException | UnsupportedDataTypeException | ScriptException | NoSuchMethodException e) {
 			errorOccu = true;
 			throw new SqlExecutorException("error occurs when execute " + callProcStmt + " with args : "
 					+ JSON.tryStringify(args), e);
@@ -315,7 +320,7 @@ public class SqlExecutor {
 			setArgs(ps, args);
 			return ps.executeUpdate();
 
-		} catch (SQLException | UnsupportedDataTypeException e) {
+		} catch (SQLException | UnsupportedDataTypeException | NoSuchMethodException | ScriptException e) {
 			errorOccu = true;
 			throw new SqlExecutorException("error occurs when execute " + sql + " with args : " + JSON.tryStringify(args), e);
 		} finally {
@@ -369,7 +374,7 @@ public class SqlExecutor {
 
 			ScriptObjectMirror arr = rsToDataTable(rs);
 			return  returnSealed ? jsTypeUtil.getSealed(arr) : arr;	// JSON.stringify(arr)
-		} catch (SQLException | UnsupportedDataTypeException | ScriptException e) {
+		} catch (SQLException | UnsupportedDataTypeException | ScriptException | NoSuchMethodException e) {
 			errorOccu = true;
 			throw new SqlExecutorException("error occurs when query " + sql + " with args : " + JSON.tryStringify(args), e);
 		} finally {
@@ -456,7 +461,7 @@ public class SqlExecutor {
 				return null;
 			}
 
-		} catch (SQLException | UnsupportedDataTypeException e) {
+		} catch (SQLException | UnsupportedDataTypeException | NoSuchMethodException | ScriptException e) {
 			errorOccu = true;
 			throw new SqlExecutorException("error occurs when query " + sql + " with args : " + JSON.tryStringify(args), e);
 		} finally {
@@ -533,7 +538,7 @@ public class SqlExecutor {
 					break;
 				}
 			}
-		} catch (SQLException | UnsupportedDataTypeException | ScriptException e) {
+		} catch (SQLException | UnsupportedDataTypeException | ScriptException | NoSuchMethodException e) {
 			errorOccu = true;
 			throw new SqlExecutorException("error occurs when query " + sql + " with args : " + JSON.tryStringify(args), e);
 		} finally {
@@ -620,8 +625,9 @@ public class SqlExecutor {
 		case Types.DATE:
 		case Types.TIME:
 		case Types.TIMESTAMP:
+		case Types.TIME_WITH_TIMEZONE:
 			return "DATE";
-
+			
 		case Types.ROWID:
 			return "ROWID";
 
@@ -673,6 +679,11 @@ public class SqlExecutor {
 				obj = rs.getTime(columnName);
 			case Types.TIMESTAMP:
 				obj = rs.getTimestamp(columnName);
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				obj = rs.getTimestamp(columnName);
+				// PG 的 TIMESTAMP WITH TIMEZONE 不会真正存储时区信息
+				// 同时 JDBC 也没有适当的方法从数据库提取时区信息
+				// 现在虽然靠 joda 打通了时区，遗憾的是数据库和 jdbc 支持都不好
 			}
 
 		}
@@ -681,165 +692,180 @@ public class SqlExecutor {
 	}
 
 	private void setArgs(PreparedStatement ps, NativeArray args) throws SqlExecutorException, SQLException,
-			UnsupportedDataTypeException {
+			UnsupportedDataTypeException, NoSuchMethodException, ScriptException {
 		for (int i = 0; i < JsTypeUtil.getArrayLength(args); i++) {
-			Object arg = args.get(i);
-			
-			boolean output = false;
-			int outputParameterType = 0;
-			CallableStatement cs = null;
-			if (ps instanceof CallableStatement) {
-				cs = (CallableStatement) ps;
-				if (arg instanceof ScriptObjectMirror && ((ScriptObjectMirror) arg).containsKey("OUT")) {
-					ScriptObjectMirror jsarg = ((ScriptObjectMirror) arg);
-					outputParameterType = (int) jsarg.get("JDBC_TYPE");
-					arg = jsarg.get("VALUE");
-					output = true;
-				}
-			}
-			if (output) {
-				cs.registerOutParameter(i + 1, outputParameterType);
-				if (JsTypeUtil.isNull(arg) || (arg instanceof Double && Double.isNaN((Double) arg))) {
-					continue;
-				}
-			}
-			
-			if (JsTypeUtil.isNull(arg)) {
-				ps.setObject(i + 1, null);
-			} else if (arg instanceof String) {
-				ps.setString(i + 1, (String) arg);
-			} else if(arg instanceof ConsString){
-				ps.setString(i + 1, arg.toString());
-			} else if( arg instanceof NativeString){
-				ps.setString(i + 1, arg.toString());
-			} else if (arg instanceof Double) { // js number always be
-												// Double，but if its came from
-												// JSON.parse， since JSON is jdk
-												// given global object, it will
-												// make Integer and ...
-				double d = ((Double) arg).doubleValue();
-				if (d == (int) d) {
-					ps.setInt(i + 1, (int) d);
-				} else if (d == (long) d) {
-					ps.setLong(i + 1, (long) d);
-				} else {
-					ps.setBigDecimal(i + 1, new BigDecimal(d));
-				}
-			} else if (arg instanceof Integer) {
-				ps.setInt(i + 1, (Integer) arg);
-			} else if (arg instanceof Long) {
-				ps.setLong(i + 1, (Long) arg);
-			} else if (arg instanceof Float) {
-				ps.setFloat(i + 1, (Float) arg);
-			} else if (jsTypeUtil.isNativeDate(arg)) {
-				ps.setTimestamp(i + 1, parseDate(arg));
-			} else if (arg instanceof Boolean) {
-				ps.setBoolean(i + 1, JsTypeUtil.isTrue(arg));
-			} else if (arg instanceof ScriptObjectMirror || arg instanceof ScriptObject) {
-				String attr = null;
-				Object value = null;
-				if(arg instanceof ScriptObjectMirror){
-					ScriptObjectMirror atm = (ScriptObjectMirror) arg;
-	
-					attr = atm.keySet().iterator().next();
-					value = atm.get(attr);
-				} else {
-					ScriptObject obj = (ScriptObject) arg;
-					String[] arr = obj.getOwnKeys(false);
-					if(arr.length == 0){
-						throw new SqlExecutorException("js argument " + arg + " (" + arg.getClass() + ") at " + i +  " is an empty js object");
-					}
-					attr = arr[0];
-					value = obj.get(attr);
-				}
-
-				if ("STRING".equals(attr)) {
-					ps.setString(i + 1, String.valueOf(value));
-				} else if ("DECIMAL".equals(attr)) {
-					if (value instanceof Double) {
-						ps.setBigDecimal(i + 1, new BigDecimal((Double) value));
-					} else {
-						ps.setBigDecimal(i + 1, new BigDecimal(value + ""));
-					}
-				} else if ("INT".equals(attr)) {
-					if (value instanceof Double) {
-						if (((Double) value).isNaN()) {
-							ps.setObject(i + 1, null);
-						} else {
-							ps.setInt(i + 1, ((Double) value).intValue());
-						}
-					} else {
-						ps.setInt(i + 1, new Integer(value + ""));
-					}
-				} else if ("BOOLEAN".equals(attr)) {
-					ps.setBoolean(i + 1, JsTypeUtil.isTrue(arg));
-				} else if ("DOUBLE".equals(attr)) {
-					if (value instanceof Double) {
-						if (((Double) value).isNaN()) {
-							ps.setObject(i + 1, null);
-						} else {
-							ps.setDouble(i + 1, (double) value);
-						}
-					} else {
-						ps.setDouble(i + 1, new Double(value + ""));
-					}
-				} else if ("FLOAT".equals(attr)) {
-					if (value instanceof Double) {
-						if (((Double) value).isNaN()) {
-							ps.setObject(i + 1, null);
-						} else {
-							ps.setFloat(i + 1, (float) (double) value);
-						}
-					} else {
-						ps.setFloat(i + 1, new Float(value + ""));
-					}
-				} else if ("DATE".equals(attr)) {
-					ps.setTimestamp(i + 1, parseDate(value));
-				} else if ("TIME".equals(attr)) {
-					ps.setTimestamp(i + 1, parseTime(value));
-				} else if ("BINARY".equals(attr)) {
-					ps.setBytes(i + 1, parseBinary(value));
-				} else if ("CLOB".equals(attr)) {
-					Clob clob = ps.getConnection().createClob();
-					clob.setString(1, String.valueOf(value));
-					ps.setClob(i + 1, clob);
-				} else if ("LONG".equals(attr)) {
-					if (value instanceof Double) {
-						if (((Double) value).isNaN()) {
-							ps.setObject(i + 1, null);
-						} else {
-							ps.setLong(i + 1, ((Double) value).longValue());
-						}
-					} else {
-						ps.setLong(i + 1, new Long(value + ""));
-					}
-				} else if ("OUTCURSOR".equals(attr)) {
-					// cs.registerOutParameter(i+1, OracleTypes.CURSOR);
-					cs.registerOutParameter(i + 1, -10);
-				} else if ("ARRAY".equals(attr)) {
-					ps.setArray(i + 1, createSqlArray(ps.getConnection(), (NativeArray) value));
-					// ps.setObject(i+1, createSqlArray(ps.getConnection(),
-					// (NativeArray) value));
-				} else if ("JSON".equals(attr) || "JSONB".equals(attr)){
-					PGobject obj = new PGobject();
-					obj.setType(attr.toLowerCase());
-					obj.setValue(this.JSON.tryStringify(value));
-					ps.setObject(i + 1, obj);
-				} else {
-					if(this.defaultJsonDbType != null){
-						PGobject obj = new PGobject();
-						obj.setType(this.defaultJsonDbType);
-						obj.setValue(this.JSON.tryStringify(arg));
-						ps.setObject(i + 1, obj);
-					} else {
-						throw new SqlExecutorException("js argument " + arg + " (" + arg.getClass() + ") not support");
-					}
-				}
-			} else {
-				throw new SqlExecutorException("js argument " + arg + " (" + arg.getClass() + ") at " + i +  " not support");
-			}
+			setArg(ps, i, args.get(i));
 		}
 
+	}
+
+	void setArg(PreparedStatement ps, int index, Object arg)
+			throws SQLException, SqlExecutorException, UnsupportedDataTypeException, NoSuchMethodException, ScriptException {
+		boolean output = false;
+		int outputParameterType = 0;
+		CallableStatement cs = null;
+		if (ps instanceof CallableStatement) {
+			cs = (CallableStatement) ps;
+			if (arg instanceof ScriptObjectMirror && ((ScriptObjectMirror) arg).containsKey("OUT")) {
+				ScriptObjectMirror jsarg = ((ScriptObjectMirror) arg);
+				outputParameterType = (int) jsarg.get("JDBC_TYPE");
+				arg = jsarg.get("VALUE");
+				output = true;
+			}
+		}
+		if (output) {
+			cs.registerOutParameter(index + 1, outputParameterType);
+			if (JsTypeUtil.isNull(arg) || (arg instanceof Double && Double.isNaN((Double) arg))) {
+				return;
+			}
+		}
+		
+		if (JsTypeUtil.isNull(arg)) {
+			ps.setObject(index + 1, null);
+		} else if (arg instanceof CharSequence) {
+			ps.setString(index + 1, arg.toString());
+		} else if( arg instanceof NativeString){
+			ps.setString(index + 1, arg.toString());
+		} else if (arg instanceof Double) { // js number always be
+											// Double，but if its came from
+											// JSON.parse， since JSON is jdk
+											// given global object, it will
+											// make Integer and ...
+			double d = ((Double) arg).doubleValue();
+			if (d == (int) d) {
+				ps.setInt(index + 1, (int) d);
+			} else if (d == (long) d) {
+				ps.setLong(index + 1, (long) d);
+			} else {
+				ps.setBigDecimal(index + 1, new BigDecimal(d));
+			}
+		} else if (arg instanceof Integer) {
+			ps.setInt(index + 1, (Integer) arg);
+		} else if (arg instanceof Long) {
+			ps.setLong(index + 1, (Long) arg);
+		} else if (arg instanceof Float) {
+			ps.setFloat(index + 1, (Float) arg);
+		} else if (jsTypeUtil.isNativeDate(arg)) {
+			ps.setTimestamp(index + 1, parseDate(arg));
+		} else if(arg instanceof ZonedDateTime){
+			ZonedDateTime zdt = (ZonedDateTime) arg;
+			ps.setTimestamp(index + 1, Timestamp.valueOf(zdt.toLocalDateTime()), Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone())));
+		} else if (arg instanceof Boolean) {
+			ps.setBoolean(index + 1, JsTypeUtil.isTrue(arg));
+		} else if (arg instanceof ScriptObjectMirror || arg instanceof ScriptObject) {
+			String attr = null;
+			Object value = null;
+			if(arg instanceof ScriptObjectMirror){
+				ScriptObjectMirror atm = (ScriptObjectMirror) arg;
+				if(atm.keySet().contains("toJavaObject")){
+					Object obj = atm.callMember("toJavaObject");
+					setArg(ps, index, obj);
+					return;
+				}
+
+				attr = atm.keySet().iterator().next();
+				value = atm.get(attr);
+			} else {
+				ScriptObject obj = (ScriptObject) arg;
+				if(obj.containsKey("toJavaObject")){
+					ScriptObjectMirror atm = (ScriptObjectMirror) jsTypeUtil.toScriptObjectMirror(obj);
+					Object result = atm.callMember("toJavaObject");
+					setArg(ps, index, result);
+					return;
+				}
+				String[] arr = obj.getOwnKeys(false);
+				if(arr.length == 0){
+					throw new SqlExecutorException("js argument " + arg + " (" + arg.getClass() + ") at " + index +  " is an empty js object");
+				}
+				attr = arr[0];
+				value = obj.get(attr);
+			}
+
+			if ("STRING".equals(attr)) {
+				ps.setString(index + 1, String.valueOf(value));
+			} else if ("DECIMAL".equals(attr)) {
+				if (value instanceof Double) {
+					ps.setBigDecimal(index + 1, new BigDecimal((Double) value));
+				} else {
+					ps.setBigDecimal(index + 1, new BigDecimal(value + ""));
+				}
+			} else if ("INT".equals(attr)) {
+				if (value instanceof Double) {
+					if (((Double) value).isNaN()) {
+						ps.setObject(index + 1, null);
+					} else {
+						ps.setInt(index + 1, ((Double) value).intValue());
+					}
+				} else {
+					ps.setInt(index + 1, new Integer(value + ""));
+				}
+			} else if ("BOOLEAN".equals(attr)) {
+				ps.setBoolean(index + 1, JsTypeUtil.isTrue(arg));
+			} else if ("DOUBLE".equals(attr)) {
+				if (value instanceof Double) {
+					if (((Double) value).isNaN()) {
+						ps.setObject(index + 1, null);
+					} else {
+						ps.setDouble(index + 1, (double) value);
+					}
+				} else {
+					ps.setDouble(index + 1, new Double(value + ""));
+				}
+			} else if ("FLOAT".equals(attr)) {
+				if (value instanceof Double) {
+					if (((Double) value).isNaN()) {
+						ps.setObject(index + 1, null);
+					} else {
+						ps.setFloat(index + 1, (float) (double) value);
+					}
+				} else {
+					ps.setFloat(index + 1, new Float(value + ""));
+				}
+			} else if ("DATE".equals(attr)) {
+				ps.setTimestamp(index + 1, parseDate(value));
+			} else if ("TIME".equals(attr)) {
+				ps.setTimestamp(index + 1, parseTime(value));
+			} else if ("BINARY".equals(attr)) {
+				ps.setBytes(index + 1, parseBinary(value));
+			} else if ("CLOB".equals(attr)) {
+				Clob clob = ps.getConnection().createClob();
+				clob.setString(1, String.valueOf(value));
+				ps.setClob(index + 1, clob);
+			} else if ("LONG".equals(attr)) {
+				if (value instanceof Double) {
+					if (((Double) value).isNaN()) {
+						ps.setObject(index + 1, null);
+					} else {
+						ps.setLong(index + 1, ((Double) value).longValue());
+					}
+				} else {
+					ps.setLong(index + 1, new Long(value + ""));
+				}
+			} else if ("OUTCURSOR".equals(attr)) {
+				// cs.registerOutParameter(i+1, OracleTypes.CURSOR);
+				cs.registerOutParameter(index + 1, -10);
+			} else if ("ARRAY".equals(attr)) {
+				ps.setArray(index + 1, createSqlArray(ps.getConnection(), (NativeArray) value));
+				// ps.setObject(i+1, createSqlArray(ps.getConnection(),
+				// (NativeArray) value));
+			} else if ("JSON".equals(attr) || "JSONB".equals(attr)){
+				PGobject obj = new PGobject();
+				obj.setType(attr.toLowerCase());
+				obj.setValue(this.JSON.tryStringify(value));
+				ps.setObject(index + 1, obj);
+			} else {
+				if(this.defaultJsonDbType != null){
+					PGobject obj = new PGobject();
+					obj.setType(this.defaultJsonDbType);
+					obj.setValue(this.JSON.tryStringify(arg));
+					ps.setObject(index + 1, obj);
+				} else {
+					throw new SqlExecutorException("js argument " + arg + " (" + arg.getClass() + ") not support");
+				}
+			}
+		} else {
+			throw new SqlExecutorException("js argument " + arg + " (" + arg.getClass() + ") at " + index +  " not support");
+		}
 	}
 
 	private Object convertJsObjToJavaType(Object arg) throws UnsupportedDataTypeException, SqlExecutorException {

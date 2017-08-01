@@ -29,12 +29,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 
 import javax.script.Invocable;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.script.SimpleScriptContext;
 
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -390,4 +393,37 @@ public class JsEngineUtil {
 			}
 		}
 	}
+	
+	public static Object getGlobal(ScriptEngine engine){
+		ScriptContext context = engine.getContext();
+		ScriptObjectMirror binding = (ScriptObjectMirror) context.getBindings(ScriptContext.ENGINE_SCOPE);
+		Field globalField = null;
+		try {
+			globalField = ScriptObjectMirror.class.getDeclaredField("global");
+			globalField.setAccessible(true);
+			Object global = globalField.get(binding);
+			return global;
+		} catch (NoSuchFieldException e) {
+		} catch (SecurityException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
+		}
+		return null;
+	}
+	
+	public static Object getGlobal(ScriptObjectMirror scriptObjectMirror){
+		Field globalField = null;
+		try {
+			globalField = ScriptObjectMirror.class.getDeclaredField("global");
+			globalField.setAccessible(true);
+			Object global = globalField.get(scriptObjectMirror);
+			return global;
+		} catch (NoSuchFieldException e) {
+		} catch (SecurityException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
+		}
+		return null;
+	}
+	
 }

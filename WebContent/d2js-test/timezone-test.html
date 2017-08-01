@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>d2js</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
+<script src="../jslib/jquery-3.2.1.js"></script>
+<script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+
+<script src="../jslib/js-joda.js"></script>
+<script src="../jslib/js-joda-timezone.js"></script>
+<script>
+	JSJoda.use(JSJodaTimezone)
+</script>
+
+<script src="../jslib/d2js/dataset.js"></script>
+<script src="../jslib/d2js/render.js"></script>
+<script src="../jslib/d2js/renderers.js"></script>
+<script src="../jslib/d2js/bootstrap-renderers.js"></script>
+
+<script src="../jslib/d2js/collector.js"></script>
+<script src="../jslib/d2js/pipelines.js"></script>
+<script src="../jslib/molecule.js"></script>
+
+</head>
+<body>
+	<div class="container" d2js.root="timezone-test">
+		<h1>表格编辑</h1>
+		<div>
+			<form class="form-inline">
+			  <div class="form-group">
+			    <label>Name</label>
+			    <input type="text" class="form-control" placeholder="" data="search,params,name" collector="c|s">
+			  </div>
+			  <button type="button" class="btn btn-default" onclick="search($(this).parent('form'))">Search</button>
+			  <button type="button" class="btn" onclick="addRow()">Add</button>
+			  <button type="button" class="btn" onclick="createTable()">Create Table</button>
+			</form>
+		</div>
+		<div data="error" renderer="stderr"></div>
+		<table class="table table-striped" data="this" renderer="table">
+			<thead>
+				<tr>
+					<th data-t="id" renderer="std">
+						<a data="this" renderer="sortLink('id', 'id')"/>
+					</th>
+					<th data-t="mail_to" renderer="std">
+						mail to
+					</th>
+					<th data-t="mail_at" renderer="std">
+						<a data="this" renderer="sortLink('mail_at', 'Mail At')"/>
+					</th>
+					<th data-t="id" renderer="editLink"></th>
+ 				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<td colspan="10000" align="center">
+						<nav>
+							<ul class="pagination" data="this" renderer="pagination">
+							</ul>
+						</nav>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+
+		<!-- Modal -->
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" d2js.root=",curr">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        <h4 class="modal-title" id="myModalLabel">Edit <span data="first_name" renderer="std"/></h4>
+		      	<div data="_error" renderer="stderr"></div>
+		      </div>
+		      <div class="modal-body">
+		      	<form>
+		          <div class="form-group" data="_error_at,mail_to" renderer="flderr" trace>
+				    <label>Mail To</label>
+				    <input type="email" class="form-control" data="mail_to" renderer="std" collector="c|s">
+				  </div>
+				  <div class="form-group" data="_error_at,mail_at" renderer="flderr" id="date">
+				    <label>Mail At</label>
+				    <input type="mail_at" class="form-control" data="mail_at" collector="c|zdt|s" renderer="std">
+				  	<button>Asia/Shanghai</button>
+				  	<button>Europe/Berlin</button>
+				  	<button>America/Chicago</button>
+				  </div>
+				</form>        
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		        <button type="button" class="btn btn-primary" onclick="save()">Save changes</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+		
+	</div>
+</body>
+<script>
+	d2js.Renderers.editLink = function(element, v){
+		var a = $(document.createElement('a')).appendTo(element);
+		a.html('EDIT');
+		a.attr('href', '###');
+		a.data('id', v);
+		a.on('click', function(){
+			editRow($(this).findRoot().root);
+		});
+	}
+	d2js.Renderers.sortLink = function(colName, text){
+		return function(element, table){
+			var e = $(element);
+			e.attr('href', '###');
+			element.onclick =  function(){
+				var sort = {};
+				var old = table.search._sorts && table.search._sorts[colName];
+				if(old == 'asc'){
+					sort[colName] = 'desc';
+				} else {
+					sort[colName] = 'asc';
+				}
+				table.search._sorts = sort;
+				table.load();
+			};
+			var icon =  null;
+			var sorts = table.search._sorts || {};
+			switch(sorts[colName]){
+			case 'asc' : icon = 'glyphicon glyphicon-arrow-up'; break;
+			case 'desc' : icon = 'glyphicon glyphicon-arrow-down'; break;
+			}
+			e.html(text + (icon ? '<span class="'  + icon + '">' : ''));
+		}
+	}
+	
+	function editRow(row){
+		table.curr = row;
+		
+		$('#myModal').bindRoot().render();
+		
+		$('#myModal').modal('show');
+	}
+	
+	$('#myModal').on('hide.bs.modal', function() {
+	    table.reject();
+	    table.clearError();
+	    d2js.render();
+	});
+
+	function search(form){
+		d2js.collect(form[0]);
+		table.load();
+	}
+	
+	function save() {
+		d2js.collect();
+		
+		table.submit({callback : function(error){
+			d2js.render();
+			if(!error){
+				$('#myModal').modal('hide');
+				this.reload();
+			}
+		}});
+	}
+</script>
+<script>
+
+	d2js.Collectors.zdt = function(element, value){
+		return JSJoda.ZonedDateTime.parse(value);
+	}
+
+	var table = new d2js.DataTable('timezone-test', 'timezone-test.d2js', {pageSize : 5});
+	table.on('load',  function(error) {
+		d2js.render(null, this);
+	});
+	
+	table.load({ _m : 'fetch'});
+	
+	function addRow(){
+		editRow(table.addRow({mail_to:'test@gmail.com', mail_at: JSJoda.ZonedDateTime.now()}));
+	}
+	
+	$(function(){
+		$(document).on('click', '#date button', function(){
+			var $input = $(this).prevUntil('input[type=text]').last().next();
+			var arr = $input.locateData();
+			var zoneId = JSJoda.ZoneId.of($(this).html());
+			(function(zdt, col, row){
+				zdt = zdt.withZoneSameInstant(zoneId);
+				row._set(col, zdt);
+			}).apply(null, arr);
+			$input.render();
+		})
+	});
+	
+	function createTable(){
+		d2js.load('timezone-test.d2js', 'createTable', function(result, error){
+			if(error){
+				alert(error);
+			} else {
+				alert('success');
+				table.reload()
+			}
+		})	
+	}
+	
+</script>
+</html>

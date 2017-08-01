@@ -342,6 +342,7 @@ function T(){}
 T.int = {
       name : 'int',
       check : function(v, fld, rcd){
+    	    if(v == null || v=='') return;
 			var n = v * 1;
 			if(isNaN(n)) return '此处需要填入整数';
 			if(n != Math.floor(n)) return '数字' + n +'不是整数'

@@ -320,8 +320,38 @@ function parseDate(key, value) {
     }
     return value;
 }
-parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z?)?$/;
+parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d))?)?$/;
 
+if(typeof JSJoda != 'undefined'){
+	parseDate = function(key, value) {
+	    if (typeof value === 'string') {
+	    	if(parseDate.reg.test(value)){
+	    		return JSJoda.ZonedDateTime.parse(value);
+	    	}
+	    }
+	    return value;
+	}
+	parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d(\[\w+\/\w+\])?))?)?$/;
+
+	/**
+	 * https://stackoverflow.com/questions/31096130/how-to-json-stringify-a-javascript-date-and-preserve-timezone
+	 */
+	Date.prototype.toJSON = function () {
+	  var timezoneOffsetInHours = -(this.getTimezoneOffset() / 60); //UTC minus local time
+	  var sign = timezoneOffsetInHours >= 0 ? '+' : '-';
+	  var leadingZero = (timezoneOffsetInHours < 10) ? '0' : '';
+
+	  //It's a bit unfortunate that we need to construct a new Date instance 
+	  //(we don't want _this_ Date instance to be modified)
+	  var correctedDate = new Date(this.getFullYear(), this.getMonth(), 
+	      this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds(), 
+	      this.getMilliseconds());
+	  correctedDate.setHours(this.getHours() + timezoneOffsetInHours);
+	  var iso = correctedDate.toISOString().replace('Z', '');
+
+	  return iso + sign + leadingZero + Math.abs(timezoneOffsetInHours).toString() + ':00';
+	}
+}
 
 /**
  * 设置状态
@@ -1285,3 +1315,85 @@ d2js.DataRow = function(table, rowData){
 		this[cname] = rowData && rowData[cname]; 	// JSON传来的数据已经去除了 '', undefined 之类似 null, 故不调用 processValue
 	}
 }
+
+/**
+ * 按 d2js 的传输机制加载任意请求的数据
+ * 如：
+ * ```js
+ * d2js.load('autor.d2js', function(result, error){
+ * 	// actions
+ * });
+ * ```
+ * @param url {string} 请求的 url
+ * @param [method='fetch'] {string} d2js 方法，放在 params 中作为 params._m 也可 
+ * @param [params] {object} 查询参数，如 *{[_m : method], param1 : value1, param2 : value2, ...}*
+ * @param option {object|function} 可提供 **function(exception){}** 或 **{ callback : function(ex){}, timeout : 30000, async : true, method : 'GET'}**
+ */
+d2js.load = function(url, method, params, option){
+	if(method instanceof Object){
+		option = params;
+		params = method;
+		method = params._m;
+	}
+	
+	if(params instanceof Function){
+		option = params;
+		params = null;
+	}
+	if(option == null) option = {};
+	if(option instanceof Function){
+		option = {callback : option};
+	}
+
+	var q = {};
+	if(params){
+		for(var k in params){
+			q[k] = params[k];
+		}
+	} 
+	
+	method = method || q._m || 'fetch';
+	
+	$.ajax({
+		url : url,
+		data : {_m : method, params : JSON.stringify(q)}, 
+		type : option.method || 'post',
+		timeout : option.timeout || 30000,
+		async : option.async != null ? option.async : true,
+		dataType : 'text',
+		success : onSuccess,
+		error : function (error){
+			onError(new Error(error.responseText || 'cannot establish connection to server'));
+		}
+	});
+	
+	function onSuccess(text, status){
+		var isJson = false;
+		try{
+			var result = JSON.parse(text, parseDate);
+			isJson = true;
+		} catch(e){}
+		
+		if(isJson){
+			if(!result.error){
+				if(option && option.callback){
+					option.callback.call(null, result);
+				}
+			} else {
+				var error =  typeof result.error == 'string' ? new Error(result.error) : Object.assign(new Error(), result.error);
+				onError(error);
+			}
+		} else {
+			onError(new Error(text));
+		}
+	}
+	
+	function onError(error){
+		if(option && option.callback){
+			option.callback.call(null, null, error);
+		} else {
+			throw error;
+		}
+	}
+}
+

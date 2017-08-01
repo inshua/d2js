@@ -157,39 +157,6 @@ if (typeof Object.assign != 'function') {
   };
 }
 
-/**
- * override function, in fun can use callSuper() invoke prev function
- * usage:
- * ```js
- * 	d2js.create.override = function(rcd){
- * 		this.create.applySuper(this, arguments);	// or this.create.callSuper(this, rcd)
- * 		...
- * 	}
- * ```
- */
-Function.prototype.override = function(fun){
-	var oldFun = this;
-	fun.applySuper = function(thiz, arguments){
-		return oldFun.apply(thiz, arguments);
-	}
-	fun.callSuper = function(thiz){
-		return oldFun.apply(thiz, Array.prototype.slice.call(arguments,1));
-	}
-	return fun;
-}
-
-Object.overrides = function(object, members){
-	for(var k in members){if(members.hasOwnPorperty(k)){
-		var m = members[k];
-		var old = object[k];
-		if(old instanceof Function && m instanceof Function){
-			old.override(m);
-		} else {
-			object[k] = m;
-		}
-	}}
-}
-
 var JsTypeUtil = Java.type('org.siphon.common.js.JsTypeUtil');
 /**
  * 将本对象转为Java对象，为 JsTypeUtil.jsObjectToJava 的包装。
@@ -366,3 +333,4 @@ function translateObject(obj, originAttrs, map){
 	}
 	return result;
 }
+
