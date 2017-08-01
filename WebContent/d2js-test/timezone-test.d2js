@@ -1,0 +1,38 @@
+d2js.exports.createTable = 
+d2js.createTable = function(){
+	sql{.
+		create table tz_test
+		(
+		 	id serial primary key,
+		 	mail_to varchar(200),
+		 	mail_at timestamp,
+		 	mail_at_tz varchar(40)
+		)
+	.}
+	this.execute(sql);
+}
+
+d2js.fetch = function(params){
+	sql{.
+		select * from tz_test
+	.}
+	return this.query(sql, params).mergeTimeZone({mail_at: 'mail_at_tz'});
+}
+
+d2js.create = function(rcd){
+	$V(this, rcd, {
+		mail_at : T.splitTimeZone('mail_at_tz')
+	});
+	return this.insertRow('tz_test', rcd, ['mail_to', 'mail_at', 'mail_at_tz']);
+}
+
+d2js.modify = function(rcd){
+	$V(this, rcd, {
+		mail_at : T.splitTimeZone('mail_at_tz')
+	});
+	return this.updateRow('tz_test', rcd, ['mail_to', 'mail_at', 'mail_at_tz']);
+}
+
+d2js.destroy = function(rcd){
+	return this.deleteRow('tz_test', rcd);
+}

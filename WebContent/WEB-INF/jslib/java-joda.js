@@ -58,10 +58,23 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	}
 })();
 
+/**
+ * 将 js Date 类型转为 java.time.Instant
+ * @returns {java.time.Instant} 
+ */
 Date.prototype.toInstant = function(){
 	return Instant.ofEpochMilli(this.getTime() * 1);
 }
 
+/**
+ * 将 js Date 类型转为 java.time.ZonedDateTime
+ * usage:
+ * ```js
+ * 	new Date().toZonedDateTime('Europe/Berlin')
+ * ```
+ * @param zoneId {java.time.ZoneId|string} 时区
+ * @returns {java.time.ZonedDateTime} 
+ */
 Date.prototype.toZonedDateTime = function(zoneId){
 	if(ZoneId.class.isInstance(zoneId)){
 		//
@@ -70,3 +83,51 @@ Date.prototype.toZonedDateTime = function(zoneId){
 	}
 	return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getTime() * 1), zoneId);
 }
+
+/**
+ * 根据提供的转换规则，将 timestamp 和属于它的 zone (varchar) 字段合并
+ * usage:
+ * ```js
+ * 	this.query('select now()::timestamp now, 'Europe/Berlin'::varchar(40) tz').mergeTimeZone({now:'tz'})
+ * ```
+ * @param timestampZoneMap {object} {field: timezoneField, ...}，可以有多个字段
+ * @returns {D2JS.DataTable} this 
+ */
+D2JS.DataTable.prototype.mergeTimeZone = function(timestampZoneMap){
+	for(var col in timestampZoneMap){if(timestampZoneMap.hasOwnProperty(col)){
+		var zoneCol = timestampZoneMap[col];
+		if(this.columns){
+			this.columns.splice(this.columns.findIndex(function(column){return column.name == zoneCol}), 1); 
+		}
+		this.rows.forEach(function(row){
+			var dt = row[col];
+			if(dt != null){
+				row[col] = row[col].toZonedDateTime(row[zoneCol]);
+			}
+		});
+	}}
+	return this;
+}
+
+/**
+ * 从 ZonedDateTime 字段分拆出 ZoneId.toString() 并设置到另一个字段，通常就是附属的 timezone 信息字段。
+ * usage:
+ * ```js
+ * 	$V(this, rcd, {post_at: T.splitTimeZone('post_at_tz')})
+ *	// then we got rcd['post_at_tz'] = zone id
+ * ```
+ * @param zoneFld {string} 时区字段
+ */
+T.splitTimeZone =  function(zoneFld){
+     return {name : 'splitTimeZone', check : function(v, fld, rcd){
+			if(v != null){
+				if(ZonedDateTime.class.isInstance(v)){
+					rcd[zoneFld] = v.zone.toString();
+				} else {
+					return v + ' 不是 ZonedDateTime 类型';
+				}
+			}
+		}
+	}
+}
+
