@@ -749,7 +749,7 @@ public class SqlExecutor {
 			ps.setTimestamp(index + 1, parseDate(arg));
 		} else if(arg instanceof ZonedDateTime){
 			ZonedDateTime zdt = (ZonedDateTime) arg;
-			ps.setTimestamp(index + 1, Timestamp.valueOf(zdt.toLocalDateTime()), Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone())));
+			ps.setTimestamp(index + 1, new Timestamp(zdt.toInstant().toEpochMilli()), Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone())));
 		} else if (arg instanceof Boolean) {
 			ps.setBoolean(index + 1, JsTypeUtil.isTrue(arg));
 		} else if (arg instanceof ScriptObjectMirror || arg instanceof ScriptObject) {
