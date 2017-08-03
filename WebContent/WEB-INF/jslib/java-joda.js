@@ -6,7 +6,9 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	LocalDateTime = Java.type('java.time.LocalDateTime'),
 	LocalDate = Java.type('java.time.LocalDate'),
 	LocalTime = Java.type('java.time.LocalTime'),
-	Instant = Java.type('java.time.Instant');
+	Instant = Java.type('java.time.Instant'),
+	TemporalAdjusters = Java.type('java.time.temporal.TemporalAdjusters'),
+	DateTimeFormatter = Java.type('java.time.format.DateTimeFormatter');
 
 
 (function(){
