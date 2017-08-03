@@ -84,6 +84,34 @@ Date.prototype.toZonedDateTime = function(zoneId){
 	return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getTime() * 1), zoneId);
 }
 
+
+/**
+ * 将 Java ZonedDateTime 类型转为 js Date
+ * usage:
+ * ```js
+ * 	Date.from(ZonedDateTime.now())
+ * ```
+ * @returns {Date} 
+ */
+Date.fromZonedDateTime = function(zonedDateTime){
+	if(zonedDateTime == null) return null;
+	return new Date(zonedDateTime.toInstant().toEpochMilli() * 1);
+};
+
+/**
+ * 将 Java Instant 类型转为 js Date
+ * usage:
+ * ```js
+ * 	Date.from(Instant.now())
+ * ```
+ * @returns {Date} 
+ */
+Date.fromInstant = function(instant){
+	if(instant == null) return null;
+	return new Date(instant.toEpochMilli() * 1);
+};
+
+
 /**
  * 根据提供的转换规则，将 timestamp 和属于它的 zone (varchar) 字段合并
  * usage:
