@@ -530,7 +530,8 @@ public class SqlExecutor {
 			while (rs.next()) {
 				ScriptObjectMirror item = jsTypeUtil.newObject();
 				for (int i = 1; i <= rsm.getColumnCount(); i++) {
-					String cname = rsm.getColumnName(i).toLowerCase();
+					String cname = this.useColumnLabelAsName ? rsm.getColumnLabel(i): rsm.getColumnName(i);
+					String label = convertColumnName(cname);
 					item.put(cname, fieldValueToNativeObject(rsm.getColumnType(i), rs, cname));
 				}
 				Object result = NativeFunction.call(traveler, traveler, item.to(ScriptObject.class), columns); // traveler.callMember("call", traveler, item, columns);
