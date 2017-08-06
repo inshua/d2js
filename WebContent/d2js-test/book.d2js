@@ -14,12 +14,23 @@ d2js.fetch = function(params){
 	return this.query(sql, params, params._page);
 }
 
+d2js.validate = function(rcd){
+	logger.info('edit book ' + JSON.stringify(rcd));
+	$V(this, rcd, {
+		title : [V.notNull],
+	});
+}
+
 d2js.create = function(rcd){
+	this.validate(rcd);
+	
 	logger.info('add book ' + JSON.stringify(rcd));
 	this.insertRow('book', rcd, ['title', 'author', 'publish_date', 'kind', 'isbn', 'remarks'])
 }
 
 d2js.modify = function(rcd){
+	this.validate(rcd);
+	
 	logger.info('edit book ' + JSON.stringify(rcd));
 	this.updateRow('book', rcd, ['id', 'title', 'author', 'publish_date', 'kind', 'isbn', 'remarks'])
 }

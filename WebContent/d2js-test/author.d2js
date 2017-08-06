@@ -1,6 +1,6 @@
 d2js.fetch = function(params){
 	sql{.
-		select name as abc_Def, id, email from author where 1 = 1
+		select name, id, email from author where 1 = 1
 	.}
 
 	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);
@@ -17,14 +17,92 @@ d2js.test = function(){
 }
 
 d2js.modify = function(row, columns){
+	logger.info('edit author ' + JSON.stringify(row));
 	$V(this, row, {
-		name : V.notNull,
+		name : [V.notNull],
 		email : [V.email, V.shortest(10)],
 		info : V.attrs(['linkin']),
 		'info,linkin': V.shortest(5)
 	});
 	
 	return this.updateRow('author', row, columns);
+}
+
+
+d2js.updateTable = function(table, parentRow, errors){
+	if(table == null) return;
+	var path = this.request.getServletContext().getContextPath();
+	var src = table.src.replace(path, '');
+	src = this.request.getServletContext().getRealPath(src);
+	var isSelf = parentRow == null;
+	
+	this.doTransaction(function(){
+		for(var i=0;i<table.rows.length; i++){
+			var row = table.rows[i];
+			try{
+				switch(row._state){
+				case 'new' : 
+					if(isSelf){
+						this.create(row, table.columns);
+					} else {
+						this.callD2js(src, 'create', [row, table.columns, parentRow]);
+					}
+					row._children && updateChildren.call(this, row);
+					break;
+				case 'edit' :
+					row._children && updateChildren.call(this, row);
+					if(isSelf){
+						this.modify(row, table.columns);
+					} else {
+						this.callD2js(src, 'modify', [row, table.columns, parentRow]);
+					}
+					break;
+				case 'remove' : 
+					row._children && updateChildren.call(this, row);
+					if(isSelf){
+						this.destroy(row, table.columns);
+					} else {
+						this.callD2js(src, 'destroy', [row, table.columns, parentRow]);
+					}
+					break;
+				case 'none' :
+					row._children && updateChildren.call(this, row);
+					break;
+				}
+			} catch(e){
+				logger.error('occur error at ' + JSON.stringify(row))
+				var err = e;
+				if(e instanceof Throwable){
+					err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
+				} else if(typeof e == 'string'){
+					err = new Error(e);
+				}
+				err.table = table.name;
+				err.idx = row._idx;
+				err._object_id = row._object_id;
+				err.table_id = table._object_id;
+				errors.push(err);
+			}
+		}
+		
+		if(isSelf && errors.length){
+			if(errors.length == 1){ 
+				throw errors[0];
+			} else { 
+				var err = new Error();
+				err.name = "MultiError";
+				err.errors = errors;
+				throw err;
+			}
+		}
+	});
+	
+	
+	function updateChildren(row){
+		for(var i=0;i<row._children.length; i++){
+			this.updateTable(row._children[i], row, errors);
+		}
+	}
 }
 
 

@@ -60,8 +60,8 @@
 		</table>
 
 		<!-- Modal -->
-		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-		  <div class="modal-dialog" role="document" d2js.root=",curr">
+		<div class="modal fade" id="myModal" d2js.root=",curr" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		  <div class="modal-dialog" role="document">
 		    <div class="modal-content">
 		      <div class="modal-header">
 		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -82,12 +82,21 @@
 				    <label>LinkIn</label>
 				    <input type="text" class="form-control" data="info,linkin" renderer="std" collector="c|oc">
 				  </div>
-				  <table class="table table-striped" d2js.root="book" data="this" renderer="table">
+				  <table class="table table-striped" d2js.root="book">
 					<thead>
 						<tr>
-							<th data-t="title" renderer="input('text')" renderer-t="std" collector-t="c|s">Title</th>
+							<th>Title</th>
 		 				</tr>
 					</thead>
+					<tbody data="rows" renderer="repeater">
+						<tr repeater="true">
+							<td>
+								<div class="form-group" data="_error_at,title" renderer="flderr">
+									<input class="form-control" data="title" renderer="std" collector="c|s">
+								</div>
+							</td>
+		 				</tr>
+					</tbody>
 				  </table>
 				</form>        
 		      </div>

@@ -123,14 +123,16 @@ D2JS.prototype.callD2js = function(src, method, args){
  *  ```
  */
 D2JS.prototype.update = function(params){
-	this.updateTable(params.table, null, true);
+	this.updateTable(params.table, null, []);
 }
 
-D2JS.prototype.updateTable = function(table, parentRow, isSelf){
+D2JS.prototype.updateTable = function(table, parentRow, errors){
 	if(table == null) return;
 	var path = this.request.getServletContext().getContextPath();
 	var src = table.src.replace(path, '');
 	src = this.request.getServletContext().getRealPath(src);
+	var isSelf = parentRow == null;
+	
 	this.doTransaction(function(){
 		for(var i=0;i<table.rows.length; i++){
 			var row = table.rows[i];
@@ -165,6 +167,7 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 					break;
 				}
 			} catch(e){
+				logger.error('occur error at ' + JSON.stringify(row))
 				var err = e;
 				if(e instanceof Throwable){
 					err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
@@ -175,14 +178,26 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 				err.idx = row._idx;
 				err._object_id = row._object_id;
 				err.table_id = table._object_id;
+				errors.push(err);
+			}
+		}
+		
+		if(isSelf && errors.length){
+			if(errors.length == 1){ 
+				throw errors[0];
+			} else { 
+				var err = new Error();
+				err.name = "MultiError";
+				err.errors = errors;
 				throw err;
 			}
 		}
 	});
 	
+	
 	function updateChildren(row){
 		for(var i=0;i<row._children.length; i++){
-			this.updateTable(row._children[i], row);
+			this.updateTable(row._children[i], row, errors);
 		}
 	}
 }
