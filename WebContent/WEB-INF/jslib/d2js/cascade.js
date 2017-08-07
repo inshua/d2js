@@ -186,7 +186,7 @@ D2JS.prototype.updateTable = function(table, parentRow, errors){
 					err.table_id = table._object_id;
 					errors.push(err);
 					if(e.name != 'ValidationError'){
-						logger.error('error occurs when process row ' + JSON.stringify(row), Error.toJava(e));
+						logger.error('error occurs when process row ' + JSON.stringify(row), Error.toJava(err));
 					}
 				}
 			}
