@@ -21,7 +21,6 @@ d2js.test = function(){
 }
 
 d2js.modify = function(row, columns){
-	throw new Error('abcd');
 	logger.info('edit author ' + JSON.stringify(row));
 	$V(this, row, {
 		name : [V.notNull],
