@@ -167,18 +167,28 @@ D2JS.prototype.updateTable = function(table, parentRow, errors){
 					break;
 				}
 			} catch(e){
-				logger.error('occur error at ' + JSON.stringify(row))
-				var err = e;
-				if(e instanceof Throwable){
-					err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
-				} else if(typeof e == 'string'){
-					err = new Error(e);
+				if(e.name == 'MultiError'){
+					for(var i=0; i<e.errors.length; i++){
+						var e2 = e.errors[i];
+						e2._object_id = row._object_id;
+						errors.push(e2) ;
+					}
+				} else {
+					var err = e;
+					if(e instanceof Throwable){
+						err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
+					} else if(typeof e == 'string'){
+						err = new Error(e);
+					}
+					err.table = table.name;
+					err.idx = row._idx;
+					err._object_id = row._object_id;
+					err.table_id = table._object_id;
+					errors.push(err);
+					if(e.name != 'ValidationError'){
+						logger.error('error occurs when process row ' + JSON.stringify(row), Error.toJava(e));
+					}
 				}
-				err.table = table.name;
-				err.idx = row._idx;
-				err._object_id = row._object_id;
-				err.table_id = table._object_id;
-				errors.push(err);
 			}
 		}
 		
@@ -186,10 +196,7 @@ D2JS.prototype.updateTable = function(table, parentRow, errors){
 			if(errors.length == 1){ 
 				throw errors[0];
 			} else { 
-				var err = new Error();
-				err.name = "MultiError";
-				err.errors = errors;
-				throw err;
+				throw new MultiError(errors);
 			}
 		}
 	});

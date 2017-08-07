@@ -260,6 +260,7 @@ Object.defineProperty(Error.prototype, 'toJSON', {
  * 表示失败的错误
  */
 function FailedError(message){
+	Error.prototype.constructor.call(this);
 	this.name = 'FailedError';		
 	this.message = message;
 }
@@ -268,8 +269,21 @@ function FailedError(message){
  * 表示致命错误的错误
  */
 function FatalError(message){
+	Error.prototype.constructor.call(this);
 	this.name = 'FatalError';
 	this.message = message;
+}
+
+/**
+ * 多个错误
+ */
+function MultiError(errors){
+	Error.prototype.constructor.call(this);
+	this.name = 'MultiError';
+	this.errors = errors || [];
+	this.toString = function(){
+		return '(MutiError '  + this.errors + ')';
+	}
 }
 
 /**
@@ -313,6 +327,13 @@ function wrapJsError(e){
 		return new ECMAException(e, null);
 	}
 }
+
+/**
+ * wrapJsError 的别名
+ * @param e {Error} js error
+ * @returns {ECMAException}
+ */
+Error.toJava = wrapJsError;
 
 
 /**

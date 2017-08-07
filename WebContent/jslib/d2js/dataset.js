@@ -876,7 +876,7 @@ d2js.DataTable.prototype.submit = function(option) {
                             return e;
                         }, error);
                     }
-                    item._error_at = err;
+                    item._error_at = Object.assign(item._error_at || {}, err);
                     item._error = null;
                 } else {
                     item._error = error;

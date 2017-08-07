@@ -28,4 +28,3 @@ d2js.modify = function(row, columns){
 	return this.updateRow('author', row, columns);
 }
 
-

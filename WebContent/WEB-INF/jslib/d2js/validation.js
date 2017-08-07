@@ -32,6 +32,7 @@
  * @alias Validation
  */
 function V(d2js, rcd, validators){
+	var errors = [];
 	for(var fld in validators){
 		if(validators.hasOwnProperty(fld)){
 			var value = rcd[fld];
@@ -45,12 +46,20 @@ function V(d2js, rcd, validators){
 				if(validator.check){
 					var msg = validator.check(value, fld, rcd, d2js);
 					if(msg != null){
-						throw new ValidationError(fld, validator.name, msg);
+						errors.push(new ValidationError(fld, validator.name, msg));
+						break;
 					}
 				} else {
 					logger.error("there is no check function on field {fname} {idx}".format({fname : fld, idx : i}));
 				}
 			}
+		}
+	}
+	if(errors.length){
+		if(errors.length == 1){
+			throw errors[0];
+		} else {
+			throw new MultiError(errors);
 		}
 	}
 }
