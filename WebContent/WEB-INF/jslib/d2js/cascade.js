@@ -123,14 +123,16 @@ D2JS.prototype.callD2js = function(src, method, args){
  *  ```
  */
 D2JS.prototype.update = function(params){
-	this.updateTable(params.table, null, true);
+	this.updateTable(params.table, null, []);
 }
 
-D2JS.prototype.updateTable = function(table, parentRow, isSelf){
+D2JS.prototype.updateTable = function(table, parentRow, errors){
 	if(table == null) return;
 	var path = this.request.getServletContext().getContextPath();
 	var src = table.src.replace(path, '');
 	src = this.request.getServletContext().getRealPath(src);
+	var isSelf = parentRow == null;
+	
 	this.doTransaction(function(){
 		for(var i=0;i<table.rows.length; i++){
 			var row = table.rows[i];
@@ -165,24 +167,44 @@ D2JS.prototype.updateTable = function(table, parentRow, isSelf){
 					break;
 				}
 			} catch(e){
-				var err = e;
-				if(e instanceof Throwable){
-					err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
-				} else if(typeof e == 'string'){
-					err = new Error(e);
+				if(e.name == 'MultiError'){
+					for(var i=0; i<e.errors.length; i++){
+						var e2 = e.errors[i];
+						e2._object_id = row._object_id;
+						errors.push(e2) ;
+					}
+				} else {
+					var err = e;
+					if(e instanceof Throwable){
+						err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
+					} else if(typeof e == 'string'){
+						err = new Error(e);
+					}
+					err.table = table.name;
+					err.idx = row._idx;
+					err._object_id = row._object_id;
+					err.table_id = table._object_id;
+					errors.push(err);
+					if(e.name != 'ValidationError'){
+						logger.error('error occurs when process row ' + JSON.stringify(row), Error.toJava(err));
+					}
 				}
-				err.table = table.name;
-				err.idx = row._idx;
-				err._object_id = row._object_id;
-				err.table_id = table._object_id;
-				throw err;
+			}
+		}
+		
+		if(isSelf && errors.length){
+			if(errors.length == 1){ 
+				throw errors[0];
+			} else { 
+				throw new MultiError(errors);
 			}
 		}
 	});
 	
+	
 	function updateChildren(row){
 		for(var i=0;i<row._children.length; i++){
-			this.updateTable(row._children[i], row);
+			this.updateTable(row._children[i], row, errors);
 		}
 	}
 }

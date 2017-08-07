@@ -471,15 +471,10 @@ d2js.Renderers.molecule = d2js.KNOWN_RENDERERS['molecule'] = function(element, v
  */
 d2js.Renderers.hideIfNull = d2js.KNOWN_RENDERERS['hideIfNull'] = function(element, value, columnName, row, index, rows, _1, table){
 	if(value == null){
-		if(element._d2js_hideIfNull_prevDisplay) return;
-		
 		element._d2js_hideIfNull_prevDisplay = element.style.display;
 		element.style.display = 'none';
 	} else {
-		if(element._d2js_hideIfNull_prevDisplay == null) return;
-		
 		element.style.display = element._d2js_hideIfNull_prevDisplay || 'block';
-		delete element._d2js_hideIfNull_prevDisplay;
 	}
 	return value;
 }
@@ -493,15 +488,10 @@ d2js.Renderers.hideIfNull = d2js.KNOWN_RENDERERS['hideIfNull'] = function(elemen
  */
 d2js.Renderers.hideIfEmpty = d2js.KNOWN_RENDERERS['hideIfEmpty'] = function(element, value, columnName, row, index, rows, _1, table){
 	if(value == null || value.length == 0){
-		if(element._d2js_hideIfEmpty_prevDisplay) return;
-
 		element._d2js_hideIfEmpty_prevDisplay = element.style.display;
 		element.style.display = 'none';
 	} else {
-		if(element._d2js_hideIfEmpty_prevDisplay == null) return;
-		
 		element.style.display = element._d2js_hideIfEmpty_prevDisplay || 'block';
-		delete element._d2js_hideIfEmpty_prevDisplay
 	}
 	return value;
 }

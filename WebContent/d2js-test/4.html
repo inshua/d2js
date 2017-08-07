@@ -24,9 +24,13 @@
 		<h1>表格编辑</h1>
 		<div>
 			<form class="form-inline">
-			  <div class="form-group">
+			  <div class="form-group" data="search,params,_error_at,name" renderer="flderr">
 			    <label>Name</label>
 			    <input type="text" class="form-control" placeholder="" data="search,params,name" collector="c|s">
+			  </div>
+			  <div class="form-group" data="search,params,_error_at,email" renderer="flderr">
+			    <label>Email</label>
+			    <input type="text" class="form-control" placeholder="" data="search,params,email" collector="c|s">
 			  </div>
 			  <button type="button" class="btn btn-default" onclick="search($(this).parent('form'))">Search</button>
 			</form>
@@ -60,8 +64,8 @@
 		</table>
 
 		<!-- Modal -->
-		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-		  <div class="modal-dialog" role="document" d2js.root=",curr">
+		<div class="modal fade" id="myModal" d2js.root=",curr" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		  <div class="modal-dialog" role="document">
 		    <div class="modal-content">
 		      <div class="modal-header">
 		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -70,7 +74,7 @@
 		      </div>
 		      <div class="modal-body">
 		      	<form>
-		          <div class="form-group" data="_error_at,name" renderer="flderr" trace>
+		          <div class="form-group" data="_error_at,name" renderer="flderr">
 				    <label>Name</label>
 				    <input type="text" class="form-control" data="name" renderer="std" collector="c|s">
 				  </div>
@@ -82,12 +86,21 @@
 				    <label>LinkIn</label>
 				    <input type="text" class="form-control" data="info,linkin" renderer="std" collector="c|oc">
 				  </div>
-				  <table class="table table-striped" d2js.root="book" data="this" renderer="table">
+				  <table class="table table-striped" d2js.root="book">
 					<thead>
 						<tr>
-							<th data-t="title" renderer="input('text')" renderer-t="std" collector-t="c|s">Title</th>
+							<th>Title</th>
 		 				</tr>
 					</thead>
+					<tbody data="rows" renderer="repeater">
+						<tr repeater="true">
+							<td>
+								<div class="form-group" data="_error_at,title" renderer="flderr">
+									<input class="form-control" data="title" renderer="std" collector="c|s">
+								</div>
+							</td>
+		 				</tr>
+					</tbody>
 				  </table>
 				</form>        
 		      </div>
