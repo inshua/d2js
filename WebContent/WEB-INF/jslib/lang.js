@@ -334,6 +334,8 @@ function wrapJsError(e){
  * @returns {ECMAException}
  */
 Error.toJava = wrapJsError;
+Object.defineProperty(Error, 'toJava', {value: wrapJsError, enumerable: false});
+
 
 
 /**
