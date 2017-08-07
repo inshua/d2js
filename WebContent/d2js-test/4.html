@@ -24,9 +24,13 @@
 		<h1>表格编辑</h1>
 		<div>
 			<form class="form-inline">
-			  <div class="form-group">
+			  <div class="form-group" data="search,params,_error_at,name" renderer="flderr">
 			    <label>Name</label>
 			    <input type="text" class="form-control" placeholder="" data="search,params,name" collector="c|s">
+			  </div>
+			  <div class="form-group" data="search,params,_error_at,email" renderer="flderr">
+			    <label>Email</label>
+			    <input type="text" class="form-control" placeholder="" data="search,params,email" collector="c|s">
 			  </div>
 			  <button type="button" class="btn btn-default" onclick="search($(this).parent('form'))">Search</button>
 			</form>
@@ -70,7 +74,7 @@
 		      </div>
 		      <div class="modal-body">
 		      	<form>
-		          <div class="form-group" data="_error_at,name" renderer="flderr" trace>
+		          <div class="form-group" data="_error_at,name" renderer="flderr">
 				    <label>Name</label>
 				    <input type="text" class="form-control" data="name" renderer="std" collector="c|s">
 				  </div>

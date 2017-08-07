@@ -1,6 +1,10 @@
 d2js.fetch = function(params){
+	
+	$V(this, params, {name : [V.longest(10)], email: [V.email]});
+	
 	sql{.
 		select name, id, email from author where 1 = 1
+		sql{.?(params.name)  and strpos(name, :name) > 0  .}
 	.}
 
 	var r = this.query(this.orderBy(sql, params._sorts, {id:'asc'}), params, params._page);

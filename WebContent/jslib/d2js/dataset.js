@@ -506,6 +506,10 @@ d2js.DataTable.prototype.load = function(method, params, option){
 	}
 	this.search.params._m = method;
 	this.search.option = option;
+	if(this.search.params) {
+		delete me.search.params._error;
+		delete me.search.params._error_at;
+	}
 	
 	$.ajax({
 		url : this.url,
@@ -545,9 +549,19 @@ d2js.DataTable.prototype.load = function(method, params, option){
 	}
 	
 	function onError(error){
-		me.error = error;
 		me.setState('error');
-		me.error = error;
+		
+		var handled = false;
+		if(me.search && me.search.params){
+			if(error.name == 'ValidationError'){
+				error._object_id = 0;
+				handled = d2js.processError(error, [me.search.params]);
+			} else if(error.name == 'MultiError'){
+				error.errors.forEach(function(err){err._object_id = 0});
+				handled = d2js.processError(error, [me.search.params]);
+			}
+		}
+		if(!handled) me.error = error;
 		me.fireEvent('load', error);
 		if(option && option.callback){
 			option.callback.call(me, error);
@@ -835,7 +849,7 @@ d2js.DataTable.prototype.submit = function(option) {
     }
 
     function onError(error) {
-        if (!processError(error)) {
+        if (!d2js.processError(error, items)) {
             table.error = error;
             table.setState('error');
             table.fireEvent('submit', error);
@@ -845,49 +859,49 @@ d2js.DataTable.prototype.submit = function(option) {
             option.callback.call(table, error);
         }
     }
-
-    function processError(error) {
-        if (error.name == 'MultiError') {
-            var handled = false;
-            error.errors.forEach(function(e) {
-                if (processError(e)) handled = true;
-            });
-            return handled;
-        }
-        if (error._object_id == null) return false;
-        var item = items && items[error._object_id];
-        if (item) {
-            if (item.isDataTable) {
-                item.error = error;
-                item.setState('error');
-                item.fireEvent('submit', error);
-            } else { // datarow
-                if (error.field) {
-                    var err;
-                    if (error.field.indexOf(',') == -1) {
-                        err = {};
-                        err[error.field] = error;
-                    } else {
-                        var arr = error.field.split(','); // json 类型的字段，错误是一串路径
-                        arr.reverse();
-                        err = arr.reduce(function(err, fld) {
-                            var e = {};
-                            e[fld] = err;
-                            return e;
-                        }, error);
-                    }
-                    item._error_at = Object.assign(item._error_at || {}, err);
-                    item._error = null;
-                } else {
-                    item._error = error;
-                    item._error_at = null;
-                }
-            }
-            return true;
-        }
-    }
-
 }
+
+d2js.processError = function(error, items) {
+    if (error.name == 'MultiError') {
+        var handled = false;
+        error.errors.forEach(function(e) {
+            if (d2js.processError(e, items)) handled = true;
+        });
+        return handled;
+    }
+    if (error._object_id == null) return false;
+    var item = items && items[error._object_id];
+    if (item) {
+        if (item.isDataTable || item.isList) {
+            item.error = error;
+            item.setState('error');
+            item.fireEvent('submit', error);
+        } else { // datarow
+            if (error.field) {
+                var err;
+                if (error.field.indexOf(',') == -1) {
+                    err = {};
+                    err[error.field] = error;
+                } else {
+                    var arr = error.field.split(','); // json 类型的字段，错误是一串路径
+                    arr.reverse();
+                    err = arr.reduce(function(err, fld) {
+                        var e = {};
+                        e[fld] = err;
+                        return e;
+                    }, error);
+                }
+                item._error_at = Object.assign(item._error_at || {}, err);
+                item._error = null;
+            } else {
+                item._error = error;
+                item._error_at = null;
+            }
+        }
+        return true;
+    }
+}
+
 
 /**
  * 清除错误
