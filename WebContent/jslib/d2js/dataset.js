@@ -332,25 +332,25 @@ if(typeof JSJoda != 'undefined'){
 	    return value;
 	}
 	parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d(\[\w+\/\w+\])?))?)?$/;
-}
 
-/**
- * https://stackoverflow.com/questions/31096130/how-to-json-stringify-a-javascript-date-and-preserve-timezone
- */
-Date.prototype.toJSON = function () {
-  var timezoneOffsetInHours = -(this.getTimezoneOffset() / 60); //UTC minus local time
-  var sign = timezoneOffsetInHours >= 0 ? '+' : '-';
-  var leadingZero = (timezoneOffsetInHours < 10) ? '0' : '';
+	/**
+	 * https://stackoverflow.com/questions/31096130/how-to-json-stringify-a-javascript-date-and-preserve-timezone
+	 */
+	Date.prototype.toJSON = function () {
+	  var timezoneOffsetInHours = -(this.getTimezoneOffset() / 60); //UTC minus local time
+	  var sign = timezoneOffsetInHours >= 0 ? '+' : '-';
+	  var leadingZero = (timezoneOffsetInHours < 10) ? '0' : '';
 
-  //It's a bit unfortunate that we need to construct a new Date instance 
-  //(we don't want _this_ Date instance to be modified)
-  var correctedDate = new Date(this.getFullYear(), this.getMonth(), 
-      this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds(), 
-      this.getMilliseconds());
-  correctedDate.setHours(this.getHours() + timezoneOffsetInHours);
-  var iso = correctedDate.toISOString().replace('Z', '');
+	  //It's a bit unfortunate that we need to construct a new Date instance 
+	  //(we don't want _this_ Date instance to be modified)
+	  var correctedDate = new Date(this.getFullYear(), this.getMonth(), 
+	      this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds(), 
+	      this.getMilliseconds());
+	  correctedDate.setHours(this.getHours() + timezoneOffsetInHours);
+	  var iso = correctedDate.toISOString().replace('Z', '');
 
-  return iso + sign + leadingZero + Math.abs(timezoneOffsetInHours).toString() + ':00';
+	  return iso + sign + leadingZero + Math.abs(timezoneOffsetInHours).toString() + ':00';
+	}
 }
 
 /**
@@ -506,6 +506,10 @@ d2js.DataTable.prototype.load = function(method, params, option){
 	}
 	this.search.params._m = method;
 	this.search.option = option;
+	if(this.search.params) {
+		delete me.search.params._error;
+		delete me.search.params._error_at;
+	}
 	
 	$.ajax({
 		url : this.url,
@@ -545,9 +549,19 @@ d2js.DataTable.prototype.load = function(method, params, option){
 	}
 	
 	function onError(error){
-		me.error = error;
 		me.setState('error');
-		me.error = error;
+		
+		var handled = false;
+		if(me.search && me.search.params){
+			if(error.name == 'ValidationError'){
+				error._object_id = 0;
+				handled = d2js.processError(error, [me.search.params]);
+			} else if(error.name == 'MultiError'){
+				error.errors.forEach(function(err){err._object_id = 0});
+				handled = d2js.processError(error, [me.search.params]);
+			}
+		}
+		if(!handled) me.error = error;
 		me.fireEvent('load', error);
 		if(option && option.callback){
 			option.callback.call(me, error);
@@ -693,177 +707,225 @@ d2js.DataTable.prototype.ajaxSubmit = function(options){
  * 提交所有变动
  * @param option {object|function} 同 `load` 函数
  */
-d2js.DataTable.prototype.submit = function(option){
-	// 收集变化
-	function collectAll(table, parentRow, relation){
-		var v = null;
-		if(parentRow) v = parentRow[relation.parentColumn];
-		var relations = table.getChildTables();
-		
-		var result = {name : table.name, src : table.src, columns : table.columns};
-		result.rows = table.rows.filter(function(row){
-				if(parentRow) 
-					return row[relation.childColumn] == v;
-				else 
-					return true;
-			}).map(function(row){
-				var jo = row._toJson();
-				jo._state = row._state;
-				jo._idx = table.rows.indexOf(row);
-				if(row._origin) jo._origin = row._origin;
-				jo._children = [];
-				return jo;
-			});
-		
-		if(result.rows.length){
-			for(var tname in relations){ if(relations.hasOwnProperty(tname)){
-				result.rows.forEach(function (row){
-					relations[tname].forEach(function(relation){
-						row._children.push(collectAll(me.dataset[tname], row, relation));
-					});
-				});
-			}}
-		}
-		result.rows.slice().forEach(function(row){
-			if(row._children.length == 0) {
-				delete row._children;		
-			}
-		});
-		return result;
-	}
-	
-	function filterChanged(table){
-		table.rows = table.rows.filter(function(row){
-			return isDirty(row);
-		});
-		table.rows.forEach(function(row){
-			if(row._children){
-				row._children.slice().forEach(function(t){
-					filterChanged(t);
-					if(t.rows.length == 0){
-						row._children.splice(row._children.indexOf(t));
-					}
-				});
-				if(row._children.length == 0){
-					delete row._children;
-				}
-			}
-		});
-		return table;
-	}
-	
-	function isDirty(row){
-		if(row._state != 'none') return true;
-		if(row._children && row._children.length){
-			return row._children.some(function(tb){return tb.rows.some(function(crow){return isDirty(crow)})});
-		}
-	}
-		
-	var me = this;
-	var changes = filterChanged(collectAll(this));
-	
-	if(changes.rows.length == 0){
-		var error = new Error('no data changed found')
-		error.level = 'warning';
-		onError(error)
-		return;
-	}
-	
-	// 开始提交
-	if(!option) option = {};
-	if(option instanceof Function){
-		option = {callback : option};
-	}
-	
-	this.clearError();
-	this.fireEvent('willsubmit');
-	this.setState('submiting');
-	var params = {_m : 'update', table : changes};
-	this.ajaxSubmit({
-		url : this.url,
-		data : {_m : 'update', params : JSON.stringify(params)},
-		type : 'post',
-		timeout : option.timeout || 30000,
-		async : option.async != null ? option.async : true,
-		dataType : 'text',
-		success : onSuccess,
-		error : function (error){onError(new Error(error.responseText));}
-	});
-	
-	function onSuccess(text, status){
-		var isJson = false;
-		try{
-			var result = JSON.parse(text, parseDate);
-			isJson = true;
-		} catch(e){}
-		if(isJson){
-			if(!result.error){
-				me.accept();
-				
-				if(option && option.callback){
-					option.callback.call(me);
-				}
-				me.setState('none');
-				me.fireEvent('submit');
-			} else {
-				var error =  typeof result.error == 'string' ? new Error(result.error) : Object.assign(new Error(), result.error);
-				onError(error);
-			}
-		} else {
-			onError(new Error(text));
-		}
-	}
-	
-	function onError(error){
-		var table = me;
-		if(error.table){
-			table = me.dataset[error.table];
-		}
-		table.error = error;
-		if(error.table && error.idx != null){
-			var row = table.rows[error.idx];
-			table.error = null;
-			if(error.field){	// 列错误
-				var err;
-				if(error.field.indexOf(',') == -1){
-					err = {};
-					err[error.field] = error;					
-				} else {
-					var arr = error.field.split(',');	// json 类型的字段，错误是一串路径
-					arr.reverse();
-					err = arr.reduce(function(err, fld){
-						var e = {}; e[fld] = err; return e;
-					}, error);
-				}
-				row._error_at = err;
-				row._error = null;
-			} else {
-				row._error = error;
-				row._error_at = null;
-			}
-		}
-		
-		table.setState('error');
-		table.fireEvent('submit', error);
-		
-		if(option && option.callback){
-			option.callback.call(table, error);
-		}
-	}
-	
+d2js.DataTable.prototype.submit = function(option) {
+    // 收集变化
+    function collectAll(table, parentRow, relation) {
+        var v = null;
+        if (parentRow) v = parentRow[relation.parentColumn];
+        var relations = table.getChildTables();
+
+        var result = { name: table.name, src: table.src, columns: table.columns };
+        result.rows = table.rows.filter(function(row) {
+            if (parentRow)
+                return row[relation.childColumn] == v;
+            else
+                return true;
+        }).map(function(row) {
+            var jo = row._toJson();
+            jo._state = row._state;
+            jo._idx = table.rows.indexOf(row);
+            if (row._origin) jo._origin = row._origin;
+            jo._children = [];
+            return jo;
+        });
+
+        if (result.rows.length) {
+            for (var tname in relations) {
+                if (relations.hasOwnProperty(tname)) {
+                    result.rows.forEach(function(row) {
+                        relations[tname].forEach(function(relation) {
+                            row._children.push(collectAll(me.dataset[tname], row, relation));
+                        });
+                    });
+                }
+            }
+        }
+        result.rows.slice().forEach(function(row) {
+            if (row._children.length == 0) {
+                delete row._children;
+            }
+        });
+        return result;
+    }
+
+    function filterChanged(table) {
+        table.rows = table.rows.filter(function(row) {
+            return isDirty(row);
+        });
+        table.rows.forEach(function(row) {
+            if (row._children) {
+                row._children.slice().forEach(function(t) {
+                    filterChanged(t);
+                    if (t.rows.length == 0) {
+                        row._children.splice(row._children.indexOf(t));
+                    }
+                });
+                if (row._children.length == 0) {
+                    delete row._children;
+                }
+            }
+        });
+        return table;
+    }
+
+    function isDirty(row) {
+        if (row._state != 'none') return true;
+        if (row._children && row._children.length) {
+            return row._children.some(function(tb) { return tb.rows.some(function(crow) { return isDirty(crow) }) });
+        }
+    }
+
+    var me = this;
+    var changes = filterChanged(collectAll(this));
+
+    if (changes.rows.length == 0) {
+        var error = new Error('no data changed found')
+        error.level = 'warning';
+        onError(error)
+        return;
+    }
+
+    var items = [],
+        itemId = 0;
+
+    function mapObjectId(changeTable) {
+        var tb = me.dataset[changeTable.name]; // physical table
+        items.push(tb);
+        changeTable._object_id = itemId++;
+        changeTable.rows.forEach(function(row) {
+            var row2 = tb.rows[row._idx];
+            items.push(row2);
+            row._object_id = itemId++;
+            if (row._children) {
+                row._children.forEach(ch => mapObjectId(ch));
+            }
+        })
+    }
+    mapObjectId(changes);
+
+    // 开始提交
+    if (!option) option = {};
+    if (option instanceof Function) {
+        option = { callback: option };
+    }
+
+    this.clearError(true);
+    this.fireEvent('willsubmit');
+    this.setState('submiting');
+    var params = { _m: 'update', table: changes };
+    this.ajaxSubmit({
+        url: this.url,
+        data: { _m: 'update', params: JSON.stringify(params) },
+        type: 'post',
+        timeout: option.timeout || 30000,
+        async: option.async != null ? option.async : true,
+        dataType: 'text',
+        success: onSuccess,
+        error: function(error) { onError(new Error(error.responseText)); }
+    });
+
+    function onSuccess(text, status) {
+        var isJson = false;
+        try {
+            var result = JSON.parse(text, parseDate);
+            isJson = true;
+        } catch (e) {}
+        if (isJson) {
+            if (!result.error) {
+                me.accept();
+
+                if (option && option.callback) {
+                    option.callback.call(me);
+                }
+                me.setState('none');
+                me.fireEvent('submit');
+            } else {
+                var error = typeof result.error == 'string' ? new Error(result.error) : Object.assign(new Error(), result.error);
+                onError(error);
+            }
+        } else {
+            onError(new Error(text));
+        }
+    }
+
+    function onError(error) {
+        if (!d2js.processError(error, items)) {
+            table.error = error;
+            table.setState('error');
+            table.fireEvent('submit', error);
+        }
+
+        if (option && option.callback) {
+            option.callback.call(table, error);
+        }
+    }
 }
+
+d2js.processError = function(error, items) {
+    if (error.name == 'MultiError') {
+        var handled = false;
+        error.errors.forEach(function(e) {
+            if (d2js.processError(e, items)) handled = true;
+        });
+        return handled;
+    }
+    if (error._object_id == null) return false;
+    var item = items && items[error._object_id];
+    if (item) {
+        if (item.isDataTable || item.isList) {
+            item.error = error;
+            item.setState('error');
+            item.fireEvent('submit', error);
+        } else { // datarow
+            if (error.field) {
+                var err;
+                if (error.field.indexOf(',') == -1) {
+                    err = {};
+                    err[error.field] = error;
+                } else {
+                    var arr = error.field.split(','); // json 类型的字段，错误是一串路径
+                    arr.reverse();
+                    err = arr.reduce(function(err, fld) {
+                        var e = {};
+                        e[fld] = err;
+                        return e;
+                    }, error);
+                }
+                item._error_at = Object.assign(item._error_at || {}, err);
+                item._error = null;
+            } else {
+                item._error = error;
+                item._error_at = null;
+            }
+        }
+        return true;
+    }
+}
+
 
 /**
  * 清除错误
+ * @param [broadcast=false] {bool} 是否推广到关联表(子表)
  * @private
  */
-d2js.DataTable.prototype.clearError = function(){
-	this.error = null;
-	for(var i=0; i< this.rows.length; i++){
-		this.rows[i]._error = null;
-		this.rows[i]._error_at = null;
-	}
-	this.setState('none');
+d2js.DataTable.prototype.clearError = function(broadcast) {
+    this.error = null;
+    for (var i = 0; i < this.rows.length; i++) {
+        this.rows[i]._error = null;
+        this.rows[i]._error_at = null;
+    }
+    if (broadcast) {
+        var me = this;
+        var tables = this.getChildTables();
+        for (var k in tables) {
+            if (tables.hasOwnProperty(k)) {
+                tables[k].forEach(function(relation) {
+                    me.dataset[relation.child].clearError(true);
+                });
+            }
+        }
+    }
+    this.setState('none');
 }
 
 /**
