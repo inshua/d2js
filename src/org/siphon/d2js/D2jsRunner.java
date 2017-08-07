@@ -221,12 +221,14 @@ public class D2jsRunner {
 				boolean ignore = false;
 				if (ex instanceof ScriptObjectMirror) {
 					ScriptObjectMirror mex = (ScriptObjectMirror) ex;
-					if (mex.containsKey("name") && "ValidationError".equals(mex.get("name"))) {
+					CharSequence name = (CharSequence) mex.get("name");
+					if ("ValidationError".equals(name) || "MultiError".equals(name)) {
 						ignore = true;
 					}
 				} else if (ex instanceof ScriptObject) {
 					ScriptObject oex = (ScriptObject) ex;
-					if (oex.containsKey("name") && "ValidationError".equals(oex.get("name"))) {
+					CharSequence name = (CharSequence) oex.get("name");
+					if ("ValidationError".equals(name) || "MultiError".equals(name)) {
 						ignore = true;
 					}
 				}
