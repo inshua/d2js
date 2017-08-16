@@ -23,6 +23,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -403,7 +404,7 @@ public class JsTypeUtil {
 		}
 	}
 
-	private static Long parseTime(Object value) throws UnsupportedConversionException {
+	public static Long parseTime(Object value) throws UnsupportedConversionException {
 		if (value instanceof Double) {
 			return ((Double) value).longValue();
 		} else if (value instanceof String) {
@@ -414,10 +415,15 @@ public class JsTypeUtil {
 			}
 		} else if (value instanceof NativeDate) {
 			return getTime((NativeDate) value);
+		} else if (value instanceof ZonedDateTime){
+			return ((ZonedDateTime) value).toInstant().toEpochMilli();
 		} else if (value instanceof ScriptObjectMirror) {
 			ScriptObjectMirror m = (ScriptObjectMirror) value;
-			if (m.to(Object.class) instanceof NativeDate) {
+			Object o = m.to(Object.class);
+			if (o instanceof NativeDate) {
 				return getTime(m.to(NativeDate.class));
+			} else if (o instanceof ZonedDateTime){
+					return ((ZonedDateTime) o).toInstant().toEpochMilli();
 			} else {
 				throw new UnsupportedConversionException("unknown date format " + value + " " + m.getClassName(), null);
 			}
@@ -430,7 +436,7 @@ public class JsTypeUtil {
 
 	private static SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm:ss");
 
-	private static Long parseDate(Object value) throws UnsupportedConversionException {
+	public static Long parseDate(Object value) throws UnsupportedConversionException {
 		if (JsTypeUtil.isNull(value)) {
 			return null;
 		}
@@ -445,7 +451,17 @@ public class JsTypeUtil {
 		} else if (value instanceof NativeDate) {
 			return getTime((NativeDate) value);
 		} else if (value instanceof ScriptObjectMirror && ((ScriptObjectMirror) value).to(Object.class) instanceof NativeDate) {
-			return getTime((ScriptObjectMirror) value);
+			ScriptObjectMirror m = (ScriptObjectMirror) value;
+			Object o = m.to(Object.class);
+			if (o instanceof NativeDate) {
+				return getTime(m.to(NativeDate.class));
+			} else if (o instanceof ZonedDateTime){
+					return ((ZonedDateTime) o).toInstant().toEpochMilli();
+			} else {
+				throw new UnsupportedConversionException("unknown date format " + value + " " + m.getClassName(), null);
+			}
+		} else if (value instanceof ZonedDateTime){
+			return ((ZonedDateTime) value).toInstant().toEpochMilli();
 		} else {
 			throw new UnsupportedConversionException("unknown date format " + value + " " + value.getClass(), null);
 		}

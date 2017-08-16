@@ -1186,24 +1186,14 @@ public class SqlExecutor {
 	private SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private java.sql.Timestamp parseDate(Object value) throws SqlExecutorException {
-		if (JsTypeUtil.isNull(value)) {
-			return null;
+		Long d;
+		try {
+			d = JsTypeUtil.parseDate(value);
+		} catch (UnsupportedConversionException e) {
+			throw new SqlExecutorException("parseDate failed " + value, e);
 		}
-		if (value instanceof Double) {
-			return dateToTimeStamp(new java.util.Date(((Double) value).longValue()));
-		} else if (value instanceof String) {
-			try {
-				return dateToTimeStamp(sdfDate.parse((String) value));
-			} catch (ParseException e) {
-				throw new SqlExecutorException("unmatched datetime format " + value, e);
-			}
-		} else if (value instanceof NativeDate){
-			return nativeDateToTimeStamp((NativeDate) value);
-		} else if (value instanceof ScriptObjectMirror && ((ScriptObjectMirror)value).to(Object.class) instanceof NativeDate) {
-			return nativeDateToTimeStamp((ScriptObjectMirror) value);
-		} else {
-			throw new SqlExecutorException("unknown date format " + value + " " + value.getClass());
-		}
+		if(d == null) return null;
+		return new java.sql.Timestamp(d.longValue());
 	}
 	
 	private Timestamp dateToTimeStamp(java.util.Date date){
@@ -1218,29 +1208,14 @@ public class SqlExecutor {
 	private SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm:ss");
 
 	private java.sql.Timestamp parseTime(Object value) throws SqlExecutorException {
-		if (JsTypeUtil.isNull(value)) {
-			return null;
+		Long d;
+		try {
+			d = JsTypeUtil.parseTime(value);
+		} catch (UnsupportedConversionException e) {
+			throw new SqlExecutorException("parseDate failed " + value, e);
 		}
-		if (value instanceof Double) {
-			return new java.sql.Timestamp(((Double) value).longValue());
-		} else if (value instanceof String) {
-			try {
-				return new java.sql.Timestamp(sdfTime.parse((String) value).getTime());
-			} catch (ParseException e) {
-				throw new SqlExecutorException("unmatched datetime format " + value, e);
-			}
-		} else if(value instanceof NativeDate){
-			return nativeDateToTimeStamp((NativeDate)value);
-		} else if (value instanceof ScriptObjectMirror) {
-			ScriptObjectMirror m = (ScriptObjectMirror) value;
-			if (m.to(Object.class) instanceof NativeDate) {
-				return nativeDateToTimeStamp(m);
-			} else {
-				throw new SqlExecutorException("unknown date format " + value + " " + m.getClassName());
-			}
-		} else {
-			throw new SqlExecutorException("unknown date format " + value + " " + value.getClass());
-		}
+		if(d == null) return null;
+		return new java.sql.Timestamp(d.longValue());
 	}
 
 	private java.sql.Timestamp nativeDateToTimeStamp(NativeDate value) {
