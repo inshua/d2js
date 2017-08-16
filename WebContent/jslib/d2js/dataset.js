@@ -851,13 +851,13 @@ d2js.DataTable.prototype.submit = function(option) {
 
     function onError(error) {
         if (!d2js.processError(error, items)) {
-            table.error = error;
-            table.setState('error');
-            table.fireEvent('submit', error);
+            me.error = error;
+            me.setState('error');
+            me.fireEvent('submit', error);
         }
 
         if (option && option.callback) {
-            option.callback.call(table, error);
+            option.callback.call(me, error);
         }
     }
 }
