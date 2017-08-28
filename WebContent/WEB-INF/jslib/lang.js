@@ -109,7 +109,7 @@ Array.prototype.indexBy = function(key){
 	for(var i=0; i<this.length; i++){
 		var el = this[i];
 		var v = el[key];
-		if(v){
+		if(v != null && v !== ''){		// '' == 0 but '' !== 0
 			result[v] = el;
 		}
 	}
