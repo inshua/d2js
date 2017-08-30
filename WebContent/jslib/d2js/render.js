@@ -261,7 +261,7 @@ d2js.travel = function(htmlElement, pattern, processor){
 				var travelChild = true;
 				var rootPath = child.getAttribute('d2js.root');
 				if(rootPath.startsWith('..')){		// 相对路径
-					if(!d2js.bindRoot(child)){
+					if(!$.hasData(child, 'd2js.root') && !d2js.bindRoot(child)){
 						travelChild = false;
 					}
 				} 
