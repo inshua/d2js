@@ -644,6 +644,9 @@ public class SqlExecutor {
 
 		case Types.BOOLEAN:
 			return "BOOLEAN";
+			
+		case Types.ARRAY:
+			return "ARRAY";
 
 		case Types.OTHER:
 			return columnTypeName.toUpperCase();
@@ -846,7 +849,11 @@ public class SqlExecutor {
 				// cs.registerOutParameter(i+1, OracleTypes.CURSOR);
 				cs.registerOutParameter(index + 1, -10);
 			} else if ("ARRAY".equals(attr)) {
-				ps.setArray(index + 1, createSqlArray(ps.getConnection(), (NativeArray) value));
+				if(value instanceof NativeArray){
+					ps.setArray(index + 1, createSqlArray(ps.getConnection(), (NativeArray) value));
+				}  else {
+					setArg(ps, index, value);	// value is {ARRAY : ['int', e1, e2, ...]}
+				}
 				// ps.setObject(i+1, createSqlArray(ps.getConnection(),
 				// (NativeArray) value));
 			} else if ("JSON".equals(attr) || "JSONB".equals(attr)){
