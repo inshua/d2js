@@ -387,6 +387,7 @@ d2js.bindRoot = function(element, data, baseElement){
 			if(data.charAt(0) == ','){	// ..,name(just eq ..name) or ....,name 
 				data = data.substr(1);
 			}
+			crumb = crumb.slice();
 			var match = d2js.extractData(root, data, crumb);
 			if(!match || crumb[0] == null/* root cannot be null */) return false;
 			$element.data('d2js.root', crumb[0]);
@@ -424,6 +425,24 @@ d2js.bindRoot = function(element, data, baseElement){
 			$(this).removeData('d2js.root').removeData('d2js.crumb');			
 		}
 	});
+	
+	var followChildren = []
+	var stk = [].concat(Array.prototype.slice.call(element.children));
+	while(stk.length){
+		var el = stk.pop();
+		if(el.hasAttribute('d2js.root')){
+			var path = el.getAttribute('d2js.root');
+			if(path.charAt(0) == ','){
+				followChildren.push(el);
+			} else {
+				// dont push children to stack
+			}
+		} else {
+			stk = stk.concat(Array.prototype.slice.call(el.children));
+		}
+	}
+//	console.log(element, ' has follow children', followChildren);
+	followChildren.forEach(function(el){d2js.bindRoot(el)});
 	return true;
 }
 
