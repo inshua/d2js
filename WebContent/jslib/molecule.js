@@ -232,6 +232,7 @@ Molecule.scanDefines = function(starter) {
         });
 }
 
+Molecule._LOAD_ONCE_RESOURCE = {};
 Molecule.registerPrototype = function(el) {
     var fullname = el.getAttribute('molecule-def');
     var depends = el.getAttribute('molecule-depends');
@@ -269,8 +270,22 @@ Molecule.registerPrototype = function(el) {
         var scripts = Array.prototype.slice.call(el.querySelectorAll('script'));
         scripts = scripts.concat( 
         		Array.prototype.slice.call( el.parentNode.querySelectorAll("script[molecule-for='" + fullname + "']"))
-            ).forEach(script => {
-                document.head.appendChild(script);
+            )
+        var css = Array.prototype.slice.call(el.querySelectorAll('link[rel=stylesheet]'));
+        css = css.concat(
+        		Array.prototype.slice.call( el.parentNode.querySelectorAll("link[rel=stylesheet][molecule-for='" + fullname + "']"))
+        	  )
+        scripts.concat(css).forEach(script => {
+            	var append = true;
+            	var src = script.src || script.href;
+            	if(src){
+            		if(Molecule._LOAD_ONCE_RESOURCE[src] == null){
+            			Molecule._LOAD_ONCE_RESOURCE[src] = 1
+            		} else {
+            			append = false;
+            		}
+            	}
+                if(append) document.head.appendChild(script.cloneNode(true));
                 script.remove();
             });
 
