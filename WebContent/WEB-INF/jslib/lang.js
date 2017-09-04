@@ -109,7 +109,7 @@ Array.prototype.indexBy = function(key){
 	for(var i=0; i<this.length; i++){
 		var el = this[i];
 		var v = el[key];
-		if(v != null && v !== ''){		// '' == 0 but '' !== 0
+		if(v != null && v != ''){
 			result[v] = el;
 		}
 	}
@@ -194,6 +194,21 @@ if(!String.prototype.trim){
 String.prototype.contains = function(t) { 
 	return this.indexOf(t) >= 0; 
 };
+
+String.prototype.toHtml = function(){
+	return this.replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\r\n|\r|\n/g, '<br>');
+}
+
+String.prototype.repeat = function(count){
+	var arr = []
+	for(var i=0; i< count; i++) arr.push(this);
+	return arr.join('');
+}
 
 /**
  * 格式化字符串。
