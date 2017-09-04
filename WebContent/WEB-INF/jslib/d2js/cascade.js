@@ -26,6 +26,24 @@ var ObjectArray = Java.type('java.lang.Object[]'),
 	EngineUtil = Java.type('org.siphon.common.js.JsEngineUtil');
 
 /**
+ * 将子表相关行置入本次查询，构造为
+ * {columns:[], rows:[], nested:{child_table: {columns:[], rows: [], ...}}}
+ * @param d2js {D2JS} D2JS 对象
+ * @param table {string} 表命名
+ * @param src {string} d2js 文件路径
+ * @param method {string} 为本主表提供的方法，接收主表 id 数组
+ * @param [id='id'] {string}
+ */
+D2JS.DataTable.prototype.nest = function(d2js, table, src, method, id){
+	id = id || 'id';
+	var ids = this.rows.map(function(row){return row[id]});
+	if(!this.nested) this.nested = {};
+	var r = d2js.callD2js(src, method, [ids]);
+	this.nested[table] = r;
+	return this;
+}
+
+/**
  * 得到另一个 d2js 文件相应的对象 
  * @param src {string} d2js文件名
  */
