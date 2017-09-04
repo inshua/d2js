@@ -29,7 +29,7 @@
 			<hr>
 			<div repeater="true">
 				<h2><span data=name renderer="std"></span><small data="email" renderer="std"></small></h2>
-				<div data="book" renderer="repeater">
+				<div data="books" renderer="repeater">
 					<div data="title" repeater="true" renderer="std"></div>
 				</div>
 			</div>
@@ -40,17 +40,13 @@
 			</nav>
 		</div>
 		
-
-		
 	</div>
 </body>
 <script>
-	
-	var table = new d2js.DataTable('author', 'author-nest.d2js', {pageSize : 3});
-	
-	var book = new d2js.DataTable('book', 'book.d2js');
-	d2js.dataset.addRelation('author', 'id', 'book', 'author');
-	
-	table.load({ _m : 'fetch'}, function(error){d2js.render(null, this);});
+	var table = new d2js.DataTable('author', 'entity/author-entity.d2js', {pageSize : 3});
+	table.load({ _m : 'fetch'}, {
+		callback: function(error){d2js.render(null, this);},
+		addColumns: ['books']
+	});
 </script>
 </html>
