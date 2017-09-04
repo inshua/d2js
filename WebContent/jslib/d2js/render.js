@@ -427,21 +427,35 @@ d2js.bindRoot = function(element, data, baseElement){
 	});
 	
 	var followChildren = []
-	var stk = [].concat(Array.prototype.slice.call(element.children));
-	while(stk.length){
-		var el = stk.pop();
-		if(el.hasAttribute('d2js.root')){
-			var path = el.getAttribute('d2js.root');
-			if(path.charAt(0) == ','){
-				followChildren.push(el);
+	function travelAllChildren(children, offset){	// 查找所有与本 root 有关的子元素, offset 为0的
+		for(var i=0; i<children.length; i++){
+			var el = children[i];
+			if(el.hasAttribute('d2js.root')){
+				var path = el.getAttribute('d2js.root');
+				if(path.charAt(0) == ','){
+					if(offset == 0){
+						followChildren.push(el);
+					}
+					travelAllChildren(el.children, offset + 1);
+				} else if(path == 'this'){
+					if(offset == 0){
+						followChildren.push(el);
+					}
+					travelAllChildren(el.children, offset);
+				} else if(path.startsWith('..')){
+					if(offset - 1 == 0){
+						followChildren.push(el);
+					}
+					travelAllChildren(el.children, offset - 1);
+				} else {
+					travelAllChildren(el.children, offset + 1);
+				}
 			} else {
-				// dont push children to stack
+				travelAllChildren(el.children, offset);
 			}
-		} else {
-			stk = stk.concat(Array.prototype.slice.call(el.children));
 		}
 	}
-//	console.log(element, ' has follow children', followChildren);
+	travelAllChildren(element.children, 0);
 	followChildren.forEach(function(el){d2js.bindRoot(el)});
 	return true;
 }
