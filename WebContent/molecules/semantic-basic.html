@@ -433,20 +433,23 @@
 		<!-- 
 			实体选择用的 select, <select> 必须放在 FormItem 内。
 			<div molecule="FormItem" col="author" text="Author" d2js.root="authors" disp-col="">
-				<select molecule="EntitySelect" collector="m|s" [multiple=""]></select>
+				<select molecule="EntitySelect" collector="m|s" [pk-scalar="true"]></select>
 			</div>
 		-->
-		<div molecule-def="EntitySelect" class="ui selection dropdown" renderer="molecule" collector="m|s">
+		<div molecule-def="EntitySelect" class="ui selection dropdown" renderer="molecule" collector="m|s" placeholder-text="">
 			<input type="hidden">
 			<i class="dropdown icon"></i>
-			<div class="default text">Select Author</div>
+			<div class="default text"></div>
 			<div class="menu" data="this" renderer="repeater">
 				<div class="item" repeater="true" data="this" renderer="entity_pk|attr('data-value')"><span data="name" renderer="std"></span></div>
 			</div>
 			<script constructor>
+				var me = this;
 				var $fld = this.$el.closest('.field');
 				var col = $fld.attr('col');
 				this.$el.attr("data", col);
+
+				this.$el.find('.default.text').html(this.$el.attr('placeholder-text') || '')
 
 				var d2jsRoot = $fld.attr('d2js.root');
 				$fld[0].removeAttribute('d2js.root');
@@ -456,36 +459,63 @@
 				this.$el.find('.item').find('span').attr('data', $fld.attr('disp-col') || 'name');
 
 				var multiple = this.$el.is('.multiple');
+				var pkScalar = this.$el.is('[pk-scalar]');
 
-				this.setValue = function (value) {
-					this.value = value;
-					if (value == null) return this.$el.dropdown('set value', '');
-					if (multiple) {
-						this.$el.dropdown('set selected', value.map(function (e) {
-							return e[e._meta.pk]
-						}).join());
-					} else {
-						this.$el.dropdown('set selected', value[value._meta.pk]);
+				if(pkScalar){
+					this.setValue = function (value) {
+						this.value = value;
+						if (value == null) return this.$el.dropdown('set value', '');
+						if (multiple) {
+							this.$el.dropdown('set exactly', value.map(function(v){return '' + v}));
+						} else {
+							this.$el.dropdown('set selected', value);
+						}
+					}
+					this.getValue = function () {
+						var v = this.$el.dropdown('get value');
+						if (multiple) {
+							return this.$el.find('.item').toArray().map(function (e) {
+								var row = $(e).findRoot().root;
+								return row[row._meta.pk];
+							}).filter(function(id){
+								return v.indexOf(id) != -1;
+							});
+						} else {
+							var row = this.$el.find('.menu').findRoot().root.find(function (row) {
+								return row[row._meta.pk] == v
+							});
+							return row[row._meta.pk];
+						}
+					}
+				} else {
+					this.setValue = function (value) {
+						this.value = value;
+						if (value == null) return this.$el.dropdown('set value', '');
+						if (multiple) {
+							this.$el.dropdown('set selected', value.map(function (e) {
+								return e[e._meta.pk]
+							}).join());
+						} else {
+							this.$el.dropdown('set selected', value[value._meta.pk]);
+						}
+					}
+					this.getValue = function () {
+						var v = this.$el.dropdown('get value');
+						if (multiple) {
+							return this.$el.find('.item.filtered').toArray().map(function (e) {
+								return $(e).findRoot().root
+							});
+						} else {
+							return this.$el.find('.menu').findRoot().root.find(function (row) {
+								return row[row._meta.pk] == v
+							});
+						}
 					}
 				}
 
-				var me = this;
 				this.$el.on('d2js.rendered', '.menu', function () {
 					me.setValue(me.value);
 				});
-
-				this.getValue = function () {
-					var v = this.$el.dropdown('get value');
-					if (multiple) {
-						return this.$el.find('.item.filtered').toArray().map(function (e) {
-							return $(e).findRoot().root
-						});
-					} else {
-						return this.$el.find('.menu').findRoot().root.find(function (row) {
-							return row[row._meta.pk] == v
-						});
-					}
-				}
 			</script>
 			<script>
 				d2js.Renderers.entity_pk = function (element, value) {
@@ -569,8 +599,19 @@
 		<div molecule-def="TableList" class="ui container">
 			<script constructor>
 				var tableList = this;
+				var me = this;
 				var editDialogId = this.$el.attr('edit-dialog');
 				var newDialogId = this.$el.attr('new-dialog') || editDialogId;
+				
+				function findDialog$(id){
+					var ps = me.$el.parents()
+					for(var i=0; i<ps.length; i++){
+						var $f = $(ps).find('#' + id);
+						if($f.length) return $f;
+					}
+				}
+				
+				
 				if(!this.el.hasAttribute('d2js.root')){
 					this.el.setAttribute('d2js.root', this.$el.closest('[table]').attr('table'));
 				}
@@ -579,10 +620,10 @@
 
 				$(document).ready(function () {
 					if (editDialogId) {
-						initDialog($('#' + editDialogId));
+						initDialog(findDialog$(editDialogId));
 					}
 					if (newDialogId && newDialogId != editDialogId) {
-						initDialog($('#' + newDialogId));
+						initDialog(findDialog$(newDialogId));
 					}
 				});
 
@@ -635,7 +676,7 @@
 
 				this.editRow = function (row) {
 					var dialogId = (row._state == 'new') ? newDialogId : editDialogId;
-					var $dialog = $('#' + dialogId);
+					var $dialog = findDialog$(dialogId);
 					$dialog.bindRoot(row).render();
 					$dialog.attr('molecule-auto-dispose', false);
 					this.$el.trigger('tablelist.edit', [row]);
