@@ -137,8 +137,8 @@ Molecule.loadModule = function(module) {
  * @param parseOnServer {Boolean} 是否由服务器解析后提供定义，取 false 时在浏览器通过 DOMParser 解析
  * @returns {Boolean} 是否加载成功
  */
-Molecule.loadHtml = function(res, parseOnServer) {
-    if (!parseOnServer) return Molecule.loadHtmlInBrowser(res);
+Molecule.loadHtml = async function(res, parseOnServer) {
+    if (!parseOnServer) return await Molecule.loadHtmlInBrowser(res);
 
     var result = false;
     var link = document.createElement('a');
@@ -180,24 +180,19 @@ Molecule.loadHtml = function(res, parseOnServer) {
  * @param html {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
  * @returns {Boolean} 是否加载成功
  */
-Molecule.loadHtmlInBrowser = function(res) {
+Molecule.loadHtmlInBrowser = async function(res) {
     var result = false;
     var link = document.createElement('a');
     link.href = res;
-    jQuery.ajax({
-        url: link.href,
-        method: 'post',
-        async: false,
-        cache: false,
-        complete: function(resp, status) {
-            if (status == 'success') {
-                var dom = new DOMParser().parseFromString(resp.responseText, 'text/html');
-                Molecule.scanDefines(dom);
-                result = true;
-            }
-        }
-    });
-    return result;
+    if(Molecule._LOAD_ONCE_RESOURCE[link.href]) return;
+    
+    Molecule._LOAD_ONCE_RESOURCE[link.href] = 1
+    
+    var resp = await fetch(link.href, {credentials: 'include'});
+    var text = await resp.text();
+    var dom = new DOMParser().parseFromString(text, 'text/html');
+    await Molecule.scanDefines(dom);	// this is a promise
+    return true;
 }
 
 Molecule.ready = function(element, handler) {
@@ -216,24 +211,23 @@ Molecule.getModuleName = function(fullname) {
     return { module: module, name: name };
 }
 
-Molecule.scanDefines = function(starter) {
-    Array.prototype.slice.call((starter || document).querySelectorAll('template')).forEach(
-        function(template) {
-            var found = false;
-            Array.prototype.slice.call(template.content.querySelectorAll('[molecule-def]')).forEach(function(el) {
-                Molecule.registerPrototype(el);
-                el.remove();
-                found = true;
-            });
+Molecule.scanDefines = async function(starter) {
+    for(var template of Array.prototype.slice.call((starter || document).querySelectorAll('template'))){
+        var found = false;
+        for(var el of Array.prototype.slice.call(template.content.querySelectorAll('[molecule-def]'))) {
+            await Molecule.registerPrototype(el);
+            el.remove();
+            found = true;
+        };
 
-            if (found && template.content.childElementCount == 0) {
-                template.remove();
-            }
-        });
+        if (found && template.content.childElementCount == 0) {
+            template.remove();
+        }
+    };
 }
 
 Molecule._LOAD_ONCE_RESOURCE = {};
-Molecule.registerPrototype = function(el) {
+Molecule.registerPrototype = async function(el) {
     var fullname = el.getAttribute('molecule-def');
     var depends = el.getAttribute('molecule-depends');
     var styles = Array.prototype.slice.call(el.querySelectorAll('style'));
@@ -272,27 +266,55 @@ Molecule.registerPrototype = function(el) {
         		Array.prototype.slice.call( el.parentNode.querySelectorAll("script[molecule-for='" + fullname + "']"))
             )
         var css = Array.prototype.slice.call(el.querySelectorAll('link[rel=stylesheet]'));
-        css = css.concat(
-        		Array.prototype.slice.call( el.parentNode.querySelectorAll("link[rel=stylesheet][molecule-for='" + fullname + "']"))
-        	  )
-        scripts.concat(css).forEach(script => {
-            	var append = true;
-            	var src = script.src || script.href;
-            	if(src){
-            		if(Molecule._LOAD_ONCE_RESOURCE[src] == null){
-            			Molecule._LOAD_ONCE_RESOURCE[src] = 1
-            		} else {
-            			append = false;
-            		}
+        css = css.concat(Array.prototype.slice.call(el.parentNode.querySelectorAll("link[rel=stylesheet][molecule-for='" + fullname + "']")))
+        var molecules = Array.prototype.slice.call(el.querySelectorAll('molecule[src]'));  
+        molecules = molecules.concat(Array.prototype.slice.call(el.parentNode.querySelectorAll("molecule[src][molecule-for='" + fullname + "']")));
+        var asyncScripts = [];
+        scripts.concat(css).concat(molecules).forEach(script => {
+        	var append = true;
+        	var src = script.src || script.href;
+        	if(src){
+        		if(Molecule._LOAD_ONCE_RESOURCE[src] == null){
+        			Molecule._LOAD_ONCE_RESOURCE[src] = 1
+        		} else {
+        			append = false;
+        		}
+        	}
+            if(append) {
+            	var clone = script.cloneNode(true);
+            	if(src && (script.tagName == 'SCRIPT' || script.tagName == 'MOLECULE')){
+            		asyncScripts.push(clone);
+            	} else {	// css
+            		document.head.appendChild(clone);
             	}
-                if(append) document.head.appendChild(script.cloneNode(true));
-                script.remove();
-            });
+            }
+            script.remove();
+        });
+        await loadScripts(asyncScripts);
 
         Molecule.definesByFullname[fullname] = m[r.name] = el;
         el.moleculeName = r.name;
     } catch (e) {
         console.error('load ' + fullname + ' failed, ', e);
+    }
+    
+    
+    function loadScripts(scripts){
+    	return new Promise(async function next(resolve, reject){
+    		if(scripts.length == 0){
+				return resolve();
+			}
+    		var script = scripts.shift();
+    		if(script.tagName == 'MOLECULE'){
+    			await Molecule.loadHtmlInBrowser(script.src);
+    		} else {
+				script.onload = function(){
+					if(Molecule.debug) console.log(this.src + ' loaded')
+					next(resolve, reject);
+	    		}
+	        	document.head.appendChild(script);
+    		}
+    	});
     }
 }
 
@@ -640,8 +662,13 @@ while(Array.prototype.defCss == null){		// i dont known why plug this function a
 	}
 }
 
-jQuery(document).on('DOMContentLoaded', function(){
-	Molecule.scanDefines();
+jQuery(document).on('DOMContentLoaded', async function(){
+	for(var m of Array.prototype.slice.call(document.querySelectorAll('molecule[src]'))){
+		if(Molecule.debug) console.log('load from ' + m.getAttribute('src'));
+		await Molecule.loadHtmlInBrowser(m.getAttribute('src'));
+	}
+	
+	await Molecule.scanDefines();
 	Molecule.scanMolecules();
 	
 	jQuery(document).on('DOMNodeInserted', function(e) {
