@@ -457,7 +457,7 @@ d2js.DataTable.prototype.addColumn = function(colName, colType){
  * 从 url 加载数据。加载成功后，本地的 columns, rows 将重建，并从服务器获得页码信息。
  * @param [method='fetch'] {string} d2js 方法，放在 params 中作为 params._m 也可 
  * @param [params] {object} 查询参数，如 *{[_m : method], param1 : value1, param2 : value2, ...}*
- * @param option {object|function} 可提供 **function(exception){}** 或 **{ callback : function(ex){}, timeout : 30000, async : true, method : 'GET'}**
+ * @param option {object|function} 可提供 **function(exception){}** 或 **{ callback : function(ex){}, timeout : 30000, async : true, method : 'GET', addColumns:[]}**, addColumns 用于说明 columns 中不具备但 row 中含有的其它属性。
  */
 d2js.DataTable.prototype.load = function(method, params, option){
 	if(method instanceof Object){
@@ -577,6 +577,7 @@ d2js.DataTable.prototype.load = function(method, params, option){
 		}
 		
 		if(result.columns) {
+			if(option && option.addColumns) result.columns = result.columns.concat(option.addColumns);
 			table.initSchema(result.columns);
 		
 			var rows = result.rows;
