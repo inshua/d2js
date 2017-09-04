@@ -94,11 +94,12 @@ D2JS.prototype.fetchEntityById = function(params){
 /**
  * 默认的创建新实体方法。使用 entityMap 提供的 table。
  */
-D2JS.prototype.create = function(rcd, columns){
+D2JS.prototype.create = function(rcd){
 	this.mustBeEntity();
 	this.needValidate();
 	
-	this.validate(rcd, 'create');
+	var columns = this.entityMap.columns.slice();
+	this.validate(rcd, 'create', columns);
 	
 	return this.insertRow(this.entityMap.table, rcd, columns, this.entityMap.pk)
 }
@@ -106,11 +107,12 @@ D2JS.prototype.create = function(rcd, columns){
 /**
  * 默认的修改实体方法。使用 entityMap 提供的 table。
  */
-D2JS.prototype.modify = function(rcd, columns){
+D2JS.prototype.modify = function(rcd){
 	this.mustBeEntity();
 	this.needValidate();
 	
-	this.validate(rcd, 'modify');
+	var columns = this.entityMap.columns.slice();
+	this.validate(rcd, 'modify', columns);
 	
 	return this.updateRow(this.entityMap.table, rcd, columns, this.entityMap.pk)
 }
