@@ -298,7 +298,7 @@ d2js.meta.loadMetas = function(metas, namespace = d2js.root) {
                     if (map.inverse != null) continue;
                     var rmeta = namespace[map.type];
                     if (rmeta) rmeta = rmeta.prototype._meta;
-                    var rmap = d2js.findInverseMap(map, rmeta.map);
+                    if(rmeta) var rmap = d2js.findInverseMap(map, rmeta.map);
                     if (rmap) {
                         map.inverse = rmap;
                         rmap.inverse = map;
@@ -399,6 +399,10 @@ d2js.Entity = function(values, state = 'new') {
                             value[map.inverse.name] = this;
                         }
                         let Constructor = this._namespace[map.type];
+                        if(Constructor == null) {
+                        	console.error(map.type + ' not found in ' , this._namespace)
+                        	throw new Error(map.type + ' not found');
+                        }
                         let obj = this._values[k] = new Constructor(value, state); // if column name == map name, just keep map name, when collect data, will collect fk id.
                         if (map.inverse && map.inverse.relation == 'many') {
                             let ls = obj[map.inverse.name];
@@ -1420,7 +1424,6 @@ d2js.Entity.dynamic = {};
  * @param [option] {object} fetch 参数
  */
 d2js.Entity.dynamic.fetch = function(url, method = 'fetch', params, option) {
-    url = contextPath + url;
     var q = {};
     if (params) {
         Object.assign(q, params);
@@ -1431,7 +1434,7 @@ d2js.Entity.dynamic.fetch = function(url, method = 'fetch', params, option) {
 
     return new Promise(async function(resolve, reject) {
         try {
-            var response = await fetch(url + '?' + jQuery.param(params),
+            var response = await fetch(contextPath + url + '?' + jQuery.param(params),
                 Object.assign({ credentials: "same-origin" }, option));
             var result = await d2js.processResponse(response);
             if (result == null) {
@@ -1461,10 +1464,9 @@ d2js.List.dynamic = {};
  * 提取列表数据。
  * @param [method='fetch'] {string} d2js method
  * @param [params] {object} 查询参数
- * @param [option] {object} fetch 参数
+ * @param [option] {object} fetch 参数, 支持{namespace: base namespace, map: {...}}
  */
 d2js.List.dynamic.fetch = function(url, method = 'fetch', params, option) {
-    url = contextPath + url;
     var q = {};
     if (params) {
         Object.assign(q, params);
@@ -1472,10 +1474,13 @@ d2js.List.dynamic.fetch = function(url, method = 'fetch', params, option) {
     q._page = { start: 0, limit: d2js.DataTable.DEFAULT_PAGESIZE };
 
     params = { _m: method || q._m || 'fetch', params: JSON.stringify(q) };
+    
+    var map = option && option.map;
+    if(map) map = Object.assign({}, map);		// clone map
 
     return new Promise(async function(resolve, reject) {
         try {
-            var response = await fetch(url + '?' + jQuery.param(params), { credentials: "same-origin" });
+            var response = await fetch(contextPath + url + '?' + jQuery.param(params), { credentials: "same-origin" });
             var table = await d2js.processResponse(response);
             var columns = table.columns;
             if (columns == null) {
@@ -1483,8 +1488,9 @@ d2js.List.dynamic.fetch = function(url, method = 'fetch', params, option) {
                 columns = Object.getOwnPropertyNames(table.rows[0]).map(function(n) { return { "name": n } });
             }
 
-            var meta = { path: url, name: '<dynamic>', columns: columns, map: null };
+            var meta = { path: url, name: '<dynamic>', columns: columns, map:  map};
             var ns = {};
+            if(option && option.namespace) Object.assign(ns, option.namespace)
             d2js.meta.loadMetas([meta], ns);
 
             var ls = new d2js.List(meta);
