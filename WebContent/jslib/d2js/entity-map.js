@@ -491,7 +491,7 @@ d2js.Entity.prototype._set = function(attr, newValue) {
     if (this._state == 'phantom') throw new Error('cant set value at phantom entity');
 
     let isMappedOject = attr in this._meta.map;
-    newValue = (newValue == null ? null : newValue);
+    newValue = (newValue == null || newValue === '' ? null : newValue);
     if (isMappedOject) {
         return this._setMappedAttribute(attr, newValue);
     } else {
