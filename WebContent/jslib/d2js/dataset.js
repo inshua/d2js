@@ -884,20 +884,23 @@ d2js.processError = function(error, items) {
                 if (error.field.indexOf(',') == -1) {
                     err = {};
                     err[error.field] = error;
+                    item._error_at = Object.assign(item._error_at || {}, err);
                 } else {
                     var arr = error.field.split(','); // json 类型的字段，错误是一串路径
-                    arr.reverse();
-                    err = arr.reduce(function(err, fld) {
-                        var e = {};
-                        e[fld] = err;
-                        return e;
-                    }, error);
+                    var err = item._error_at || {};
+                    arr.reduce(function(acc, fld, idx){
+                    	if(acc[fld] == null) acc[fld] = {};
+                    	if(idx == arr.length -1){
+                    		acc[fld] = error;
+                    	}
+                    	return acc[fld];
+                    }, err);
+                    item._error_at = err;
                 }
-                item._error_at = Object.assign(item._error_at || {}, err);
-                item._error = null;
+                //item._error = null;
             } else {
                 item._error = error;
-                item._error_at = null;
+                //item._error_at = null;
             }
         }
         return true;
@@ -970,7 +973,7 @@ d2js.DataTable.prototype.rebuildIndexes = function(){
 			for(var j=0; j< this.indexedColumns.length; j++){
 				var cname = this.indexedColumns[j];
 				var v = row[cname];
-				if(v != null && v !=== ''){
+				if(v != null && v !== ''){
 					if(this.indexes[cname][v]) throw new Error('unable to create index since same value '  + v + ' existed');
 					this.indexes[cname][v] = row;
 				}
