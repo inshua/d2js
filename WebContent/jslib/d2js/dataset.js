@@ -970,7 +970,7 @@ d2js.DataTable.prototype.rebuildIndexes = function(){
 			for(var j=0; j< this.indexedColumns.length; j++){
 				var cname = this.indexedColumns[j];
 				var v = row[cname];
-				if(v != null && v !== ''){
+				if(v != null && v !=== ''){
 					if(this.indexes[cname][v]) throw new Error('unable to create index since same value '  + v + ' existed');
 					this.indexes[cname][v] = row;
 				}
@@ -1231,7 +1231,7 @@ d2js.DataRow = function(table, rowData){
 	this._error_at = null;
 	
 	function processValue(v){
-		if(v == null || v == '') return null;
+		if(v == null || v === '') return null;
 		return v;
 	}
 	
