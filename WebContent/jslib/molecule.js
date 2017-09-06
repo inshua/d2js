@@ -522,7 +522,7 @@ Molecule.scanMolecules = function(starter, manual) {
             	var isTableElement = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR'].indexOf(parent.nodeName);
             	var childNodes = Array.prototype.slice.call(target.childNodes);
             	var indicator = p;
-            	for(var i=childNodes.length -1; i--; i>=0){
+            	for(var i=childNodes.length -1; i>=0; i--){
                     var c = childNodes[i];
                     if(isTableElement){		// unescapeTableElement
                     	c = unescapeTableElement(c, parent);
@@ -684,11 +684,11 @@ jQuery(document).on('DOMContentLoaded', async function(){
 	jQuery(document).on('DOMNodeRemoved', function(e) {
 	    var target = (e.originalEvent.target || e.target);
 	    if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
-	        if (target.molecule) {
+	        if (target.moleculeInstance) {
 	            target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
 	        }
 	        Array.prototype.forEach.call(target.querySelectorAll('[molecule-obj]'), ele => {
-	             target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
+	        	ele.moleculeInstance && ele.moleculeInstance.onDOMNodeRemoved();
 	        });
 	    }
 	});
