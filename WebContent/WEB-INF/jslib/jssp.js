@@ -53,7 +53,7 @@ function processJsspRequest(d2js, params, request, response, session, out){
  * @param params {object} 传入参数
  */
 D2JS.prototype.includeJssp = function(jsspFile, params){
-	this.callD2js(jsspFile, 'jssp', params);
+	this.callD2js(jsspFile, 'jssp', params || {});
 }
 
 /**
