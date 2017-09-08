@@ -191,7 +191,7 @@ Molecule.loadHtmlInBrowser = async function(res) {
     var resp = await fetch(link.href, {credentials: 'include'});
     var text = await resp.text();
     var dom = new DOMParser().parseFromString(text, 'text/html');
-    await Molecule.scanDefines(dom);	// this is a promise
+    await Molecule.scanDefines(dom, link.href);	// this is a promise
     return true;
 }
 
@@ -211,11 +211,11 @@ Molecule.getModuleName = function(fullname) {
     return { module: module, name: name };
 }
 
-Molecule.scanDefines = async function(starter) {
+Molecule.scanDefines = async function(starter, baseUrl) {
     for(var template of Array.prototype.slice.call((starter || document).querySelectorAll('template'))){
         var found = false;
         for(var el of Array.prototype.slice.call(template.content.querySelectorAll('[molecule-def]'))) {
-            await Molecule.registerPrototype(el);
+            await Molecule.registerPrototype(el, baseUrl);
             el.remove();
             found = true;
         };
@@ -226,8 +226,9 @@ Molecule.scanDefines = async function(starter) {
     };
 }
 
+
 Molecule._LOAD_ONCE_RESOURCE = {};
-Molecule.registerPrototype = async function(el) {
+Molecule.registerPrototype = async function(el, baseUrl) {
     var fullname = el.getAttribute('molecule-def');
     var depends = el.getAttribute('molecule-depends');
     var styles = Array.prototype.slice.call(el.querySelectorAll('style'));
@@ -272,8 +273,16 @@ Molecule.registerPrototype = async function(el) {
         var asyncScripts = [];
         scripts.concat(css).concat(molecules).forEach(script => {
         	var append = true;
-        	var src = script.src || script.href;
+        	var isCss = (script.tagName == 'LINK');
+        	var attr = 'src';
+        	if(isCss) attr = 'href';
+        	var src = script[attr];
         	if(src){
+        		if(baseUrl && src != script.getAttribute(attr)){
+            		var abs = absolute(baseUrl, script.getAttribute(attr));
+            		script.setAttribute(attr, abs);
+            		src = script[attr]
+            	}
         		if(Molecule._LOAD_ONCE_RESOURCE[src] == null){
         			Molecule._LOAD_ONCE_RESOURCE[src] = 1
         		} else {
@@ -315,6 +324,22 @@ Molecule.registerPrototype = async function(el) {
 	        	document.head.appendChild(script);
     		}
     	});
+    }
+    
+    function absolute(base, relative) {
+        var stack = base.split("/"),
+            parts = relative.split("/");
+        stack.pop(); // remove current file name (or empty string)
+                     // (omit if "base" is the current folder without trailing slash)
+        for (var i=0; i<parts.length; i++) {
+            if (parts[i] == ".")
+                continue;
+            if (parts[i] == "..")
+                stack.pop();
+            else
+                stack.push(parts[i]);
+        }
+        return stack.join("/");
     }
 }
 
