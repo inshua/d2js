@@ -387,7 +387,14 @@ Molecule.scanMolecules = function(starter, manual) {
         var inner = target.innerHTML;
         if (Molecule.debug) console.info(fullname + ' outerHTML', target.outerHTML);
 
-        if (target.hasAttribute('molecule-trace')) debugger;
+        var debugForTrace = false
+        if (target.hasAttribute('molecule-trace')) {
+        	if(!Molecule.debug){
+        		debugForTrace = true
+        		Molecule.debug = true
+        	}
+        	debugger;
+        }
 
         var defs = [node];
         while (node.hasAttribute('molecule')) {
@@ -442,6 +449,7 @@ Molecule.scanMolecules = function(starter, manual) {
             createMoleculeInstance(defs[d]);
         }
         Molecule.processing = false;
+        if(debugForTrace) { Molecule.debug = false; debugger; }
 
         jQuery(target).trigger('molecule-inited', [target, fullname]);
 
@@ -516,10 +524,10 @@ Molecule.scanMolecules = function(starter, manual) {
             });
 
             var p = templateMirror.querySelector('molecule-placeholder');
-            if(!p) p = templateMirror.querySelector('template[molecule-placeholder]');
+            if(!p) p = templateMirror.querySelector('[molecule-placeholder]');
             if (p) {
             	var parent = p.parentNode;
-            	var isTableElement = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR'].indexOf(parent.nodeName);
+            	var isTableElement = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR'].indexOf(parent.nodeName) > -1;
             	var childNodes = Array.prototype.slice.call(target.childNodes);
             	var indicator = p;
             	for(var i=childNodes.length -1; i>=0; i--){
@@ -576,10 +584,13 @@ Molecule.scanMolecules = function(starter, manual) {
                 var nodes = Array.prototype.slice.call(node.childNodes);
                 for(var i = 0;i < nodes.length; i++){
                 	var c = nodes[i];
-                	if(allowedChildren[tag] != null){
+                	if(allowed && allowed.indexOf(tag) > -1){
                 		c = unescapeTableElement(c, nd);
+                		nd.appendChild(c);
+                	} else {
+                		console.error('cannot insert ', tag, 'into', parentNode);
+                		debugger;
                 	}
-                    nd.appendChild(c);
                 }
         		node.remove();
         		node = nd;
@@ -587,7 +598,7 @@ Molecule.scanMolecules = function(starter, manual) {
         		 var nodes = Array.prototype.slice.call(node.childNodes);
                  for(var i = 0;i < nodes.length; i++){
                  	var c = nodes[i];
-                 	if(allowedChildren[tag] != null){
+                 	if(allowed && allowed.indexOf(tag) > -1){
                  		var c2 = unescapeTableElement(c, nd);
                  		if(c2 != c){replaceNode(c, c2);}
                  	}
@@ -662,6 +673,7 @@ while(Array.prototype.defCss == null){		// i dont known why plug this function a
 	}
 }
 
+jQuery.holdReady(true);
 jQuery(document).on('DOMContentLoaded', async function(){
 	for(var m of Array.prototype.slice.call(document.querySelectorAll('molecule[src]'))){
 		if(Molecule.debug) console.log('load from ' + m.getAttribute('src'));
@@ -670,6 +682,7 @@ jQuery(document).on('DOMContentLoaded', async function(){
 	
 	await Molecule.scanDefines();
 	Molecule.scanMolecules();
+	jQuery.holdReady(false);
 	
 	jQuery(document).on('DOMNodeInserted', function(e) {
 	    var target = (e.originalEvent.target || e.target);
