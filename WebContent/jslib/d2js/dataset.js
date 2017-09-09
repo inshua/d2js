@@ -916,8 +916,7 @@ d2js.processError = function(error, items) {
 d2js.DataTable.prototype.clearError = function(broadcast) {
     this.error = null;
     for (var i = 0; i < this.rows.length; i++) {
-        this.rows[i]._error = null;
-        this.rows[i]._error_at = null;
+        this.rows[i]._clearError()
     }
     if (broadcast) {
         var me = this;
@@ -1374,6 +1373,14 @@ d2js.DataRow = function(table, rowData){
 	 */
 	this._remove = function(){
 		this._state = 'remove';
+	}
+	
+	/**
+	 * 清除错误
+	 */
+	this._clearError = function(){
+		this._error = null;
+		this._error_at = null;
 	}
 	
 	// 初始化
