@@ -29,138 +29,19 @@
 		<!-- 可排序的列头，<th col=xxx text=xxx [renderer=xxx,默认为 std] sortable="true|false"></th> -->
 		<th molecule-def="Header" renderer="std">
 			<a></a>
+			<script src="basic.js"></script>
 			<script constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var col = this.$el.attr('col');
-				var text = this.$el.attr('text');
-				this.$el.attr('data-t', col);
-
-				var sortable = this.$el.attr('sortable');
-				sortable = (sortable && sortable != 'false')
-
-				var a = this.$el.find('a');
-				if (sortable) {
-					a.attr('data', 'this');
-					a.attr('renderer', "sortLink('" + col + "','" + text + "')");
-				} else {
-					a[0].outerHTML = text;
-				}
-			</script>
-			<script>
-				d2js.Renderers.sortLink = function (colName, text) {
-					return function (element, table) {
-						var e = $(element);
-						e.attr('href', '###');
-						element.onclick = function () {
-							var sort = {};
-							var old = table.search._sorts && table.search._sorts[colName];
-							if (old == 'asc') {
-								sort[colName] = 'desc';
-							} else {
-								sort[colName] = 'asc';
-							}
-							table.search._sorts = sort;
-							table.load();
-						};
-						var icon = null;
-						var sorts = table.search._sorts || {};
-						switch (sorts[colName]) {
-							case 'asc': icon = 'glyphicon glyphicon-arrow-up'; break;
-							case 'desc': icon = 'glyphicon glyphicon-arrow-down'; break;
-						}
-						e.html(text + (icon ? '<span class="' + icon + '">' : ''));
-					}
-				}
+				basicui.Header.call(this, 'bootstrap');
 			</script>
 		</th>
 		<!-- 
             	多选列头  <th col="id"> 
-            -->
+        -->
 		<th molecule-def="CheckHeader" renderer="check">
 			<input type="checkbox" id="ckAll">
+			<script src="basic.js"></script>
 			<script constructor>
-				var checked = [];
-				var checkboxes = [];
-				var col = this.$el.attr('col');
-				this.$el.attr('data-t', col);
-
-				this.$el.attr('check-all-id', this.id || '');
-
-				var me = this;
-				this.$el.find('#ckAll').on('change', function (e) {
-					var arr = [];
-					checkboxes.forEach(function (ck) {
-						ck.checked = this.checked;
-						if (ck.checked) arr.push($(ck).parent().data('value'))
-					}, this);
-					checked = arr;
-					me.$el.trigger('valuechange', [checked]);
-				});
-
-				this.checkboxes = checkboxes;
-
-				this.checked = function (v) {
-					if (v == null) {
-						return checked;
-					} else {
-						checked = v;
-						checkboxes.forEach(function (ck) {
-							ck.checked = (checked.indexOf($(ck).parent().data('value')) != -1);
-						})
-						if (checkboxes.every(function (ck) { return ck.checked })) {
-							me.$el.find('#ckAll').prop('checked', true);
-						} else {
-							me.$el.find('#ckAll').prop('checked', false);
-						}
-					}
-				}
-
-				var table = d2js.dataset.getTable(this.$el.closest('[table]').attr('table'));
-				table.on(['load', 'submit'], function () {
-					me.checked([]);
-				});
-			</script>
-			<script>
-				d2js.Renderers.check = function (element, v, table) {
-					var checkAllId = $(element).attr('check-all-id');
-					if(checkAllId != null && checkAllId != ''){
-						var checkAll = $(element).closest('table').find('thead').find('th[check-all-id=' + checkAllId + ']').molecule();
-					} else {
-						var checkAll = $(element).closest('table').find('thead').find('th[check-all-id]').molecule();
-					}
-					
-					var checked = checkAll.checked();
-					var checkboxes = checkAll.checkboxes;
-
-					var e = $(element).html('');
-					var ck = $(document.createElement('input')).attr('type', 'checkbox')
-						.prop('checked', checked.indexOf(v) != -1)
-						.appendTo(e);
-					checkboxes.push(ck[0]);
-
-					$(element).data('value', v);
-
-					ck.on('change', function (event) {
-						var checked = checkAll.checked();
-						if (this.checked) {
-							if (checked.indexOf(v) == -1) {
-								checked.push(v);
-							}
-							if (checkboxes.every(function (ck) { return ck.checked })) {
-								checkAll.$el.find('#ckAll').prop('checked', true);
-							}
-							checkAll.$el.trigger('valuechange', [checked]);
-						} else {
-							if (checked.indexOf(v) != -1) {
-								checked.splice(checked.indexOf(v), 1);
-							}
-							if (!checkboxes.every(function (ck) { return ck.checked })) {
-								checkAll.$el.find('#ckAll').prop('checked', false);
-							}
-							checkAll.$el.trigger('valuechange', [checked]);
-						}
-					});
-				}
+				basicui.CheckHeader.call(this, 'bootstrap');
 			</script>
 		</th>
 
@@ -172,31 +53,7 @@
 		<th molecule-def="ActionHeader" href="###">
 		</th>
 		<script molecule-for="ActionHeader" constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var col = this.$el.attr('col');
-				var text = this.$el.attr('text');
-				this.$el.attr('data-t', col);
-
-				var a = this.$el.find('a');
-				a.attr('data-t', 'this');
-				var onclick = (this.$el.attr('onclick') || '').replace(/\'/g, "\"");
-				this.$el.attr('renderer', "actionLink('" + col + "','" + text + "','" + onclick + "')");
-				this.$el.removeAttr('onclick');
-		</script>
-		<script molecule-for="ActionHeader">
-				d2js.Renderers.actionLink = function (colName, text, click) {
-					return function (element, table) {
-						var e = $(document.createElement('a')).appendTo(element);
-						e.attr('href', '###');
-						if (click) e.attr('onclick', click);
-						var action = e.parent().attr('action');
-						e.bind('click', function () {
-							var td = $(this).parent();
-							td.trigger('actionheader.click', [action].concat(d2js.locateData(td)));
-						});
-						e[0].innerHTML = text;
-					}
-				}
+			basicui.ActionHeader.call(this,'bootstrap');
 		</script>
 		
 		<!-- 表单项，<form col="" text=""></form>， 必须放在 form 里，且 form 已指定 table=xxx -->
@@ -225,17 +82,7 @@
 			<molecule-placeholder></molecule-placeholder>
 			<div class="help-block with-errors" renderer="flderr"></div>
 			<script constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var col = this.$el.attr('col');
-				var text = this.$el.attr('text');
-
-				this.$el.find('.help-block').attr('data', '_error_at,' + col);
-				this.$el.find('label').html(text);
-
-				if (this.$el.is('[dict]') && this.$el.find('select').length) {
-					this.$el.attr('data', 'this');
-					this.$el.attr('renderer', "dictToList|options('name','id',false)");
-				}
+				basicui.FormItem.call(this, 'bootstrap');
 			</script>
 		</div>
 
@@ -248,38 +95,7 @@
 			<img id="imgPreview" class="form-control">
 			<input type="file" accept="images/*" capture="camera" class="form-control">
 			<script constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var col = this.$el.closest('.form-group').attr('col');
-				this.$el.attr('data', col);
-
-				var imgPreview = this.$el.find('#imgPreview')[0];
-				var imageData = '';
-				this.$el.find('input').on('change', function previewImage() {
-					var file = this;
-					var reader = new FileReader();
-					reader.onloadend = function () {
-						imageData = imgPreview.src = reader.result;
-						console.log(reader.result);
-					}
-					if (file) {
-						reader.readAsDataURL(file.files[0]);
-					} else {
-						imageData = imgPreview.src = "";
-					}
-				});
-				var me = this;
-				$(imgPreview).on('click', function () { me.$el.find('input').click(); });
-				this.getValue = function () { return imageData };
-				this.setValue = function (value) {
-					imageData = imgPreview.src = value || "";
-				}
-				if (this.$el.attr('src')) {
-					imgPreview.src = this.$el.attr('src');
-					this.$el.removeAttr('src');
-				}
-				if (this.$el.attr('img-style')) {
-					imgPreview.style.cssText = this.$el.attr('img-style')
-				}
+				basicui.FormImageItem.call(this, 'bootstrap');
 			</script>
 		</div>
 
@@ -289,10 +105,7 @@
 			<label></label>
 			<molecule-placeholder></molecule-placeholder>
 			<script constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var col = this.$el.attr('col');
 				var text = this.$el.attr('text');
-
 				this.$el.find('label').html(text);
 			</script>
 		</div>
@@ -300,9 +113,7 @@
 		<!-- 输入控件, <input type=xxx> 必须放在 FormItem 内-->
 		<input molecule-def="Input" type="text" class="form-control" renderer="std" collector="c|s">
 		<script molecule-for="Input" constructor>
-				var table = this.$el.closest('[table]').attr('table');
 				var col = this.$el.closest('.form-group').attr('col');
-
 				this.$el.attr('data', col);
 		</script>
 
@@ -311,11 +122,8 @@
     -->
 		<textarea molecule-def="TextArea" class="form-control" renderer="std" collector="c|s"></textarea>
 		<script molecule-for="TextArea" constructor>
-				var table = this.$el.closest('[table]').attr('table');
 				var col = this.$el.closest('.form-group').attr('col');
-
 				this.$el.attr('data', col);
-
 				this.$el.closest('.form-group').addClass('form-textarea-item');
 		</script>
 		<style molecule-for="TextArea">
@@ -324,26 +132,18 @@
 			}
 		</style>
 
-
 		<form molecule-def="SearchForm" class="form-inline" style="float:right" d2js.root=",search,params">
 		</form>
 
 		<!-- 
-    	输入的 select form item, 放在 search form 中，已嵌套一个 select 元素
-    	用法：
-    	<div molecule="SearchFormSelectItem" col="gender" text="Gendor" [dict="gender"] [allow-empty="true|false"]></div>
-    -->
+	    	输入的 select form item, 放在 search form 中，已嵌套一个 select 元素
+	    	用法：
+	    	<div molecule="SearchFormSelectItem" col="gender" text="Gendor" [dict="gender"] [allow-empty="true|false"]></div>
+	    -->
 		<div molecule-def="SearchFormSelectItem" molecule="SearchFormItem" col="gender" text="Gendor" dict="gender" allow-empty="true">
 			<select class="form-control" renderer="std" collector="c|s"></select>
 			<script constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var col = this.$el.closest('.form-group').attr('col');
-				var allowEmpty = (this.$el.closest('[allow-empty]').attr('allow-empty') != 'false');
-
-				this.$el.attr('data', 'this');
-				this.$el.find('select').attr('data', col);
-				this.$el.attr('renderer', 'dictToList|options(\'name\',\'id\', ' + allowEmpty + ')');
-				d2js.render(this.$el);
+				basicui.SearchFormSelectItem.call(this, 'bootstrap')
 			</script>
 		</div>
 
@@ -368,7 +168,7 @@
 					overflow-y: scroll;
 				}
 
-				modal {
+				.modal-body {
 					overflow: visible;
 				}
 			</style>
@@ -389,126 +189,27 @@
 				</div>
 			</div>
 			<script constructor>
-				var title = this.$el.attr('title');
-				this.$el.find('.modal-title').html(title);
-				this.el.title = '';
-
-				if (this.$el.attr('show-buttons') == 'false') this.$el.find('#bnSave').hide();
-				EventDispatcher.call(this);
-				this.regEvent(['close', 'submit']);
-
-				var me = this;
-				this.$el.on('click', '#bnSave', function () {
-					me.fireEvent('submit');
-				});
-
-				this.$el.on('hide.bs.modal', function () {
-					me.fireEvent('close');
-				});
+				basicui.Dialog.call(this, 'bootstrap');
 			</script>
 		</div>
 
 		<!-- 搜索按钮, 放在 form 里 -->
 		<button molecule-def="SearchButton" type="button" class="btn btn-default"></button>
 		<script molecule-for="SearchButton" type="text/javascript" constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var btn = this.$el;
-				btn.on('click', function () {
-					d2js.collect(btn.parent('form')[0]);
-					d2js.dataset.getTable(table).navigatePage(0);
-				});
+			basicui.SearchButton.call(this)
 		</script>
 
 		<!-- 增加按钮, 放在 form 里 -->
 		<button molecule-def="AddButton" type="button" class="btn btn-default"></button>
 		<script molecule-for="AddButton" type="text/javascript" constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var btn = this.$el;
-				btn.on('click', function () {
-					var tl = $(this).closest('[molecule-obj=TableList]');
-					var row = d2js.dataset.getTable(table).addRow(d2js.dataset.getTable(table).newRow());
-					Molecule.of(tl).editRow(row);
-				});
+			basicui.AddButton.call(this);
 		</script>
 
 		<!-- TableList, <table table="" edit-dialog="dialog id" [new-dialog="dialog id"] allow-remove="true|false"> -->
 		<div molecule-def="TableList" class="container">
+			<script src="basic.js"></script>
 			<script constructor>
-				var tname = this.$el.closest('[table]').attr('table');
-				this.el.setAttribute('d2js.root', tname);
-
-				var editDialogId = this.$el.attr('edit-dialog');
-				var newDialogId = this.$el.attr('new-dialog') || editDialogId;
-
-				if (editDialogId == null || newDialogId == null) return;		// 没有提供编辑数据的对话框
-
-				$('body').on('molecule-inited', function (event, ele) {
-					if (editDialogId && $(ele).is('#' + editDialogId)) {
-						initDialog($('#' + editDialogId));
-					}
-					if (newDialogId && newDialogId != editDialogId && $(ele).is('#' + newDialogId)) {
-						initDialog($('#' + newDialogId));
-					}
-				});
-
-				var me = this;
-				function initDialog(dialogEle) {
-					dialogEle.find('#divRowError').attr('data', "_error");
-					var dialog = Molecule.of(dialogEle);
-					if (dialog == null) debugger;
-					dialog.on('close', function () {
-						var table = d2js.dataset.getTable(tname);
-						table.reject();
-						table.clearError();
-						d2js.render();
-					});
-					dialog.on('submit', function () {
-						var e = { cancel: false };
-						dialogEle.trigger('willsubmit', e);
-						if (e.cancel) return;
-						$(dialogEle).collect();
-						var table = d2js.dataset.getTable(tname);
-						if (dialogEle[0].hasAttribute('trace-submit')) {
-							table.inspect();
-							return;
-						}
-						table.submit({
-							callback: function (error) {
-								if (!error) {
-									dialogEle.modal('hide');
-									this.reload();
-								} else {
-									d2js.render();
-								}
-							}
-						});
-					});
-				}
-
-				this.editRow = function (row) {
-					var dialogId = (row._state == 'new') ? newDialogId : editDialogId;
-
-					row._table.curr = row;
-					this.$el.trigger('tablelist.edit', [row]);
-					$('#' + dialogId).bindRoot(row, this.el).render().modal('show');
-				}
-			</script>
-			<script>
-				d2js.Renderers.editLink = function (element, v) {
-	        		var table = d2js.findArg(arguments, 'table');
-	            	var $e = $(element);
-	     	        $e.html('');
-	     	        var a = $(document.createElement('a')).appendTo($e);
-	     	        a.html('EDIT');
-	     	        a.attr('href', '###');
-	     	        a.data('id', v);
-	     	        var idColumn = arguments[arguments.length-2];
-	     	        a.on('click', function () {
-	     	        	var row = $e.findRoot().root;
-	     	        	var tl = $(this).closest('[molecule-obj=TableList]');
-	     	        	Molecule.of(tl).editRow(row);
-	     	        });
-	     	    };
+				basicui.TableList.call(this,'bootstrap');
 			</script>
 		</div>
 
@@ -521,26 +222,11 @@
 		<div molecule-def="Confirm" class="panel panel-default" style="display:inline-block;">
 			<div class="panel-body">
 				<molecule-placeholder></molecule-placeholder>
-				<button class="btn btn-primary">OK</button>
-				<button class="btn btn-default">Cancel</button>
+				<button id="ok" class="btn btn-primary">OK</button>
+				<button id="cancel" class="btn btn-default">Cancel</button>
 			</div>
 			<script constructor>
-				var me = this;
-				this.$el.find('.btn-primary').on('click', function () {
-					$(document).off('mousedown', f);
-					me.$el.trigger('confirm.ok');
-				});
-				this.$el.find('.btn-default').on('click', function () {
-					$(document).off('mousedown', f);
-					me.$el.trigger('confirm.cancel');
-				});
-				function f(event) {
-					if (!me.$el.has($(event.target)).length) {
-						$(document).off('mousedown', f);
-						me.$el.trigger('confirm.cancel');
-					}
-				}
-				$(document).on('mousedown', f);
+				basicui.Confirm.call(this)
 			</script>
 		</div>
 
@@ -550,69 +236,13 @@
 		<div molecule-def="CheckGroup" renderer="molecule" collector="m|s">
 			<ul class="list-inline checkgroup" renderer="dictToList|checkgroup('name','id')" d2js.root="dicts"></ul>
 			<script constructor>
-					  var table = this.$el.closest('[table]').attr('table');
-					  var col = this.$el.closest('[col]').attr('col');
-					  this.$el.attr('data', col);
-
-					  var dict = this.$el.is('[dict]') || this.$el.parent('[dict][molecule-obj=FormItem]').attr('dict');
-					  var ckgrp = this.$el.find('.checkgroup');
-					  if (dict) {
-						  ckgrp.attr('dict', dict);
-					  }
-
-					  this.value = [];
-
-					  var me = this;
-					  this.setValue = function (v) {
-						  me.value = v;
-						  me.$el.find('input[type=checkbox]').each(function (idx, ck) {
-							  ck.checked = (v && v.indexOf(ck.value) != -1)
-						  });
-					  }
-
-					  this.getValue = function () { return me.value; }
-
-					  this.updateValue = function () {
-						  var arr = [];
-						  me.$el.find('input[type=checkbox]').each(function (idx, ck) {
-							  if (ck.checked) {
-								  arr.push(ck.value);
-							  }
-						  });
-						  me.value = arr;
-					  }
-
-					  this.$el.on('change', function (event) {
-						  if (event.target && $(event.target).is('input[type=checkbox]')) {
-							  me.updateValue();
-							  me.$el.trigger('change', [me.value]);
-						  }
-					  })
-			</script>
-			<script>
-				d2js.Renderers.checkgroup = function (dispCol, valueCol) {
-					return function (element, rows, table) {
-						$(element).find('*').each(function (idx, ele) { ele.remove() });
-
-						if (rows == null) return;
-						for (var i = 0; i < rows.length; i++) {
-							var li = $(document.createElement('li'));
-							$(document.createElement('input'))
-								.attr('type', 'checkbox').val(rows[i][valueCol])
-								.appendTo(li);
-							$(document.createElement('span')).html(rows[i][dispCol]).appendTo(li);
-							li.appendTo(element);
-						}
-						var m = $(element).parent().molecule();
-						if (m) m.setValue(m.getValue());
-					}
-				}
+				basicui.CheckGroup.call(this, 'bootstrap');
 			</script>
 		</div>
 
 		<!-- 
-    	日期时间控件。从 input type=date 和 input type=time 复合得到的一个 molecule。 
-    -->
+	    	日期时间控件。从 input type=date 和 input type=time 复合得到的一个 molecule。 
+	    -->
 		<div molecule-def="DateTime" class="datetime" collector="m|s" renderer="molecule">
 			<style>
 				.datetime {
@@ -635,19 +265,7 @@
 			</style>
 			<input class="form-control" type="date" format="yyyy-MM-dd"><input class="form-control" type="time" format="HH:mm">
 			<script constructor>
-				this.getValue = function () {
-					var s = this.$el.find('[type=date]').val() + ' ' + this.$el.find('[type=time]').val();
-					return Date.parse(s, 'yyyy-MM-dd HH:mm');
-				}
-				this.setValue = function (value) {
-					if (value) {
-						this.$el.find('[type=date]').val(value.format('yyyy-MM-dd'));
-						this.$el.find('[type=time]').val(value.format('HH:mm'));
-					} else {
-						this.$el.find('[type=date]').val('');
-						this.$el.find('[type=time]').val('');
-					}
-				}
+				basicui.DateTime.call(this)
 			</script>
 		</div>
 
@@ -658,55 +276,7 @@
 			<div class="btn-group" role="group" data="#dicts" renderer="dictToList|buttons('name', 'id')">
 			</div>
 			<script constructor>
-				this.$el.find('.btn-group').attr('dict', this.$el.attr('dict'));
-				var value = this.$el.data('value');
-
-				this.setValue = function (val) {
-					value = val;
-					this.$el.find('button').each(function (idx, btn) {
-						if ($(btn).data('value') == value) {
-							$(btn).addClass('btn-primary');
-						} else {
-							$(btn).removeClass('btn-primary');
-						}
-					});
-				}
-				if (value != null && value.length) {
-					this.setValue(value);
-				}
-				this.getValue = function () {
-					return value;
-				}
-
-				var me = this;
-				this.$el.on('click', 'button', function (event) {
-					var v = $(event.currentTarget).data('value');
-					me.setValue(v);
-				});
-			</script>
-			<script>
-				d2js.Renderers.buttons = function (dispCol, valueCol, allowEmpty) {
-
-					return function (element, rows, table) {
-						var group = $(element);
-
-						element.innerHTML = '';
-
-						if (!rows) return;
-						for (var i = 0; i < rows.length; i++) {
-							$(document.createElement('button'))
-								.addClass('btn btn-default')
-								.data('value', rows[i][valueCol])
-								.html(rows[i][dispCol])
-								.appendTo(group);
-						}
-
-						var m = group.parent().molecule();
-						if (m) {
-							m.setValue(m.getValue());
-						}
-					}
-				}
+				basicui.RadioButtonGroup.call(this, 'bootstrap')
 			</script>
 		</div>
 	</template>
@@ -731,159 +301,16 @@
 					<td width="100%" colspan="1000">
 						<div style="display: flex;flex-flow: row nowrap;justify-content: space-between;align-items: center;">
 							<div id="leftFoot"></div>
-							<nav>
-								<ul class="pagination" renderer="pagination">
-								</ul>
+							<nav molecule=Pagination>
 							</nav>
 							<div id="rightFoot"></div>
 						</div>
 					</td>
 				</tr>
 			</tfoot>
+			<script src="basic.js"></script>
 			<script constructor>
-				var table = this.$el.closest('[table]').attr('table');
-				var valueColumn = this.$el.closest('[value-col]').attr('value-col') || 'id'
-				this.$el.attr('d2js.root', table).attr('data', 'this');
-				var paging = this.$el.closest('[paging]').attr('paging');
-				if (paging == 'false') {
-					this.$el.find('.pagination').closest('tfoot').remove();
-				} else {
-					this.$el.find('.pagination').attr('data', 'this');
-				}
-				if (this.$el.closest('[show-header]').attr('show-header') == 'false') {
-					this.$el.find('thead').hide();
-				}
-
-				var me = this;
-				var select = this.$el.closest('[select]').attr('select') || 'none';
-				switch (select) {
-					case 'none': ;
-						break;
-					case 'single':
-						this.$el[0].className = 'table table-hover table-condensed table-selectable list';
-						this.$el.on('d2js.rendered', function f(event) {
-							if (event.target == me.$el[0]) {
-								var storeValue = me.$el.data('value');
-								$(event.target).find('tbody.data>tr').each(function (idx, tr) {
-									var row = $(tr).findRoot().root;
-									var value = row[valueColumn];
-									if (storeValue && storeValue == value) {
-										$(tr).addClass('info');
-										me.$el.data('prev_selected_tr', tr);
-									}
-									$(tr).bind('click', function () {
-										if (me.$el.data('value') != value) {
-											var prevtr = me.$el.data('prev_selected_tr');
-											prevtr && $(prevtr).removeClass('info');
-
-											me.$el.data('value', value);
-											$(tr).addClass('info');
-											me.$el.data('prev_selected_tr', tr);
-											me.$el.trigger('valuechange', [value, row]);
-										}
-									});
-								});
-							}
-						});
-						this.setValue = function (value) {
-							if (value != this.getValue()) {
-								me.$el.data('value', value);
-								d2js.render(me.$el);
-								this.$el.trigger('valuechange', [value]);
-							}
-						}
-						this.getValue = function () {
-							return me.$el.data('value');
-						}
-						break;
-					case 'multi':
-						this.$el[0].className = 'table table-hover table-condensed table-selectable list';
-						var checkAll = $(document.createElement('th')).attr('molecule', 'CheckHeader');
-						checkAll.attr('col', valueColumn);
-						var tr = this.$el.find('thead>tr');
-						checkAll.insertBefore(tr.children()[0]);
-
-						$(this.$el).on('valuechange', function (evt, checked) {
-							if (evt.target != me.$el[0]) {
-								me.$el.find('tbody.data>tr').each(function (idx, tr) {
-									var d = $(tr).findRoot().root;
-									if (!d) return;
-									var row = d;
-									var value = row[valueColumn];
-									if (checked.indexOf(value) != -1) {
-										$(tr).addClass('info')
-									} else {
-										$(tr).removeClass('info')
-									}
-								});
-								console.log(me.$el[0] + ' trigger valuechange');
-								me.$el.trigger('valuechange', [checked]);
-							}
-						});
-
-						this.$el.on('d2js.rendered', function f(event) {
-							if (event.target == me.$el[0]) {
-								var storeValue = me.$el.data('value');
-								$(event.target).find('tbody.data>tr').each(function (idx, tr) {
-									$(tr).on('click', function (event) {
-										if ($(event.target).is('td[molecule-obj=CheckHeader]>input')) {
-											return;
-										}
-										var ck = $(tr).find('td[molecule-obj=CheckHeader]>input');
-										ck.prop('checked', !ck.prop('checked'));
-										ck.change();
-									});
-								});
-							}
-						});
-
-						this.setValue = function (value) {
-							var ck = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
-							ck.molecule().checked(value && value.slice());
-							ck.trigger('valuechange', [ck.molecule().checked()])
-						}
-						this.getValue = function () {
-							return me.$el.find('thead>tr>th[molecule-obj=CheckHeader]').molecule().checked();
-						}
-
-						break;
-				}
-
-				var allowRemove = this.$el.closest('[allow-remove]').attr('allow-remove') == 'true';
-
-				var willDeleteRows = null;
-				if (allowRemove) {
-					var leftFoot = this.$el.find('#leftFoot');
-					leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
-					leftFoot.on('click', function (evt) {
-						if ($(evt.target).is('.btn-remove')) {
-							var th = me.$el.find('thead>tr>th[molecule-obj=CheckHeader]');
-							var col = th.attr('col');
-							var checked = th.molecule().checked();
-							var t = d2js.dataset.getTable(table);
-							willDeleteRows = checked.map(function (c) { return t.find(col, c) }).filter(function (r) { return r });
-							if (willDeleteRows.length == 0) {
-								var a = $('<div class="alert alert-warning" role="alert">请选择要删除的数据行</div>').appendTo(leftFoot.parent().parent());
-								setTimeout(function () { a.remove() }, 500);
-							} else {
-								leftFoot.html('<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>');
-							}
-						}
-					}).on('confirm.ok', function () {
-						var t = d2js.dataset.getTable(table);
-						willDeleteRows.forEach(function (row) { row._remove(); });
-						t.submit(function (error) {
-							if (!error) {
-								this.reload();
-							} else {
-								d2js.render();
-							}
-						})
-						leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
-					}).on('confirm.cancel', function () {
-						leftFoot.html('<button class="btn btn-default btn-remove">Remove</button>');
-					});
-				}
+				basicui.List.call(this, 'bootstrap');
 			</script>
 		</table>
 
@@ -919,8 +346,39 @@
 			</style>
 
 	</template>
-
-
+	
+	<template>
+		<nav molecule-def="Pagination" class="ui pagination menu" page-nearby="3" data="this" renderer="pagination">
+			<ul class="pagination" renderer="pagination">
+				<li id="prev">
+					<a aira-label=Privious><span aria-hidden="true">&laquo;</span></a>
+				</li>
+				<li id="next">
+					<a aira-label=Next><span aria-hidden="true">&raquo;</span></a>
+				</li>
+				<li>
+					<div class="input-group" style="display: inline-block; margin-left: 8px;">
+				      <input type="text" class="form-control" placeholder="Page" style="width:80px;">
+				      <span class="input-group-btn">
+				        <button id="go" class="btn btn-default" type="button">Go</button>
+				      </span>
+				    </div>
+				</li>
+			</ul>
+			<script constructor>
+				basicui.Pagination.call(this, 'bootstrap')
+			</script>
+			<style>
+				.pagination > .active > a, .pagination > .active > span, 
+				.pagination > .active > a:hover, .pagination > .active > span:hover, 
+				.pagination > .active > a:focus, .pagination > .active > span:focus, 
+				.pagination > li > a:hover, .pagination > li > span:hover, .pagination > li > a:focus, 
+				.pagination > li > span:focus {
+					cursor : 'pointer'
+				}
+			</style>
+		</nav>
+	</template>
 
 	<div molecule="TableList" table="book" edit-dialog="dialog1" allow-remove="true">
 		<h1>Book</h1>
@@ -949,7 +407,7 @@
 					<th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
 					<th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
 					<th data-t="id" renderer="editLink"></th>
-					<th molecule="ActionHeader" col="id" text="点击我" onclick="alert('111')">动作</th>
+					<th molecule="ActionHeader" col="id" text="点击我" action="open" onclick="alert('111')">动作</th>
 				</tr>
 			</thead>
 		</table>
@@ -988,8 +446,9 @@
 		});
 
 		$(document).ready(function () {
-			$('[molecule-obj=List]').on('actionheader.click', function (evt, action, value, table, _1, rows, idx, row) {
-				console.info(row);
+			$('[molecule-obj=List]').on('actionheader.click', function (evt, action, value) {
+                console.info($(evt.target).findRoot().root);
+                console.info(action, 'at', value);
 			});
 
 			table.load('fetch', { gender: 'F' });
