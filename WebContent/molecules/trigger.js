@@ -85,23 +85,22 @@ Molecule.trigger.DropDownList = function(ui){
 		this.$el.find('#txDropDownText').attr('readonly', true);
 	}
 	
-	this.$el.on('d2js.rendered',function(event, value){
+	this.$el.on('d2js.rendered','[molecule-obj=List]', function(event, value){
 		if(me.inputting) return;
 		
-		var t = $(event.target);
-		if(t.is('[molecule-obj=List]')){
-			updateText(t, me.getValue());
-		}
+		var t = $(this);
+		updateText(t, me.getValue());
     });
 	
 	if(select == 'multi' && bootstrap){
 		$('<div class="form-control search"></div>').insertBefore(this.$el.find('#txDropDownText'));
 		this.$el.find('#txDropDownText').addClass('hide')
+		this.$el.find('.form-control.search').css('padding-top', '0px');
 	}
 	
 	
 	function updateText(t, value){
-		var table = d2js.locateData(t)[0];
+		var table = t.findRoot().root;
 		var dispCol = t.closest('[display-col]').attr('display-col');
 		var valueCol = t.closest('[value-col]').attr('value-col') || 'id';
 		if(select == 'multi'){
@@ -119,7 +118,7 @@ Molecule.trigger.DropDownList = function(ui){
 			}
 		} else {
 			var row = table.find(valueCol, value);
-			if(!row) success = false;
+//			if(!row) success = false;
 			me.setText(row ? row[dispCol] : value);
 			me.close();
 		}
@@ -172,14 +171,13 @@ Molecule.trigger.DropDownTree = function(ui){
 	if(select == 'multi' && bootstrap){
 		$('<div class="form-control search"></div>').insertBefore(this.$el.find('#txDropDownText'));
 		this.$el.find('#txDropDownText').addClass('hide')
+		this.$el.find('.form-control.search').css('padding-top', '0px');
 	}
 
-	this.$el.on('d2js.rendered', function (event, value) {
-		var t = $(event.target);
-		if (t.is('[molecule-obj=Tree]')) {
-			//console.log('d2js.render', $(event.target).attr('data'));
-			updateText(t, me.getValue());
-		}
+	this.$el.on('d2js.rendered', '[molecule-obj=Tree]', function (event, value) {
+		var t = $(this);
+		//console.log('d2js.render', $(event.target).attr('data'));
+		updateText(t, me.getValue());
 	});
 	
 	this.$el.on('click', '.delete.icon,button.close', function(event){
@@ -191,7 +189,7 @@ Molecule.trigger.DropDownTree = function(ui){
 	});
 
 	function updateText(t, value) {
-		var table = d2js.locateData(t)[0];
+		var table = t.findRoot().root;
 		var dispCol = t.closest('[display-col]').attr('display-col');
 		var valueCol = t.closest('[value-col]').attr('value-col') || 'id';
 		if (select == 'multi') {
@@ -208,7 +206,7 @@ Molecule.trigger.DropDownTree = function(ui){
 		} else {
 			var row = table.find(valueCol, value);
 			me.setText(row ? row[dispCol] : value);
-			me.close();
+			if(bootstrap) me.close();	// semantic will auto close
 		}
 	}
 	this.setValue = function (value) {
