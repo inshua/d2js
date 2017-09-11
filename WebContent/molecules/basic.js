@@ -91,6 +91,7 @@ basicui.TableList = function(ui){
 	}
 
 	this.editRow = function (row) {
+		if(row.isTreeNode) row = row.row;	// 侵入式代码
 		var dialogId = (row._state == 'new') ? newDialogId : editDialogId;
 		var $dialog = findDialog$(dialogId);
 		$dialog.bindRoot(row).render();
@@ -439,7 +440,7 @@ basicui.SearchButton = function(ui){
 	var table = this.$el.closest('[table]').attr('table');
 	this.$el.on('click', function () {
 		$(this).parent('form').collect();
-		$(this).findRoot().root.navigatePage(0);
+		$(this).parent('form').parent().findRoot().root.navigatePage(0);
 	});
 }
 
@@ -787,7 +788,7 @@ basicui.List = function(ui){
 					a.remove()
 				}, 500);
 			} else {
-				if(boostrap) var s3 = '<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>'
+				if(bootstrap) var s3 = '<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>'
 				if(semantic) var s3 = '<div molecule="Confirm">所选 ' + willDeleteRows.length + ' 行记录将被删除，该操作无法撤销，请点击[确定]按钮继续</div>'
 				leftFoot.html(s3);
 			}

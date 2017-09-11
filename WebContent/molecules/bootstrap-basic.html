@@ -12,6 +12,7 @@
 	<script src="../jslib/date.js/Date.js"></script>
 
 	<script src="../jslib/d2js/dataset.js"></script>
+	<script src="../jslib/d2js/entity-map.js"></script>
 	<script src="../jslib/d2js/render.js"></script>
 	<script src="../jslib/d2js/renderers.js"></script>
 	<script src="../jslib/d2js/collector.js"></script>
@@ -135,6 +136,32 @@
 		<form molecule-def="SearchForm" class="form-inline" style="float:right" d2js.root=",search,params">
 		</form>
 
+		<input molecule-def="SearchInput" type="text" class="form-control" renderer="std" collector="c|s">
+		<script molecule-for="SearchInput" constructor>
+			var table = this.$el.closest('[table]').attr('table');
+			var col = this.$el.closest('.field').attr('col');
+
+			this.$el.attr('data', 'search,params,' + col);
+		</script>
+
+		<!-- 输入的 select, 放在 SearchFormItem 内
+			用法：
+				<div molecule="SearchFormItem" col="gender" text="Gendor">
+					<select molecule="SearchSelect">
+				</div>
+		-->
+		<select molecule-def="SearchSelect" class="form-control ui nullable dropdown" renderer="std" collector="c|s"></select>
+		<script molecule-for="SearchSelect" constructor>
+			var table = this.$el.findRoot().root;
+			var col = this.$el.closest('.field').attr('col');
+			this.$el.attr('data', 'search,params,' + col);
+			d2js.render(this.$el.parent());
+			var me = this;
+			this.$el.dropdown({onChange : function(value, text, $choice){
+				me.$el.trigger('dropdown.change', [value, text, $choice])
+		    }});
+		</script>
+		
 		<!-- 
 	    	输入的 select form item, 放在 search form 中，已嵌套一个 select 元素
 	    	用法：
@@ -158,6 +185,93 @@
 				}
 		</script>
 
+		<div molecule-def="EntitySelect" class="ui selection dropdown" renderer="molecule" collector="m|s" placeholder-text="">
+			<input type="hidden">
+			<i class="dropdown icon"></i>
+			<div class="default text"></div>
+			<div class="menu" data="this" renderer="repeater">
+				<div class="item" repeater="true" data="this" renderer="entity_pk|attr('data-value')"><span data="name" renderer="std"></span></div>
+			</div>
+			<script constructor>
+				var me = this;
+				var $fld = this.$el.closest('.field');
+				var col = $fld.attr('col');
+				this.$el.attr("data", col);
+
+				this.$el.find('.default.text').html(this.$el.attr('placeholder-text') || '')
+
+				var d2jsRoot = $fld.attr('d2js.root');
+				$fld[0].removeAttribute('d2js.root');
+				this.$el.find('.menu').attr('d2js.root', d2jsRoot);
+				this.$el.bindRoot();
+
+				this.$el.find('.item').find('span').attr('data', $fld.attr('disp-col') || 'name');
+
+				var multiple = this.$el.is('.multiple');
+				var pkScalar = this.$el.is('[pk-scalar]');
+
+				if(pkScalar){
+					this.setValue = function (value) {
+						this.value = value;
+						if (value == null) return this.$el.dropdown('set value', '');
+						if (multiple) {
+							this.$el.dropdown('set exactly', value.map(function(v){return '' + v}));
+						} else {
+							this.$el.dropdown('set selected', value);
+						}
+					}
+					this.getValue = function () {
+						var v = this.$el.dropdown('get value');
+						if (multiple) {
+							return this.$el.find('.item').toArray().map(function (e) {
+								var row = $(e).findRoot().root;
+								return row[row._meta.pk];
+							}).filter(function(id){
+								return v.indexOf(id) != -1;
+							});
+						} else {
+							var row = this.$el.find('.menu').findRoot().root.find(function (row) {
+								return row[row._meta.pk] == v
+							});
+							return row[row._meta.pk];
+						}
+					}
+				} else {
+					this.setValue = function (value) {
+						this.value = value;
+						if (value == null) return this.$el.dropdown('set value', '');
+						if (multiple) {
+							this.$el.dropdown('set selected', value.map(function (e) {
+								return e[e._meta.pk]
+							}).join());
+						} else {
+							this.$el.dropdown('set selected', value[value._meta.pk]);
+						}
+					}
+					this.getValue = function () {
+						var v = this.$el.dropdown('get value');
+						if (multiple) {
+							return this.$el.find('.item.filtered').toArray().map(function (e) {
+								return $(e).findRoot().root
+							});
+						} else {
+							return this.$el.find('.menu').findRoot().root.find(function (row) {
+								return row[row._meta.pk] == v
+							});
+						}
+					}
+				}
+
+				this.$el.on('d2js.rendered', '.menu', function () {
+					me.setValue(me.value);
+				});
+			</script>
+			<script>
+				d2js.Renderers.entity_pk = function (element, value) {
+					if (value) return value[value._meta.pk];
+				}
+			</script>
+		</div>
 
 		<!-- 对话框  <div title="title"> -->
 		<div molecule-def="Dialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" title="Title">
@@ -374,7 +488,7 @@
 				.pagination > .active > a:focus, .pagination > .active > span:focus, 
 				.pagination > li > a:hover, .pagination > li > span:hover, .pagination > li > a:focus, 
 				.pagination > li > span:focus {
-					cursor : 'pointer'
+					cursor : 'pointer';
 				}
 			</style>
 		</nav>
@@ -429,7 +543,60 @@
 			</div>
 		</form>
 	</div>
+	
+	
+    <div molecule="TableList" d2js.root="books" edit-dialog="dialog2" allow-remove="true">
+        <h1>Book (Entity)</h1>
+        <div>
+            <form molecule="SearchForm">
+                <div molecule="SearchFormItem" col="title" text="Name">
+                    <input type="text" molecule="SearchInput">
+                </div>
+                <div molecule="SearchFormSelectItem" col="kind" text="Kind" dict="book_kind">
+                </div>
+                <div molecule="SearchFormItem" col="author" text="Author" d2js.root="authors" data="this" renderer="options('name','id',true)">
+                    <select molecule="Select"></select>
+                </div>
+                <button molecule="SearchButton">Search</button>
+                <button molecule="AddButton">Add</button>
+            </form>
+        </div>
 
+        <div molecule="TableError"></div>
+
+        <table molecule="List">
+            <thead>
+                <tr>
+                    <th molecule="CheckHeader" col="id"></th>
+                    <th molecule="Header" col="id" text="ID"></th>
+                    <th molecule="Header" col="title" text="Title" sortable="true"></th>
+                    <th molecule="Header" col="author,name" text="Author"></th>
+                    <th molecule="Header" col="kind" text="Kind" dict="book_kind" renderer="dict|std"></th>
+                    <th molecule="Header" col="publish_date" text="Publish Date" format="yyyy-MM-dd" renderer="date|std"></th>
+                    <th data-t="id" renderer="editLink"></th>
+                    <th molecule="ActionHeader" col="id" text="点击我" onclick="alert(111)">动作</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <div molecule="Dialog" title-text="Book" id="dialog2" d2js.root="#">
+        <!-- 留空，防止绑定错误 -->
+        <form class="table-form">
+            <div molecule="FormItem" col="title" text="Title">
+                <input type="text" molecule="Input">
+            </div>
+            <div molecule="FormItem" col="kind" text="Kind" dict="book_kind">
+                <select molecule="Select" collector="c|s"></select>
+            </div>
+            <div molecule="FormItem" col="publish_date" text="Publish Date">
+                <input type="date" molecule="Input" format="yyyy-MM-dd" renderer="date|std" collector="c|d|s">
+            </div>
+            <div molecule="FormItem" col="author" text="Author" d2js.root="authors" disp-col="name">
+                <div molecule="EntitySelect"></div>
+            </div>
+        </form>
+    </div>
 
 	<script>
 		Dicts.book_kind = { f: '小说', k: '武侠', p: '哲学' }
@@ -453,6 +620,28 @@
 
 			table.load('fetch', { gender: 'F' });
 		})
+		
+		//        ----------------- entity ------------------
+        var authors = null,
+            books = null;
+        (async function() {
+            await d2js.meta.load(['/bookstore/author-entity.d2js', '/bookstore/book-entity.d2js',
+                '/bookstore/publisher-entity.d2js'
+            ]);
+            books = d2js.root.books = new d2js.List(d2js.root.Book);
+
+            books.on('load', function() {
+                $('[d2js\\.root=books]').render();
+            });
+            books.pageSize = 5;
+            await books.fetch();
+
+            authors = d2js.root.authors = new d2js.List(d2js.root.Author);
+            authors.on('load', function() {
+                $('body').render(this);
+            });
+            await authors.fetch();
+        })();
 	</script>
 </body>
 
