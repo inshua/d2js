@@ -92,6 +92,9 @@ basicui.TableList = function(ui){
 
 	this.editRow = function (row) {
 		if(row.isTreeNode) row = row.row;	// 侵入式代码
+		if(row._table){
+			row._table.curr = row;
+		}
 		var dialogId = (row._state == 'new') ? newDialogId : editDialogId;
 		var $dialog = findDialog$(dialogId);
 		$dialog.bindRoot(row).render();
