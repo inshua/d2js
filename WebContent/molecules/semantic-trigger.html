@@ -39,25 +39,7 @@
 		  	<molecule-placeholder></molecule-placeholder>
         </div>
         <script constructor>
-           	this.isDropDown = true;
-           	
-           	this.close = function(){
-           		this.$el.dropdown('hide');
-           	}
-           	
-           	this.open = function(){
-           		this.$el.dropdown('show');
-           	}
-           	
-           	this.shown = function(){
-           		return this.$el.find('.menu').is('.visible');
-           	}
-           	
-            this.setText = function (text) {
-                this.$el.find('input').val(text);
-                this.$el.find('.text').html(text).attr('class', 'text');
-            }
-            this.$el.dropdown();
+        	Molecule.trigger.DropDown.call(this, 'semantic')
         </script>
     </div>
 
@@ -80,96 +62,7 @@
             </table>
         </div>
         <script constructor>
-            	this.isDropDownList = true;
-            	var me = this;
-            	this.$el.on('valuechange',function(event, value){
-            		var t = $(event.target);
-            		if(t.is('[molecule-obj=List]')){
-            			updateText(t, value);
-            		}
-                });
-            	
-            	var autoCompleteCol = this.$el.attr('autocomplete-col'); 
-            	if(autoCompleteCol){
-            		this.$el.addClass('search').dropdown(); 
-	            	this.$el.on('keyup', 'input.search', function(event, value){
-	            		me.inputting = true;
-	            		setTimeout(function(){
-	            			me.inputting = false;
-	            		}, 50)
-	            		me.$el.find('[molecule-obj=List]').attr('renderer', 'autoCompleteTableRenderer|table');
-	            		var text = $(event.currentTarget).val();
-	            		var t = me.$el.find('[molecule-obj=List]');
-	            		t.attr('autocomplete-pattern', text);
-	            		t.render();
-	            		me.$el.find('.message').hide();
-	            		
-	            		if(!me.shown()){
-	            			me.show();
-	            			$(event.currentTarget).focus();
-	            		}
-	                });
-            	} else {
-            		this.$el.find('#txDropDownText').attr('readonly', true);
-            	}
-            	
-            	this.$el.on('d2js.rendered',function(event, value){
-            		if(me.inputting) return;
-            		
-            		var t = $(event.target);
-            		if(t.is('[molecule-obj=List]')){
-            			updateText(t, me.getValue());
-            		}
-                });
-            	
-            	this.$el.on('click', '.delete.icon', function(event){
-            		var t = $(event.target);
-            		var v = t.parent().data('value');
-           			me.setValue(me.getValue().filter(function(item){return item != v}));
-               		event.stopPropagation();
-               		me.open();	
-            	});
-            	
-            	function updateText(t, value){
-            		var table = d2js.locateData(t)[0];
-        			var dispCol = t.closest('[display-col]').attr('display-col');
-        			var valueCol = t.closest('[value-col]').attr('value-col') || 'id';
-        			var select = t.closest('[select]').attr('select');
-        			if(select == 'multi'){
-        				if(value) {
-        					me.setText(value.map(function(v){
-	        					var row = table.find(valueCol, v);
-	        					var text = row ? row[dispCol] : v;        					
-	        					return '<a class="ui label transition visible" data-value="' + v +'" style="display: inline-block !important;">' + text + '<i class="delete icon"></i></a>';
-	        				}).join(''));
-        				}
-        			} else {
-        				var row = table.find(valueCol, value);
-        				if(!row) success = false;
-        				me.setText(row ? row[dispCol] : value);
-            			me.close();
-        			}
-            	}
-            	this.setValue = function(value){this.$el.find('[molecule-obj=List]').molecule().setValue(value);}
-            	this.getValue = function(value){return this.$el.find('[molecule-obj=List]').molecule().getValue();}
-        </script>
-        <script>
-	        d2js.Renderers.autoCompleteTableRenderer = function(hTable, table){
-        		var autoCompleteCol = $(hTable).closest('[autocomplete-col]').attr('autocomplete-col');
-        		var pattern = $(hTable).closest('[autocomplete-pattern]').attr('autocomplete-pattern').toUpperCase();  
-        		var tb = new d2js.DataTable('na', 'na', {standalone:true});
-        		for(var i=0; i<table.rows.length; i++){
-        			var row = table.rows[i];
-        			if(autoCompleteCol){
-        				var s = row[autoCompleteCol] + '';
-        				if(s.toUpperCase().indexOf(pattern) == -1){
-        					continue;
-        				}
-        			}
-        			tb.rows.push(row);
-        		}
-        		return tb;
-        	}
+            Molecule.trigger.DropDownList.call(this, 'semantic')
         </script>
     </div>
     
@@ -189,60 +82,9 @@
                 </thead>
             </table>
         </div>
+        <script src="trigger.js"></script>
         <script constructor>
-            	this.isDropDownTree = true;
-            	var me = this;
-            	this.$el.on('valuechange',function(event, value){
-            		var t = $(event.target);
-            		if(t.is('[molecule-obj=Tree]')){
-            			updateText(t, value);
-            		}
-                });
-            	
-            	this.$el.on('d2js.rendered',function(event, value){
-            		var t = $(event.target);
-            		if(t.is('[molecule-obj=Tree]')){
-            			updateText(t, me.getValue());
-            		}
-                });
-            	
-            	this.$el.on('click', '.delete.icon', function(event){
-            		var t = $(event.target);
-            		var v = t.parent().data('value');
-           			me.setValue(me.getValue().filter(function(item){return item != v}));
-               		event.stopPropagation();
-               		me.open();	
-            	});
-
-            	function updateText(t, value){
-            		var table = d2js.locateData(t)[0];
-        			var dispCol = t.closest('[display-col]').attr('display-col');
-        			var valueCol = t.closest('[value-col]').attr('value-col') || 'id';
-        			var select = t.closest('[select]').attr('select');
-        			if(select == 'multi'){
-        				if(value){
-        					me.setText(value.map(function(v){
-	        					var row = table.find(valueCol, v);
-	        					var text = row ? row[dispCol] : v;        					
-	        					return '<a class="ui label transition visible" data-value="' + v +'" style="display: inline-block !important;">' + text + '<i class="delete icon"></i></a>';
-	        				}).join(''));
-        				}
-        			} else {
-        				var row = table.find(valueCol, value);
-        				me.setText(row ? row[dispCol] : value);
-        				if(me.$el.find('.input-group-btn').is('.open')){
-            				me.toggle();
-        				}
-        			}
-            	}
-            	this.setValue = function(value){
-            		if(JSON.stringify(value) != JSON.stringify(this.getValue())){
-	            		var t = this.$el.find('[molecule-obj=Tree]');
-	            		t.molecule().setValue(value);
-	            		t.trigger('valuechange', [value]);
-            		}
-            	}
-            	this.getValue = function(value){return this.$el.find('[molecule-obj=Tree]').molecule().getValue();}
+        	Molecule.trigger.DropDownTree.call(this, 'semantic');
         </script>
     </div>
     </template>
@@ -290,7 +132,7 @@
 		  </div>
 		  
 		  <label>multi tree</label>
-		  <div molecule="DropDownTree" table="company2" value-col="id" display-col="name" parent-col="parent_id" select="multi" show-header="true">
+		  <div molecule="DropDownTree" table="company" value-col="id" display-col="name" parent-col="parent_id" select="multi" show-header="true">
 		  		<tr>
 					<m:th molecule="TreeNode" col="name" text="Name"></m:th>		  
 			  		<m:th molecule="Header" col="id" text="ID"></m:th>
@@ -321,11 +163,6 @@
         d2js.render(null, this);
     });
     
-    var table2 = new d2js.DataTable('company2', 'test.d2js', { pageSize: 5 });		// 目前一个DataTable只能有一个树, 所以另外建一个 DataTable
-    table2.on('load', function (error) {
-        d2js.render(null, this);
-    });
-
     $(function(){
     	var data = [
 	        { id: 1, name: '东方航空', email: 'dh@xxx.com', parent_id: null },
@@ -338,7 +175,6 @@
 	        { id: 7, name: '吉祥航空', email: 'jx@xxx.com' },
         ];
 	    table.fill(data, true);
-	    table2.fill(data, true);
     });
     
 </script>
