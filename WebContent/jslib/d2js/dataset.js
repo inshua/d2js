@@ -981,6 +981,27 @@ d2js.DataTable.prototype.rebuildIndexes = function(){
 	}
 }
 
+if(Array.prototype.indexBy == null){
+	/**
+	 * 得到按属性的索引，如:
+	 * 		[{name: 'mike', phone: '12233'}, {name: 'tom', phone: '53332'},].indexOf('phone') 
+	 * 得到：
+	 * 		{'12233' : {name: 'mike', phone: '12233'}, '53332': {name: 'tom', phone: '53332'}}
+	 * 这里值部分为对象引用。
+	 */
+	Array.prototype.indexBy = function(key){
+		var result = {};
+		for(var i=0; i<this.length; i++){
+			var el = this[i];
+			var v = el[key];
+			if(v != null && v !== ''){
+				result[v] = el;
+			}
+		}
+		return result;
+	}
+}
+
 /**
  * 增加子表，同 d2js.dataset.addRelation
  * @param column {string} 本表字段名，通常为主键
