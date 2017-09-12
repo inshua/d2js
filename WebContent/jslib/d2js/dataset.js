@@ -1349,7 +1349,7 @@ d2js.DataRow.prototype._accept = function(){
 d2js.DataRow.prototype._reject = function(){
 	switch(this._state){
 	case 'edit' :
-		table.columnNames.forEach(function(cname){
+		this._table.columnNames.forEach(function(cname){
 			this[cname] = this._origin[cname];
 		}, this);
 		this._state = 'none';
@@ -1357,7 +1357,7 @@ d2js.DataRow.prototype._reject = function(){
 		return true;
 		break;
 	case 'new' :
-		table.rows.splice(table.rows.indexOf(this), 1);
+		this._table.rows.splice(table.rows.indexOf(this), 1);
 		return true;
 		break;
 	} 
@@ -1373,7 +1373,7 @@ d2js.DataRow.prototype._reject = function(){
  * @returns {DataRow[]}
  */
 d2js.DataRow.prototype._children = function(childTable){
-	return table.findChildRows(this, childTable);
+	return this._table.findChildRows(this, childTable);
 }
 
 /**
@@ -1386,7 +1386,7 @@ d2js.DataRow.prototype._children = function(childTable){
  * @returns {DataRow[]}
  */
 d2js.DataRow.prototype._parents = function(parentTable){
-	return table.findParentRows(this, parentTable);
+	return this._table.findParentRows(this, parentTable);
 }
 
 /**
@@ -1399,7 +1399,7 @@ d2js.DataRow.prototype._parents = function(parentTable){
  * @returns {DataRow}
  */
 d2js.DataRow.prototype._parent = function(parentTable){
-	return table.findParentRows(this, parentTable)[0];
+	return this._table.findParentRows(this, parentTable)[0];
 }
 
 /**
