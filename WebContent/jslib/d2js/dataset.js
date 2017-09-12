@@ -1253,162 +1253,168 @@ d2js.DataRow = function(table, rowData){
 	 */
 	this._error_at = null;
 	
-	function processValue(v){
-		if(v == null || v === '') return null;
-		return v;
-	}
-	
-	/**
-	 * 设置字段的值，如果当前行状态为 none，则新的行状态为 edit
-	 * @param column {string} 字段名
-	 * @param value {object} 值
-	 */
-	this._set = function(column, value){
-		var v = processValue(value);
-		if(this[column] != v){			
-			if(this._state == 'none') {
-				this._state = 'edit';
-				if(this._origin == null){
-					this._origin = this._toJson();
-				}
-			}
-			this[column] = value;
-		}
-		return this;
-	}
-
-	/**
-	 * 批次设置值，与 _set 相似，只是批次调用
-	 * @param rowData {object} {col1:val, col2:val, col3:val}
-	 */
-	this._setValues = function(rowData){
-		for(var k in rowData){
-			if(this._table.columns.some(function(col){return col.name == k})){
-				this._set(k, rowData[k]);
-			}
-		}
-		return this;
-	}
-	
-	/**
-	 * 转换为JSON数据对象
-	 */
-	this._toJson = function(){
-		var obj = {};
-		for(var i=0; i<table.columnNames.length; i++){
-			var cname = table.columnNames[i];
-			obj[cname] = this[cname]; 
-		}
-		return obj;
-	}
-	
-	/**
-	 * 行状态是否为脏状态，所谓脏状态是指 edit, remove, new 三种状态
-	 * @returns {Boolean}
-	 */
-	this._isDirty = function(){
-		return this._state != 'none';
-	}
-	
-	/**
-	 * 接受变更
-	 * @returns {Boolean} 确实有变动返回 true，否则返回 false
-	 */
-	this._accept = function(){
-		switch(this._state){
-		case 'edit' :
-			this._origin = null;
-			this._state = 'none';
-			return true;
-		case 'new':
-			this._state = 'none';
-			return true;
-		case 'remove' :
-			this._table.rows.splice(this._table.rows.indexOf(this), 1);
-			return true;
-		}
-	}
-	
-	/**
-	 * 回滚变更，退回上一版本
-	 * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
-	 */
-	this._reject = function(){
-		switch(this._state){
-		case 'edit' :
-			table.columnNames.forEach(function(cname){
-				this[cname] = this._origin[cname];
-			}, this);
-			this._state = 'none';
-			this._origin = null;
-			return true;
-			break;
-		case 'new' :
-			table.rows.splice(table.rows.indexOf(this), 1);
-			return true;
-			break;
-		} 
-	}
-	
-	/**
-	 * 获取子表的行（定义在 d2js.dataset.relations)
-	 * 用法如：
-	 *```js
-	 * 	 order.rows[0]._children('order_detail').forEach(...)
-	 *```
-	 * @param childTable {string} 子表表名
-	 * @returns {DataRow[]}
-	 */
-	this._children = function(childTable){
-		return table.findChildRows(this, childTable);
-	}
-	
-	/**
-	 * 获取父表的所有父行（定义在 d2js.dataset.relations)
-	 * 用法如：
-	 * ```js
-	 * 	 orderDetail.rows[0]._parents('order')[0]
-	 * ```
-	 * @param parentTable {string} 父表表名
-	 * @returns {DataRow[]}
-	 */
-	this._parents = function(parentTable){
-		return table.findParentRows(this, parentTable);
-	}
-	
-	/**
-	 * 获取父行（定义在 d2js.dataset.relations)
-	 * 用法如：
-	 * ```js
-	 * 	 orderDetail.rows[0]._parent('order')
-	 * ```
-	 * @param parentTable {string} 父表表名
-	 * @returns {DataRow}
-	 */
-	this._parent = function(parentTable){
-		return table.findParentRows(this, parentTable)[0];
-	}
-	
-	/**
-	 * 将本数据行状态设为 remove
-	 */
-	this._remove = function(){
-		this._state = 'remove';
-	}
-	
-	/**
-	 * 清除错误
-	 */
-	this._clearError = function(){
-		this._error = null;
-		this._error_at = null;
-	}
-	
 	// 初始化
 	for(var i=0; i<table.columnNames.length; i++){
 		var cname = table.columnNames[i];
 		this[cname] = rowData && rowData[cname]; 	// JSON传来的数据已经去除了 '', undefined 之类似 null, 故不调用 processValue
 	}
+}
+
+d2js.DataRow.prototype = {};
+
+d2js.DataRow.prototype._processValue = function(v){
+	if(v == null || v === '') return null;
+	return v;
+}
+
+/**
+ * 设置字段的值，如果当前行状态为 none，则新的行状态为 edit
+ * @param column {string} 字段名
+ * @param value {object} 值
+ */
+d2js.DataRow.prototype._set = function(column, value){
+	var v = this.processValue(value);
+	if(this[column] != v){			
+		if(this._state == 'none') {
+			this._state = 'edit';
+			if(this._origin == null){
+				this._origin = this._toJson();
+			}
+		}
+		this[column] = value;
+	}
+	return this;
+}
+
+/**
+ * 批次设置值，与 _set 相似，只是批次调用
+ * @param rowData {object} {col1:val, col2:val, col3:val}
+ */
+d2js.DataRow.prototype._setValues = function(rowData){
+	for(var k in rowData){
+		if(this._table.columns.some(function(col){return col.name == k})){
+			this._set(k, rowData[k]);
+		}
+	}
+	return this;
+}
+
+/**
+ * 转换为JSON数据对象
+ */
+d2js.DataRow.prototype._toJson = function(){
+	var obj = {};
+	for(var i=0; i< this._table.columnNames.length; i++){
+		var cname = this._table.columnNames[i];
+		obj[cname] = this[cname]; 
+	}
+	return obj;
+}
+
+d2js.DataRow.prototype.toJSON = function(){
+	return JSON.stringify(this._toJson())
+}
+
+/**
+ * 行状态是否为脏状态，所谓脏状态是指 edit, remove, new 三种状态
+ * @returns {Boolean}
+ */
+d2js.DataRow.prototype._isDirty = function(){
+	return this._state != 'none';
+}
+
+/**
+ * 接受变更
+ * @returns {Boolean} 确实有变动返回 true，否则返回 false
+ */
+d2js.DataRow.prototype._accept = function(){
+	switch(this._state){
+	case 'edit' :
+		this._origin = null;
+		this._state = 'none';
+		return true;
+	case 'new':
+		this._state = 'none';
+		return true;
+	case 'remove' :
+		this._table.rows.splice(this._table.rows.indexOf(this), 1);
+		return true;
+	}
+}
+
+/**
+ * 回滚变更，退回上一版本
+ * @returns {Boolean} 如果确实有回滚，返回 true，否则返回 false
+ */
+d2js.DataRow.prototype._reject = function(){
+	switch(this._state){
+	case 'edit' :
+		table.columnNames.forEach(function(cname){
+			this[cname] = this._origin[cname];
+		}, this);
+		this._state = 'none';
+		this._origin = null;
+		return true;
+		break;
+	case 'new' :
+		table.rows.splice(table.rows.indexOf(this), 1);
+		return true;
+		break;
+	} 
+}
+
+/**
+ * 获取子表的行（定义在 d2js.dataset.relations)
+ * 用法如：
+ *```js
+ * 	 order.rows[0]._children('order_detail').forEach(...)
+ *```
+ * @param childTable {string} 子表表名
+ * @returns {DataRow[]}
+ */
+d2js.DataRow.prototype._children = function(childTable){
+	return table.findChildRows(this, childTable);
+}
+
+/**
+ * 获取父表的所有父行（定义在 d2js.dataset.relations)
+ * 用法如：
+ * ```js
+ * 	 orderDetail.rows[0]._parents('order')[0]
+ * ```
+ * @param parentTable {string} 父表表名
+ * @returns {DataRow[]}
+ */
+d2js.DataRow.prototype._parents = function(parentTable){
+	return table.findParentRows(this, parentTable);
+}
+
+/**
+ * 获取父行（定义在 d2js.dataset.relations)
+ * 用法如：
+ * ```js
+ * 	 orderDetail.rows[0]._parent('order')
+ * ```
+ * @param parentTable {string} 父表表名
+ * @returns {DataRow}
+ */
+d2js.DataRow.prototype._parent = function(parentTable){
+	return table.findParentRows(this, parentTable)[0];
+}
+
+/**
+ * 将本数据行状态设为 remove
+ */
+d2js.DataRow.prototype._remove = function(){
+	this._state = 'remove';
+}
+
+/**
+ * 清除错误
+ */
+d2js.DataRow.prototype._clearError = function(){
+	this._error = null;
+	this._error_at = null;
 }
 
 /**
