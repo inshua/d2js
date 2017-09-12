@@ -88,8 +88,10 @@ Molecule.trigger.DropDownList = function(ui){
 	this.$el.on('d2js.rendered','[molecule-obj=List]', function(event, value){
 		if(me.inputting) return;
 		
-		var t = $(this);
-		updateText(t, me.getValue());
+		var t = $(event.target);
+		if(t.is('[molecule-obj=List]')){
+			updateText(t, me.getValue());
+		}
     });
 	
 	if(select == 'multi' && bootstrap){
@@ -164,9 +166,11 @@ Molecule.trigger.DropDownTree = function(ui){
 	var select = this.$el.closest('[select]').attr('select');
 	this.$el.on('valuechange', '[molecule-obj=Tree]', function (event, value) {
 		var t = $(event.target);
-		//console.log('value change', event.target);
+		// console.log('value change', event.target);
 		updateText(t, value);
 	});
+	
+	var asObject = this.$el.closest('[as-object]').attr('as-object') == 'true';
 	
 	if(select == 'multi' && bootstrap){
 		$('<div class="form-control search"></div>').insertBefore(this.$el.find('#txDropDownText'));
@@ -175,9 +179,11 @@ Molecule.trigger.DropDownTree = function(ui){
 	}
 
 	this.$el.on('d2js.rendered', '[molecule-obj=Tree]', function (event, value) {
-		var t = $(this);
-		//console.log('d2js.render', $(event.target).attr('data'));
-		updateText(t, me.getValue());
+		var t = $(event.target);
+		if(t.is('[molecule-obj=Tree]')){
+			// console.log('d2js.render', $(event.target).attr('data'));
+			updateText(t, me.getValue());
+		}
 	});
 	
 	this.$el.on('click', '.delete.icon,button.close', function(event){
@@ -192,9 +198,10 @@ Molecule.trigger.DropDownTree = function(ui){
 		var table = t.findRoot().root;
 		var dispCol = t.closest('[display-col]').attr('display-col');
 		var valueCol = t.closest('[value-col]').attr('value-col') || 'id';
+		
 		if (select == 'multi') {
 			if (value) me.setText(value.map(function (v) {
-				var row = table.find(valueCol, v);
+				if(asObject) var row = v; else var row = table.find(valueCol, v);
 				var text = row ? row[dispCol] : v; 
 				if(semantic)
 					var h = '<a class="ui label transition visible" data-value="' + v +'" style="display: inline-block !important;">' 
@@ -204,7 +211,9 @@ Molecule.trigger.DropDownTree = function(ui){
 				return h;
 			}).join(''));
 		} else {
-			var row = table.find(valueCol, value);
+			// console.log('update text ', value);
+			if(value && value.length) value = value[0];
+			if(asObject) var row = value; else var row = table.find(valueCol, value);
 			me.setText(row ? row[dispCol] : value);
 			if(bootstrap) me.close();	// semantic will auto close
 		}

@@ -36,10 +36,12 @@
 			<table table=xxx [paging="true"] [checkable="false"] [id-col="id"] [parent-col="parent_id"] [value-col="id"] [select="none|single|multi"] [show-header="true|false"]></table>
 			checkable 是否支持复选
 			id-col id 字段名
+			value-col	id 字段名，值字段，当 value-object=true 时无效
 			parent-col parent_id 字段名，反身关联 
 			select 选择模式
 			show-header 是否显示表头
 			paging	是否显示分页
+			as-object 是否返回对象
 		-->
 		<table molecule-def="Tree" class="table table-striped" renderer="tree" checkable="false">
 			<style>
@@ -81,7 +83,7 @@
 		</div>
 		<div molecule="TableError"></div>
 
-		<table molecule="Tree" checkable="true" select="multi">
+		<table molecule="Tree" checkable="true" select="multi" as-object="true">
 			<thead>
 				<tr>
 					<th molecule="TreeNode" col="name" text="Name"></th>
@@ -125,8 +127,8 @@
 				});
 
 				$(function () {
-					$('[molecule-obj=TableList]').on('valuechange', function () {
-						console.info(arguments)
+					$('[molecule-obj=TableList]').on('valuechange', function (evt, item) {
+						console.info('selected ', item);
 					});
 				});
 

@@ -493,6 +493,74 @@
 			</style>
 		</nav>
 	</template>
+	
+	
+	<template>
+		<!-- TabPages
+			<div molecule="TabPages">
+				<div data-title="Info" class="active">
+					info
+				</div>
+				<div data-title="Config">
+					configuration
+				</div>
+			</div>
+		-->
+		<div molecule-def="TabPages">
+			<ul id="myTabs" class="nav nav-tabs" role="tablist">
+		      <li id="tplTabHeader" role="presentation">
+		      	<a href="#info" id="home-tab" role="tab" data-toggle="tab" aria-controls="info" aria-expanded="true">Info</a>
+		      </li>
+		    </ul>
+		    <div id="myTabContent" class="tab-content">
+		    	<molecule-placeholder></molecule-placeholder>
+				<div id="tplPage" role="tabpanel" class="tab-pane" aria-labelledby="info-tab" data-title="Info">
+				</div>
+			</div>
+			<script constructor>
+				var $ul = this.$el.find('ul#myTabs');
+				var $tabPages = this.$el.find('#myTabContent');
+				var tplPage = this.el.querySelector("#tplPage");
+				tplPage.remove();
+				var tplHeader = this.el.querySelector('#tplTabHeader');
+				tplHeader.remove();
+				var M = arguments.callee;
+				if(M.nextId == null) M.nextId  = 1;
+				var me = this;
+				$tabPages.children().each(function(){
+					var id = 'page_' + (M.nextId ++);
+					var child = this;
+					var $child = $(child);
+					['role', 'class'].forEach(function(attr){
+						var v = $child.attr(attr);
+						if(v) 
+							v = v + " " + tplPage.getAttribute(attr);
+						else
+							v = tplPage.getAttribute(attr)
+						$child.attr(attr, v);
+					});
+					$child.attr('aria-labelledby',  id + '-tab');
+					child.id = id;
+					var $h = $(tplHeader.cloneNode(true));
+					$h.appendTo($ul);
+					var $a = $h.attr('id', null).find('a')
+					$a.text($(child).data('title'));
+					$a.attr('href', '#' + id).attr('aria-controls', id);
+					if($child.is('.active')){
+						$h.addClass("active");
+					}
+				})
+				this.$el.find('#myTabs a').click(function (e) {
+				  e.preventDefault()
+				  $(this).tab('show')
+				})
+				// this.$el.find('#myTabs li.active a').tab('show') // Select first tab
+			</script>
+		</div>
+	</template>
+	
+	
+	<!-- RUNNABLE SAMPLE -->
 
 	<div molecule="TableList" table="book" edit-dialog="dialog1" allow-remove="true">
 		<h1>Book</h1>

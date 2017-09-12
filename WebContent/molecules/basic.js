@@ -442,14 +442,15 @@ basicui.Dialog = function(ui){
 basicui.SearchButton = function(ui){
 	var table = this.$el.closest('[table]').attr('table');
 	this.$el.on('click', function () {
-		$(this).parent('form').collect();
-		$(this).parent('form').parent().findRoot().root.navigatePage(0);
+		var $form = $(this).closest('form')
+		$form.collect();
+		$form.parent().findRoot().root.navigatePage(0);
 	});
 }
 
 basicui.AddButton = function(){
 	this.$el.on('click', function () {
-		var table = $(this).findRoot().root;
+		var table = $(this).closest('form').parent().findRoot().root;
 		var tl = $(this).closest('[molecule-obj=TableList]');
 		if (table.isList) {
 			var Constructor = table.meta.Constructor;
@@ -723,7 +724,7 @@ basicui.List = function(ui){
 							$(tr).removeClass(activeTrClass)
 						}
 					});
-					console.log(me.$el[0] + ' trigger valuechange');
+					// console.log(me.$el[0] + ' trigger valuechange');
 					me.$el.trigger('valuechange', [checked]);
 				}
 			});

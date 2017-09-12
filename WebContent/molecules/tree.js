@@ -88,6 +88,7 @@ Molecule.tree.Tree = function(ui){
 
 	var idColumn = this.$el.closest('[id-col]').attr('id-col') || 'id';
 	var valueColumn = this.$el.closest('[value-col]').attr('value-col') || idColumn;
+	var asObject = this.$el.closest('[as-object]').attr('as-object') == 'true';
 
 	if (this.$el.closest('[show-header]').attr('show-header') == 'false') {
 		this.$el.find('thead').hide();
@@ -136,8 +137,7 @@ Molecule.tree.Tree = function(ui){
 								ck.change();
 							} else {
 								var row = d2js.findRoot(tr).root.row;
-								var v = row[valueColumn];
-								me.setMultiValue([v], event);
+								me.setMultiValue([toValue(row)], event);
 							}
 						});
 					});
@@ -184,11 +184,16 @@ Molecule.tree.Tree = function(ui){
 				}
 			}
 		}
-		return items.map(function (nd) { return nd.row[valueColumn] });
+		return items.map(function (nd) { return toValue(nd.row) });
 	}
 
-	d2js.Renderers.tree = function (hTable, table) {
-		table = d2js.findArg(arguments, 'table');
+	function toValue(row){
+		if(asObject) return row;
+		return row[valueColumn]
+	}
+	
+	this.$el.bindRenderers({tree : function (hTable, table) {
+		
 		var checked = $(hTable).data('value');
 		var checkable = hTable.getAttribute('checkable');
 		checkable = (checkable && checkable != 'false');
@@ -196,35 +201,44 @@ Molecule.tree.Tree = function(ui){
 		var valueColumn = $(hTable).closest('[value-col]').attr('value-col') || idColumn;
 		var parentColumn = $(hTable).closest('[parent-col]').attr('parent-col') || 'parent_id';
 		var rebuildTree = false;
+		var rows = null, index = null;
+		if(table.isList){
+			rows = table;
+			index = rows.indexBy(idColumn);
+		} else {		// isDataTable
+			rows = table.rows;
+			if(table.indexes == null) table.rebuildIndexes();
+			index = table.indexes[idColumn];
+		}
 
 		var tree = $(hTable).data('tree');
 
 		if (!tree) {
 			rebuildTree = true;
-		} else if ((table.rows.length == 0) != (tree.length == 0)) {
+		} else if ((rows.length == 0) != (tree.length == 0)) {
 			rebuildTree = true;
-		} else if (table.rows.indexOf(tree[0] && tree[0].row) == -1) {
+		} else if (rows.indexOf(tree[0] && tree[0].row) == -1) {
 			rebuildTree = true;
 		}
 		if (rebuildTree) {
-			tree = buildTree(table, idColumn, parentColumn);
+			tree = buildTree(idColumn, parentColumn);
 			$(hTable).data('tree', tree);
 		}
-
-		function buildTree(table, idColumn, parentColumn) {
-			var roots = table.rows.filter(function (row) {
-				return table.find('id', row[parentColumn]) == null;		// 没有父节点的即是根节点
+		
+		function buildTree(idColumn, parentColumn) {
+			var roots = rows.filter(function (row) {
+				return index[row[parentColumn]] == null;		// 没有父节点的即是根节点
 			}).map(function (row) { return toNode(row, 0) });
 
 			function toNode(row, depth, parentNode) {
 				var node = { row: row, expanded: true, depth: depth, parent: parentNode, isTreeNode: true };
 				if (checkable) {
 					node.checked = false;		// false | true | undefined
-					if ((parentNode && parentNode.checked) || (checked && checked.indexOf(row[valueColumn]) != -1)) {
+					if ((parentNode && parentNode.checked) || (checked && checked.indexOf(toValue(row)) != -1)) {
 						node.checked = true;
 					}
 				}
-				node.children = table.rows
+				node.children = rows
 					.filter(function (crow) { return crow[parentColumn] == row[idColumn] })
 					.map(function (crow) { return toNode(crow, depth + 1, node) });
 				return node;
@@ -263,7 +277,7 @@ Molecule.tree.Tree = function(ui){
 		var stk = tree.slice(); stk.reverse();
 		while (stk.length) {
 			var nd = stk.pop();
-			var idx = nd.row._table.rows.indexOf(nd.row);
+			var idx = rows.indexOf(nd.row);
 
 			var tr = tBody.insertRow();
 			$(tr).bindRoot(nd, hTable);
@@ -291,6 +305,6 @@ Molecule.tree.Tree = function(ui){
 				}
 			}
 		}
-	}
+	}});
 }
 
