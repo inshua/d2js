@@ -600,6 +600,10 @@ d2js.Entity.prototype.toString = function() {
     return `(${this._meta.name} ${JSON.stringify(this._toRaw())})`
 }
 
+d2js.Entity.prototype.toJSON = function(){
+	return JSON.stringify(this._toRaw());
+}
+
 /**
  * 行状态是否为脏状态，所谓脏状态是指 edit, remove, new 三种状态
  * @returns {Boolean}
@@ -839,6 +843,12 @@ d2js.List.prototype.setArray = function(arr, state = 'new') {
         }
     }
     return this;
+}
+
+d2js.List.prototype.find = function(attr, value){
+	return Array.prototype.find.call(this, function(item){
+		return item[attr] == value;
+	});
 }
 
 d2js.List.prototype.toString = function() {
