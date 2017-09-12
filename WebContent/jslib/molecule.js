@@ -324,6 +324,7 @@ Molecule.registerPrototype = async function(el, baseUrl) {
     			var src = script.getAttribute('src');
     			if(baseUrl) src = absolute(baseUrl, src);
     			await Molecule.loadHtmlInBrowser(src);
+    			next(resolve, reject);
     		} else {
 				script.onload = function(){
 					if(Molecule.debug) console.log(this.src + ' loaded')
@@ -335,6 +336,8 @@ Molecule.registerPrototype = async function(el, baseUrl) {
     }
     
     function absolute(base, relative) {
+    	if(relative.charAt(0) == '/') return relative;
+    	
         var stack = base.split("/"),
             parts = relative.split("/");
         stack.pop(); // remove current file name (or empty string)
