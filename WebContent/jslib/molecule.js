@@ -19,23 +19,26 @@
  *******************************************************************************/
 
 /**
- * Molecule 类。 molecule 组件的共同基类。
- * 请按指导手册使用 molecule，不要自己使用构造函数创建。
- * @class 
- * @param container {HTMLElement} 所附着的 html 元素
+ * Molecule 类。 molecule 组件的共同基类。 请按指导手册使用 molecule，不要自己使用构造函数创建。
+ * 
+ * @class
+ * @param container
+ *            {HTMLElement} 所附着的 html 元素
  */
 function Molecule(container) {
     /**
-     *  molecule 所附着的 html 元素
-     * @type {HTMLElement}
-     */
+	 * molecule 所附着的 html 元素
+	 * 
+	 * @type {HTMLElement}
+	 */
     this.el = container;
 
     this.isMolecule = true;
     /**
-     * molecule 所附着的 html 元素的 jQuery 包装
-     * @type {jQueryElement} 
-     */
+	 * molecule 所附着的 html 元素的 jQuery 包装
+	 * 
+	 * @type {jQueryElement}
+	 */
     this.$el = jQuery(container);
     if (container == null) debugger;
     var me = this;
@@ -50,9 +53,10 @@ function Molecule(container) {
             }
         }
         /**
-         * molecule原型
-         * @type {DOMElement} 
-         */
+		 * molecule原型
+		 * 
+		 * @type {DOMElement}
+		 */
     this.moleculePrototype = null;
 
     this.$el.on('focus', function(ele) {
@@ -63,8 +67,8 @@ function Molecule(container) {
     });
 
     /**
-     * 移除 molecule
-     */
+	 * 移除 molecule
+	 */
     this.release = function() {
         if (this.dispose) this.dispose();
         Molecule.removeInstance(this);
@@ -92,11 +96,8 @@ Molecule.removeInstance = function(instance) {
 }(jQuery));
 
 /**
- * 设定 molecule 的存放路径，也即 `extract.jssp` 的存放路径，**需要更改为自己的网站名！**
- * 如：
- * ```js
- * Molecule.ModulesPath = website + '/molecues/'
- * ```
+ * 设定 molecule 的存放路径，也即 `extract.jssp` 的存放路径，**需要更改为自己的网站名！** 如： ```js
+ * Molecule.ModulesPath = website + '/molecues/' ```
  */
 Molecule.ModulesPath = '/d2js/molecules/';
 
@@ -133,8 +134,11 @@ Molecule.loadModule = function(module) {
 
 /**
  * 加载指定 html 文件中的所有 molecule，将使用 extract.jssp。
- * @param html {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
- * @param parseOnServer {Boolean} 是否由服务器解析后提供定义，取 false 时在浏览器通过 DOMParser 解析
+ * 
+ * @param html
+ *            {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
+ * @param parseOnServer
+ *            {Boolean} 是否由服务器解析后提供定义，取 false 时在浏览器通过 DOMParser 解析
  * @returns {Boolean} 是否加载成功
  */
 Molecule.loadHtml = async function(res, parseOnServer) {
@@ -177,7 +181,9 @@ Molecule.loadHtml = async function(res, parseOnServer) {
 
 /**
  * 加载指定 html 文件中的所有 molecule，将使用 extract.jssp。
- * @param html {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
+ * 
+ * @param html
+ *            {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
  * @returns {Boolean} 是否加载成功
  */
 Molecule.loadHtmlInBrowser = async function(res) {
@@ -276,9 +282,9 @@ Molecule.registerPrototype = async function(el, baseUrl) {
         	var isCss = (script.tagName == 'LINK');
         	var attr = 'src';
         	if(isCss) attr = 'href';
-        	var src = script[attr];
+        	var src = script.getAttribute(attr);
         	if(src){
-        		if(baseUrl && src != script.getAttribute(attr)){
+        		if(script.tagName != 'MOLECULE' && baseUrl && src != script[attr]){
             		var abs = absolute(baseUrl, script.getAttribute(attr));
             		script.setAttribute(attr, abs);
             		src = script[attr]
@@ -315,7 +321,9 @@ Molecule.registerPrototype = async function(el, baseUrl) {
 			}
     		var script = scripts.shift();
     		if(script.tagName == 'MOLECULE'){
-    			await Molecule.loadHtmlInBrowser(script.src);
+    			var src = script.getAttribute('src');
+    			if(baseUrl) src = absolute(baseUrl, src);
+    			await Molecule.loadHtmlInBrowser(src);
     		} else {
 				script.onload = function(){
 					if(Molecule.debug) console.log(this.src + ' loaded')
@@ -330,7 +338,8 @@ Molecule.registerPrototype = async function(el, baseUrl) {
         var stack = base.split("/"),
             parts = relative.split("/");
         stack.pop(); // remove current file name (or empty string)
-                     // (omit if "base" is the current folder without trailing slash)
+                     // (omit if "base" is the current folder without
+						// trailing slash)
         for (var i=0; i<parts.length; i++) {
             if (parts[i] == ".")
                 continue;
@@ -345,7 +354,9 @@ Molecule.registerPrototype = async function(el, baseUrl) {
 
 /**
  * 以 starter 为出发元素，初始化该元素及其子元素中的所有 molecule，如果有 molecule-init=manual 的，也将强行创建。
- * @param starter {HTMLElement} html 元素
+ * 
+ * @param starter
+ *            {HTMLElement} html 元素
  */
 Molecule.init = function(starter) {
     Molecule.scanMolecules(starter, true);
@@ -353,8 +364,11 @@ Molecule.init = function(starter) {
 
 /**
  * 以 starter 为出发元素，初始化该元素及其子元素中的所有 molecule。
- * @param starter {HTMLElement} html 元素
- * @param manual {bool} 是否初始化声明为 molecule-init=manual 的元素
+ * 
+ * @param starter
+ *            {HTMLElement} html 元素
+ * @param manual
+ *            {bool} 是否初始化声明为 molecule-init=manual 的元素
  */
 Molecule.scanMolecules = function(starter, manual) {
     if (starter && starter.jquery) {
@@ -636,7 +650,9 @@ Molecule.scanMolecules = function(starter, manual) {
     }
 
     function combineValue(attr, baseValue, inheritedValue) {
-        if (attr == 'class' && inheritedValue && inheritedValue.charAt(0) == '+') { // molecule="block" class="+ myclass"
+        if (attr == 'class' && inheritedValue && inheritedValue.charAt(0) == '+') { // molecule="block"
+																					// class="+
+																					// myclass"
             return (baseValue || '') + ' ' + inheritedValue.substr(1);
         } else if (attr == 'style' && inheritedValue && inheritedValue.charAt(0) == '+') {
             return (baseValue || '') + ' ' + inheritedValue.substr(1);
@@ -669,11 +685,12 @@ Molecule.of = function(ele) {
     return r;
 }
 
-while(Array.prototype.defCss == null){		// i dont known why plug this function always faild, so...
+while(Array.prototype.defCss == null){		// i dont known why plug this
+											// function always faild, so...
 	/**
-	 * 使用 js 定义 css
-	* [{$ : 'p', color : 'red', 'font-size' : 'large'}, {$ : 'h1', color : 'blue'}];
-	*/
+	 * 使用 js 定义 css [{$ : 'p', color : 'red', 'font-size' : 'large'}, {$ : 'h1',
+	 * color : 'blue'}];
+	 */
 	Array.prototype.defCss = function(container){
 		container = container || document.head;
 		var styleElement = document.createElement("style");
@@ -711,7 +728,8 @@ jQuery(document).on('DOMContentLoaded', async function(){
 	
 	jQuery(document).on('DOMNodeInserted', function(e) {
 	    var target = (e.originalEvent.target || e.target);
-	    if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
+	    if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div
+								// molecule=...></div></div>, 仅能收到外层 div 的事件
 	        if (Molecule._scanningEle && jQuery.contains(Molecule._scanningEle, target)) return; // 正在扫描父元素，早晚会扫到它
 	        if (Molecule.debug) console.info('DOMNodeInserted ', e.target);
 	        Molecule.scanMolecules(target);
@@ -721,7 +739,8 @@ jQuery(document).on('DOMContentLoaded', async function(){
 	
 	jQuery(document).on('DOMNodeRemoved', function(e) {
 	    var target = (e.originalEvent.target || e.target);
-	    if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div molecule=...></div></div>, 仅能收到外层 div 的事件
+	    if (target.tagName) { // 可能嵌套于未声明为 molecule的元素中，<div><div
+								// molecule=...></div></div>, 仅能收到外层 div 的事件
 	        if (target.moleculeInstance) {
 	            target.moleculeInstance && target.moleculeInstance.onDOMNodeRemoved();
 	        }
