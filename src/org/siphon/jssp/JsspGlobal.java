@@ -45,6 +45,7 @@ public class JsspGlobal implements Map<String, Object>{
 
 	@Override
 	public Object put(String key, Object value) {
+		if(value == null) map.remove(key);
 		return map.put(key, value);
 	}
 
