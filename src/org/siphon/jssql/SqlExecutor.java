@@ -34,6 +34,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLType;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -45,6 +47,7 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -62,8 +65,13 @@ import jdk.nashorn.internal.runtime.ScriptFunction;
 import jdk.nashorn.internal.runtime.ScriptObject;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp2.DelegatingPreparedStatement;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.postgresql.core.Oid;
+import org.postgresql.util.ByteConverter;
 import org.postgresql.util.PGobject;
 import org.siphon.common.js.JsTypeUtil;
 import org.siphon.common.js.UnsupportedConversionException;
@@ -861,6 +869,12 @@ public class SqlExecutor {
 				obj.setType(attr.toLowerCase());
 				obj.setValue(this.JSON.tryStringify(value));
 				ps.setObject(index + 1, obj);
+			} else if("UUID".equals(attr)){
+				if(value != null){
+					ps.setObject(index + 1, UUID.fromString(value.toString()));
+				} else {
+					ps.setObject(index + 1, null);
+				}
 			} else {
 				if(this.defaultJsonDbType != null){
 					PGobject obj = new PGobject();
@@ -875,7 +889,7 @@ public class SqlExecutor {
 			throw new SqlExecutorException("js argument " + arg + " (" + arg.getClass() + ") at " + index +  " not support");
 		}
 	}
-
+	
 	private Object convertJsObjToJavaType(Object arg) throws UnsupportedDataTypeException, SqlExecutorException {
 		if (JsTypeUtil.isNull(arg)) {
 			return null;
@@ -1103,6 +1117,8 @@ public class SqlExecutor {
 				result.callMember("push", v);
 			}
 			return result;
+		} else if(obj instanceof UUID){
+			return obj.toString();
 		} else if(obj instanceof PGobject){
 			PGobject pgObj = (PGobject) obj;
 			if("jsonb".equals(pgObj.getType()) || "json".equals(pgObj.getType())){
