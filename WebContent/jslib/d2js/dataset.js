@@ -1273,7 +1273,7 @@ d2js.DataRow.prototype._processValue = function(v){
  * @param value {object} 值
  */
 d2js.DataRow.prototype._set = function(column, value){
-	var v = this.processValue(value);
+	var v = this._processValue(value);
 	if(this[column] != v){			
 		if(this._state == 'none') {
 			this._state = 'edit';
