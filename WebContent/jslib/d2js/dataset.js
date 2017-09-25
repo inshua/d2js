@@ -1357,7 +1357,7 @@ d2js.DataRow.prototype._reject = function(){
 		return true;
 		break;
 	case 'new' :
-		this._table.rows.splice(table.rows.indexOf(this), 1);
+		this._table.rows.splice(this._table.rows.indexOf(this), 1);
 		return true;
 		break;
 	} 
