@@ -1328,41 +1328,42 @@ d2js.Entity.prototype._submit =
  * @param [option] {object} fetch 参数
  */
 d2js.List.prototype.load =
-    d2js.List.prototype.fetch = function(method = 'fetch', params, option) {
-        var me = this;
+d2js.List.prototype.fetch = function(method = 'fetch', params, option) {
+    var me = this;
 
-        var url = contextPath + this.meta.path;
-        var q = {};
-        if (this.search.params) {
-            Object.assign(q, this.search.params);
-        } else if (params) {
-            Object.assign(q, params);
-        }
-        if (params && params._sorts) {
-            this.search._sorts = q._sorts;
-        } else {
-            q._sorts = this.search._sorts;
-        }
-        q._page = { start: this.page * this.pageSize, limit: this.pageSize };
-
-        params = { _m: method || q._m || 'fetch', params: JSON.stringify(q) };
-
-        return new Promise(async function(resolve, reject) {
-            try {
-                me._clearError();
-                me.fireEvent('willload', me);
-                var response = await fetch(url + '?' + jQuery.param(params), Object.assign({ credentials: "same-origin" }, option));
-                var table = await d2js.processResponse(response);
-                d2js.tableToList(table, me);
-                me.fireEvent('load', me);
-                resolve(me);
-            } catch (error) { //TODO 
-                me.error = error;
-                me.fireEvent('load', me);
-                resolve(error);
-            }
-        });
+    var url = contextPath + this.meta.path;
+    var q = {};
+    if (this.search.params) {
+        Object.assign(q, this.search.params);
+    } 
+    if (params) {
+        Object.assign(q, params);
     }
+    if (params && params._sorts) {
+        this.search._sorts = q._sorts;
+    } else {
+        q._sorts = this.search._sorts;
+    }
+    q._page = { start: this.page * this.pageSize, limit: this.pageSize };
+
+    params = { _m: method || q._m || 'fetch', params: JSON.stringify(q) };
+
+    return new Promise(async function(resolve, reject) {
+        try {
+            me._clearError();
+            me.fireEvent('willload', me);
+            var response = await fetch(url + '?' + jQuery.param(params), Object.assign({ credentials: "same-origin" }, option));
+            var table = await d2js.processResponse(response);
+            d2js.tableToList(table, me);
+            me.fireEvent('load', me);
+            resolve(me);
+        } catch (error) { //TODO 
+            me.error = error;
+            me.fireEvent('load', me);
+            resolve(error);
+        }
+    });
+}
 
 /**
  * 跳到指定页
