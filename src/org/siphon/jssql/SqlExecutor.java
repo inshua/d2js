@@ -397,6 +397,10 @@ public class SqlExecutor {
 
 	public Object pageQuery(Connection connection, String sql, int start, int limit, NativeArray args)
 			throws SqlExecutorException {
+		if(limit == -1){
+			return this.query(connection, sql, args, true);
+		}
+
 		if (connection == null) {
 			return this.pageQuery(sql, start, limit, args);
 		}

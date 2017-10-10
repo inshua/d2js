@@ -68,23 +68,13 @@ public class D2jsUnitManager extends ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
 
-	public D2jsUnitManager(ServletContext servletContext, D2jsInitParams initParams) {
-		super(servletContext, initParams);
+	public D2jsUnitManager(ServletContext servletContext) {
+		super(servletContext);
 	}
 
 	@Override
-	protected ScriptEngine createEngine(D2jsInitParams initParams) throws Exception {
-		ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
-
-		JsEngineUtil.initEngine(engine, initParams.getLibs());
-		
-		engine.put("servletContext", this.servletContext);
-
-		File path = new File(srcFolder);
-
-		engine.put("logger", logger);
-		engine.put("application", initParams.getApplication());
-
+	protected void createEngine(D2jsInitParams initParams) throws Exception {
+		super.createEngine(initParams);
 		// 由 js 根据业务需要创建，创建后由 java 关闭
 		if (initParams.getPreloadJs() != null) {
 			String[] preloadJs = initParams.getPreloadJs(); // [abs path, alias]
@@ -92,8 +82,6 @@ public class D2jsUnitManager extends ServerUnitManager {
 			JsEngineUtil.eval(engine, preloadJs[0], preloadJs[1], FileUtils.readFileToString(new File(preloadJs[0]), "utf-8"),
 					true, false);
 		}
-
-		return engine;
 	}
 	
 	@Override
