@@ -27,10 +27,12 @@ import java.nio.file.WatchEvent.Kind;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
+import org.siphon.common.js.JsEngineUtil;
 import org.siphon.d2js.D2jsUnitManager;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -39,26 +41,27 @@ public abstract class ServerUnitManager {
 
 	private static Logger logger = Logger.getLogger(D2jsUnitManager.class);
 	protected String srcFolder;
-	protected final ScriptEngine engine;
-	private final  ConcurrentHashMap<String, ScriptObjectMirror> allD2js;
+	protected  ScriptEngine engine;
+	private ConcurrentHashMap<String, ScriptObjectMirror> allD2js = new ConcurrentHashMap<>();
 	protected final ServletContext servletContext;
 
 	public ScriptEngine getEngine() {
 		return engine;
 	}
-
-	public ServerUnitManager(ServletContext servletContext, D2jsInitParams initParams) {
-		this.servletContext = servletContext;
-		this.srcFolder = servletContext.getRealPath("");
+	
+	public void init(D2jsInitParams initParams) {
 		try {
-			this.engine = createEngine(initParams);
-//			this.engine.put("allD2js", allD2js);
-			
-			allD2js = (ConcurrentHashMap<String, ScriptObjectMirror>) this.engine.get("allD2js");
+			createEngine(initParams);
+			//allD2js = (ConcurrentHashMap<String, ScriptObjectMirror>) this.engine.get("allD2js");
 		} catch (Exception e) {
 			logger.error("", e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	public ServerUnitManager(ServletContext servletContext) {
+		this.servletContext = servletContext;
+		this.srcFolder = servletContext.getRealPath("");
 	}
 	
 	public String localFilePathToRequestPath(String srcFile){
@@ -123,7 +126,15 @@ public abstract class ServerUnitManager {
 		}
 	}
 
-	protected abstract ScriptEngine createEngine(D2jsInitParams initParams) throws Exception;
+	protected  void createEngine(D2jsInitParams initParams) throws Exception{
+		engine = new ScriptEngineManager().getEngineByName("JavaScript");
+		engine.put("allD2js", allD2js);
+		engine.put("servletContext", this.servletContext);
+		engine.put("logger", logger);
+		engine.put("application", initParams.getApplication());
+
+		JsEngineUtil.initEngine(engine, initParams.getLibs());
+	}
 
 	public ServletContext getServletContext() {
 		return servletContext;

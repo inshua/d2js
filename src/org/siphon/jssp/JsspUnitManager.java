@@ -55,8 +55,8 @@ public class JsspUnitManager extends D2jsUnitManager {
 
 	private static Logger logger = Logger.getLogger(JsspUnitManager.class);
 
-	public JsspUnitManager(ServletContext servletContext, D2jsInitParams initParams) {
-		super(servletContext, initParams);
+	public JsspUnitManager(ServletContext servletContext) {
+		super(servletContext);
 	}
 
 	@Override

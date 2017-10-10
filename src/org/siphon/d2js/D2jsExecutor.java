@@ -46,9 +46,11 @@ public class D2jsExecutor extends JsServlet {
 		d2jsInitParams.setApplication(JsServlet.application);
 		d2jsInitParams.setPreloadJs(this.getPreloadJs());
 
-		this.d2jsUnitManager = new D2jsUnitManager(this.getServletContext(), d2jsInitParams);
-
 		instance = this;
+
+		this.d2jsUnitManager = new D2jsUnitManager(this.getServletContext());
+		this.d2jsUnitManager.init(d2jsInitParams);
+
 	}
 
 	protected Object execute(String jsfile, String method, Object... params) throws Exception {

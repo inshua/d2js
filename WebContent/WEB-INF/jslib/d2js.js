@@ -42,8 +42,6 @@ imports("./d2js/validation.js");
 imports("./java-joda.js");
 
 var ConcurrentHashMap = Java.type('java.util.concurrent.ConcurrentHashMap');
-var allD2js = new ConcurrentHashMap();
-
 
 // 处理 d2js 请求，发现比用 java 的方式处理快
 function processRequest(d2js, method, params, request, response, session, out, taskDocker){

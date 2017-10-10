@@ -75,7 +75,8 @@ public class DispatchServlet extends JsServlet {
 		args.setApplication(JsServlet.application);
 		args.setPreloadJs(this.getPreloadJs());
 		
-		D2jsUnitManager d2jsUnitManager = new D2jsUnitManager(this.getServletContext(), args);
+		D2jsUnitManager d2jsUnitManager = new D2jsUnitManager(this.getServletContext());
+		d2jsUnitManager.init(args);
 		//d2jsUnitManager.scanD2jsUnits();
 		D2jsRunner d2jsRunner = new D2jsRunner(d2jsUnitManager);	// only init once
 		this.getServletContext().setAttribute("d2jsRunner", d2jsRunner);
