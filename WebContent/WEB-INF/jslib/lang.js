@@ -461,3 +461,23 @@ Object.override = function(base, extend, override){
 	return base;
 }
 
+/**
+ * usage:
+ * ```js
+ * d2js.insertRow = d2js.insertRow.override(function f(row){
+ * 		f.callSuper(this, row);
+ * 		...
+ * })
+ * ```
+ */
+Function.prototype.override = function(newFun){
+	var old = this;
+	newFun.callSuper = function(thiz){
+		return old.apply(thiz, Array.prototype.slice.call(arguments,1));
+	}
+	newFun.applySuper = function(thiz, arguments){
+		return old.apply(thiz, arguments);
+	}
+	return newFun;
+}
+
