@@ -1,0 +1,26 @@
+// override-test.d2js?_m=test&a=4&b=5
+d2js.exports.test = 
+d2js.test = function(params){
+	return this.calc(params.a * 1, params.b * 1);
+}
+
+// 9
+d2js.calc = function(a, b){
+	return a + b;
+}
+
+// 20
+Object.override(d2js, {calc : function f(a, b){
+	return a * b;
+}})
+
+// 40
+Object.override(d2js, {calc : function f(a, b){
+	return f.callSuper(this, a, b)  + f.callSuper(this, a, b);
+}})
+
+// 1600
+Object.override(d2js, {calc : function f(a, b){
+	return f.callSuper(this, a, b)  * f.callSuper(this, a, b);
+}})
+

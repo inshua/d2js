@@ -372,3 +372,92 @@ function translateObject(obj, originAttrs, map){
 	return result;
 }
 
+/*
+ *  extend-js
+ *
+ *  usage:
+ *  Class1.extends(Class2)
+ *
+ *  Class2 instances have access to the Class1 prototype
+ *
+ *  this.super can be called from within the Class2 constructor,
+ *  to apply the Class1 constructor to the Class2 instance
+ *  
+ *  https://github.com/bill-bishop/extends-js
+ *
+ */
+var extend = (function () {
+    var extendsFnName = 'extends', superFnName = 'super', noConflict = '';
+    Function.prototype[noConflict + extendsFnName] = function (SuperConstructor) {
+        var extender = this, extending = SuperConstructor.prototype;
+        function ExtendedPrototype () {
+            this.constructor = extender.prototype.constructor;
+            this[noConflict + superFnName] = function () {
+                var superResult, fn = extender.prototype[noConflict + superFnName];
+                if(extending[noConflict + superFnName])  {
+                    extender.prototype[noConflict + superFnName] = extending[noConflict + superFnName];
+                }
+
+                superResult = SuperConstructor.apply(this, arguments);
+                if(superResult && superResult.length > 0 && arguments.length > 0 && this.length === 0) {
+                    this.push.apply(this, superResult);
+                }
+                extender.prototype[noConflict + superFnName] = fn;
+            };
+
+            for(var prop in extender.prototype) {
+                if(extender.prototype.hasOwnProperty(prop)) {
+                    this[prop] = extender.prototype[prop];
+                }
+            }
+        }
+        ExtendedPrototype.prototype = SuperConstructor.prototype;
+        this.prototype = new ExtendedPrototype();
+    };
+    return {
+        noConflict: function (str) {
+            var fn = Function.prototype[noConflict + extendsFnName];
+            delete Function.prototype[noConflict + extendsFnName];
+            noConflict = str || '$';
+            Function.prototype[noConflict + extendsFnName] = fn;
+        }
+    };
+})();
+
+/* Object.override(obj1, {attrs, methods})
+ * 
+ *  in method of extend obj can invoke super:
+ *  ```js
+ *  	Object.override(shape, {area : function f(){
+ *  		return f.applySuper(this, arguments);
+ *  		// or 
+ *  		var a = f.callSuper(this, 2, 3)
+ *  		// ...
+ *  	}})
+ *  ```
+ * 
+ * inshua@gmail.com
+ * */
+Object.override = function(base, extend, override){
+	if(override == null) override = true;
+	for(var k in extend){
+		if(k in base == false){
+			base[k] = extend[k]
+		} else if(override){
+			var old = base[k], neo = extend[k];
+			if(old instanceof Function && neo instanceof Function){
+				neo.applySuper = function(thiz, arguments){
+					return old.apply(thiz, arguments);
+				}
+				neo.callSuper = function(thiz){
+					return old.apply(thiz, Array.prototype.slice.call(arguments,1));
+				}
+				base[k] = neo;
+			} else {
+				base[k] = extend[k];
+			}
+		}
+	}
+	return base;
+}
+
