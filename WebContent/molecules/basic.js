@@ -420,7 +420,7 @@ basicui.SearchFormSelectItem = function(ui){
 
 
 basicui.Dialog = function(ui){
-	var title = this.$el.attr('title');
+	var title = this.$el.attr('title-text');
 	this.$el.find('.modal-title').html(title);
 	this.el.title = '';
 
