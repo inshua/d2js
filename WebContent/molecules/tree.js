@@ -4,6 +4,13 @@ d2js.Renderers.treeNode = function (element, v, columnName, row, _1, node) {
 	if (!row) return;
 	var path = row.path;
 	var depth = node.depth
+	if($(element).closest('table').is('.ui.table')){
+		var expandIcon = '<i class="angle down icon"></i>';
+		var collapseIcon = '<i class="angle right icon"></i>';
+	} else {
+		var expandIcon = '<span class="glyphicon glyphicon-menu-down"></span>';
+		var collapseIcon = '<span class="glyphicon glyphicon-menu-right"></span>';
+	}
 	var s = '';
 	for (var i = 0; i < depth; i++) s += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
 	var checkHtml = typeof node.checked != 'undefined' ? '<input type="checkbox">&nbsp;&nbsp;' : '';
@@ -11,14 +18,14 @@ d2js.Renderers.treeNode = function (element, v, columnName, row, _1, node) {
 		$(element).html(s + checkHtml + v);
 	} else {
 		if (node.expanded) {
-			$(element).html(s + '<a class=""><i class="angle down icon"></i></a>&nbsp;&nbsp;' + checkHtml + v);
+			$(element).html(s + '<a class="">' + expandIcon + '</a>&nbsp;&nbsp;' + checkHtml + v);
 			$(element).find('a').on('click', function (event) {
 				node.expanded = false;
 				d2js.render(element.closest('table')[0]);
 				event.stopPropagation();
 			})
 		} else {
-			$(element).html(s + '<a class=""><i class="angle right icon"></i></a>' + checkHtml + v);
+			$(element).html(s + '<a class="">' + collapseIcon + '</a>' + checkHtml + v);
 			$(element).find('a').on('click', function () {
 				node.expanded = true;
 				d2js.render(element.closest('table')[0]);
@@ -75,7 +82,6 @@ Molecule.tree.Tree = function(ui){
 
 	if(bootstrap) var selectedTrClass = 'info';
 	if(semantic) var selectedTrClass = 'active';
-	
 	
 	var table = this.$el.closest('[table]').attr('table');
 	this.$el.attr('d2js.root', table).attr('data', 'this');
