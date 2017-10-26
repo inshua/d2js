@@ -16,7 +16,16 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	var prevParseDate = parseDate;
 	parseDate = function(key, value){
 		if(typeof value === 'string' && reg.test(value)){
-			return ZonedDateTime.parse(value);
+			try{
+				return ZonedDateTime.parse(value);
+			} catch(e){
+				// 有时遇到一些像这样的格式 "2017-10-25T18:22:17.038" ZonedDateTime.parse 无法解析，先转 JsDate 再转 ZonedDateTime
+		        var a = prevParseDate.reg.exec(value);
+		        if (a) {
+		            var d = new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[5] || 0, a[6] || 0, +a[7] || 0));
+		            return d.toZonedDateTime();
+		        }
+			}
 		}
 		return value;
 	}
@@ -74,11 +83,13 @@ Date.prototype.toInstant = function(){
  * ```js
  * 	new Date().toZonedDateTime('Europe/Berlin')
  * ```
- * @param zoneId {java.time.ZoneId|string} 时区
+ * @param [zoneId=] {java.time.ZoneId|string} 时区
  * @returns {java.time.ZonedDateTime} 
  */
 Date.prototype.toZonedDateTime = function(zoneId){
-	if(ZoneId.class.isInstance(zoneId)){
+	if(zoneId == null){
+		zoneId = ZoneId.of("Z")
+	} else if(ZoneId.class.isInstance(zoneId)){
 		//
 	} else {
 		zoneId = ZoneId.of(zoneId);
