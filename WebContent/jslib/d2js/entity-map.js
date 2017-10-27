@@ -846,9 +846,13 @@ d2js.List.prototype.setArray = function(arr, state = 'new') {
 }
 
 d2js.List.prototype.find = function(attr, value){
-	return Array.prototype.find.call(this, function(item){
-		return item[attr] == value;
-	});
+	if(typeof attr == 'function'){
+		return Array.prototype.find.call(this, attr, value); 
+	} else {
+		return Array.prototype.find.call(this, function(item){
+			return item[attr] == value;
+		});
+	}
 }
 
 d2js.List.prototype.toString = function() {
