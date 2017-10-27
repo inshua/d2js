@@ -444,21 +444,24 @@ Object.override = function(base, extend, override){
 		if(k in base == false){
 			base[k] = extend[k]
 		} else if(override){
-			var old = base[k], neo = extend[k];
-			if(old instanceof Function && neo instanceof Function){
-				neo.applySuper = function(thiz, arguments){
-					return old.apply(thiz, arguments);
-				}
-				neo.callSuper = function(thiz){
-					return old.apply(thiz, Array.prototype.slice.call(arguments,1));
-				}
-				base[k] = neo;
-			} else {
-				base[k] = extend[k];
-			}
+			wrap(base[k], extend[k]);
 		}
 	}
 	return base;
+	
+	function wrap(old, neo){
+		if(old instanceof Function && neo instanceof Function){
+			neo.applySuper = function(thiz, arguments){
+				return old.apply(thiz, arguments);
+			}
+			neo.callSuper = function(thiz){
+				return old.apply(thiz, Array.prototype.slice.call(arguments,1));
+			}
+			base[k] = neo;
+		} else {
+			base[k] = extend[k];
+		}
+	}
 }
 
 /**
