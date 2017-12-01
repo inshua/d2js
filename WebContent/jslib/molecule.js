@@ -34,6 +34,25 @@ function Molecule(container) {
     this.el = container;
 
     this.isMolecule = true;
+    
+    /**
+	 * 是否为某种类型的 molecule
+	 * 
+     * @param molecule {string|object} 
+	 * @returns {bool}
+	 */
+    this.is = function(molecule){
+    	if(typeof molecule == 'string'){
+            return this.moleculePrototype.moleculeName == molecule
+        } else if (typeof molecule == 'function'){
+            return this.moleculePrototype.moleculeConstructor == molecule
+        } else if(molecule instanceof HTMLElement){
+            return this.el == molecule
+        } else if(typeof molecule == 'object'){
+            return molecule == this
+        }
+    }
+    
     /**
 	 * molecule 所附着的 html 元素的 jQuery 包装
 	 * 
@@ -52,11 +71,11 @@ function Molecule(container) {
                 Molecule.removeInstance(this);
             }
         }
-        /**
-		 * molecule原型
-		 * 
-		 * @type {DOMElement}
-		 */
+	/**
+	 * molecule原型
+	 * 
+	 * @type {DOMElement}
+	 */
     this.moleculePrototype = null;
 
     this.$el.on('focus', function(ele) {
@@ -95,98 +114,16 @@ Molecule.removeInstance = function(instance) {
     };
 }(jQuery));
 
-/**
- * 设定 molecule 的存放路径，也即 `extract.jssp` 的存放路径，**需要更改为自己的网站名！** 如： ```js
- * Molecule.ModulesPath = website + '/molecues/' ```
- */
-Molecule.ModulesPath = '/d2js/molecules/';
-
 Molecule.defines = {};
-Molecule.definesByFullname = {}; // defines by fullname
-
-Molecule.loadedModules = {};
-Molecule.loadModule = function(module) {
-    var result = false;
-    jQuery.ajax({
-        url: Molecule.ModulesPath + '/' + module + '.json',
-        async: false,
-        type: 'get',
-        cache: false,
-        complete: function(resp, status) {
-            if (status == 'success') {
-                resp = resp.responseJSON;
-                var m = Molecule.defines[module];
-                if (m == null) {
-                    m = Molecule.defines[module] = {};
-                }
-                for (var k in resp) {
-                    if (resp.hasOwnProperty(k)) {
-                        Molecule.definesByFullname[module + '.' + k] = m[k] = resp[k];
-                    }
-                };
-                Molecule.loadedModules[module] = true;
-                result = true;
-            }
-        }
-    });
-    return result;
-}
 
 /**
- * 加载指定 html 文件中的所有 molecule，将使用 extract.jssp。
- * 
- * @param html
- *            {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
- * @param parseOnServer
- *            {Boolean} 是否由服务器解析后提供定义，取 false 时在浏览器通过 DOMParser 解析
- * @returns {Boolean} 是否加载成功
- */
-Molecule.loadHtml = async function(res, parseOnServer) {
-    if (!parseOnServer) return await Molecule.loadHtmlInBrowser(res);
-
-    var result = false;
-    var link = document.createElement('a');
-    link.href = res;
-    jQuery.ajax({
-        url: Molecule.ModulesPath + '/extract.jssp',
-        data: { html: res },
-        processData: true,
-        method: 'post',
-        async: false,
-        cache: false,
-        complete: function(resp, status) {
-            if (status == 'success') {
-                resp = resp.responseJSON;
-                for (var module in resp) {
-                    if (resp.hasOwnProperty(module)) {
-                        var m = Molecule.defines[module];
-                        if (m == null) {
-                            m = Molecule.defines[module] = {};
-                        }
-                        var defs = resp[module];
-                        for (var name in defs) {
-                            if (defs.hasOwnProperty(name)) {
-                                Molecule.definesByFullname[module + '.' + name] = m[name] = defs[name];
-                            }
-                        }
-                        Molecule.loadedModules[module] = true;
-                    }
-                };
-                result = true;
-            }
-        }
-    });
-    return result;
-}
-
-/**
- * 加载指定 html 文件中的所有 molecule，将使用 extract.jssp。
+ * 加载指定 html 文件中的所有 molecule。
  * 
  * @param html
  *            {string} 包含有 molecule 的 html 文件的文件路径。不用包含webapp路径。
  * @returns {Boolean} 是否加载成功
  */
-Molecule.loadHtmlInBrowser = async function(res) {
+Molecule.loadHtml = async function(res) {
     var result = false;
     var link = document.createElement('a');
     link.href = res;
@@ -201,20 +138,8 @@ Molecule.loadHtmlInBrowser = async function(res) {
     return true;
 }
 
-Molecule.ready = function(element, handler) {
-    if (element.hasAttribute('molecule')) return;
-    jQuery(element).on('molecule-inited', handler);
-}
-
-Molecule.getModuleName = function(fullname) {
-    var module = 'noname',
-        name = fullname;
-    if (fullname.lastIndexOf('.') != -1) {
-        var p = fullname.lastIndexOf('.');
-        module = fullname.substring(0, p);
-        name = fullname.substr(p + 1);
-    }
-    return { module: module, name: name };
+Molecule.ready = function(element, handler) {    
+    jQuery(element).on('molecule-inited', handler);    
 }
 
 Molecule.scanDefines = async function(starter, baseUrl) {
@@ -236,7 +161,6 @@ Molecule.scanDefines = async function(starter, baseUrl) {
 Molecule._LOAD_ONCE_RESOURCE = {};
 Molecule.registerPrototype = async function(el, baseUrl) {
     var fullname = el.getAttribute('molecule-def');
-    var depends = el.getAttribute('molecule-depends');
     var styles = Array.prototype.slice.call(el.querySelectorAll('style'));
     styles = styles.concat(Array.prototype.slice.call(el.parentNode.querySelectorAll("style[molecule-for='" + fullname + "']")));
     styles = styles.map(function(style) {
@@ -250,11 +174,6 @@ Molecule.registerPrototype = async function(el, baseUrl) {
         document.head.appendChild(style);
     }
 
-    var r = Molecule.getModuleName(fullname);
-    var m = Molecule.defines[r.module];
-    if (m == null) {
-        m = Molecule.defines[r.module] = {};
-    }
     console.log('define molecule ' + fullname);
 
     try {
@@ -307,8 +226,9 @@ Molecule.registerPrototype = async function(el, baseUrl) {
         });
         await loadScripts(asyncScripts);
 
-        Molecule.definesByFullname[fullname] = m[r.name] = el;
-        el.moleculeName = r.name;
+        Molecule.defines[fullname] = el;
+        Molecule.defines[fullname].moleculeSrc = baseUrl;
+        el.moleculeName = fullname;
     } catch (e) {
         console.error('load ' + fullname + ' failed, ', e);
     }
@@ -323,7 +243,7 @@ Molecule.registerPrototype = async function(el, baseUrl) {
     		if(script.tagName == 'MOLECULE'){
     			var src = script.getAttribute('src');
     			if(baseUrl) src = absolute(baseUrl, src);
-    			await Molecule.loadHtmlInBrowser(src);
+    			await Molecule.loadHtml(src);
     			next(resolve, reject);
     		} else {
 				script.onload = function(){
@@ -399,21 +319,9 @@ Molecule.scanMolecules = function(starter, manual) {
     if (Molecule.debug) console.info('molecule scan', starter, 'over');
 
     function findMoleculeDef(moleculeName) {
-        var def = Molecule.definesByFullname[moleculeName];
-        var moduleDesc = Molecule.getModuleName(moleculeName);
-        var name = moduleDesc.name;
-        var module = moduleDesc.module;
+        var def = Molecule.defines[moleculeName];
         if (def == null) {
-            if (Molecule.loadedModules[module] == null) {
-                if (!Molecule.loadModule(module)) {
-                    throw new Error(module + ' load failed, ' + name + ' cannot create');
-                }
-            }
-            def = Molecule.defines[module][name];
-            ensureDepends(def);
-        }
-        if (!def) {
-            throw new Error(name + ' not found in ' + module + ', please check whether this molecule exists');
+            throw new Error(moleculeName + ' not found');
         }
         return def;
     }
@@ -508,8 +416,8 @@ Molecule.scanMolecules = function(starter, manual) {
                     if (def.moleculeConstructor.extends) {
                         if (def.moleculeConstructor.extends === true) {
 
-                        } else if (m.is(def.moleculeConstrutor.extends) == false) {
-                            throw new Error(def.moleculeName + "should extends on " + def.moleculeConstrutor.extends)
+                        } else if (m.is(def.moleculeConstructor.extends) == false) {
+                            throw new Error(def.moleculeName + "should extends on " + def.moleculeConstructor.extends)
                         }
                     }
                 } else {
@@ -565,8 +473,12 @@ Molecule.scanMolecules = function(starter, manual) {
                 }
             });
 
+            // 处理无名称的 placehodler
+            // 有名称的 placeholder 只与同名称的 replace 匹配，匹配不到也不移除
             var p = templateMirror.querySelector('molecule-placeholder');
+            if(p && p.getAttribute('molecule-placeholder')) p = null;   
             if(!p) p = templateMirror.querySelector('[molecule-placeholder]');
+            if(p && p.getAttribute('molecule-placeholder')) p = null;
             if (p) {
             	var parent = p.parentNode;
             	var isTableElement = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR'].indexOf(parent.nodeName) > -1;
@@ -663,18 +575,6 @@ Molecule.scanMolecules = function(starter, manual) {
             return inheritedValue;
         }
     }
-
-    function ensureDepends(def) {
-        if (def.depends && def.depends.length) {
-            def.depends.forEach(function(depend) {
-                if (Molecule.defines[depend] == null) {
-                    if (Molecule.loadModule(depend)) { // 不需要显示写递归，如果引用进的分子需要辗转引用其它包，在初始化元素该分子时即会发生
-                        throw new Error('depend module ' + module + ' load failed, ' + def.name + ' cannot create');
-                    }
-                }
-            });
-        }
-    }
 }
 
 Molecule.of = function(ele) {
@@ -722,10 +622,10 @@ jQuery.holdReady(true);
 jQuery(document).on('DOMContentLoaded', async function(){
 	for(var m of Array.prototype.slice.call(document.querySelectorAll('molecule[src]'))){
 		if(Molecule.debug) console.log('load from ' + m.getAttribute('src'));
-		await Molecule.loadHtmlInBrowser(m.getAttribute('src'));
+		await Molecule.loadHtml(m.getAttribute('src'));
 	}
 	
-	await Molecule.scanDefines();
+	await Molecule.scanDefines(document, document.baseURI);
 	Molecule.scanMolecules();
 	jQuery.holdReady(false);
 	
