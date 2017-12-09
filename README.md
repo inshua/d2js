@@ -1,7 +1,7 @@
 # d2js, jssp 及 molecule 框架
 
 ## d2js 
-## [guide](WebContent/guide/d2js.md)
+## [Quick Start](WebContent/guide/d2js.md)
 ### 后端为 SSH 框架杀手，前端为 angular 杀手
 
 * d2js 框架提出了独有的数据路径、渲染、收集概念，适合各类 js 对象与 html ui 之间交互
@@ -31,7 +31,7 @@ d2js.eval2 = function(){
 ```
 
 ## jssp 
-## [guide](WebContent/guide/jssp.md) 
+## [Quick Start](WebContent/guide/jssp.md) 
 ### 大致可以取代 php
 
 尽管 `d2js 前端(html + ajax) + d2js 后端` 可以满足大部分应用场景，还是有很多场景需要页面在服务器端就绪后输出，不宜使用纯 ajax 技术。
