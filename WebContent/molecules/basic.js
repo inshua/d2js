@@ -909,7 +909,6 @@ basicui.Pagination = function(ui){
 						$a.html('...').addClass('item page-num disabled');
 					}
 					if(bootstrap){
-						console.info(el)
 						var $li = $(document.createElement('li')).addClass('disabled page-num').insertAfter(el);
 						var $a = $(document.createElement('a')).appendTo($li).html('...');
 						el = $li
