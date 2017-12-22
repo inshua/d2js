@@ -262,4 +262,7 @@ d2js.Collectors.oc = d2js.KNOWN_COLLECTORS['oc'] = function(element, newValue){
 }
 
 
+d2js.Collectors.json = function(element, v){
+	return v.length ? JSON.parse(v, parseDate) : null;
+}
 
