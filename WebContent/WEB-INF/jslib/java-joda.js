@@ -3,6 +3,7 @@ imports("./Date.js");
 
 var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	ZoneId = Java.type('java.time.ZoneId'),
+	UtcZoneId = ZoneId.of("Z"),
 	LocalDateTime = Java.type('java.time.LocalDateTime'),
 	LocalDate = Java.type('java.time.LocalDate'),
 	LocalTime = Java.type('java.time.LocalTime'),
@@ -88,13 +89,13 @@ Date.prototype.toInstant = function(){
  */
 Date.prototype.toZonedDateTime = function(zoneId){
 	if(zoneId == null){
-		zoneId = ZoneId.of("Z")
+		zoneId = UtcZoneId;
 	} else if(ZoneId.class.isInstance(zoneId)){
 		//
 	} else {
 		zoneId = ZoneId.of(zoneId);
 	}
-	return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getTime() * 1), zoneId);
+	return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getTime() * 1), zoneId)
 }
 
 
