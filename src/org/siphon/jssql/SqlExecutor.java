@@ -29,6 +29,7 @@ import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -41,6 +42,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Base64;
@@ -132,6 +134,8 @@ public class SqlExecutor {
 	private JsTypeUtil jsTypeUtil;
 	
 	private String defaultJsonDbType;
+	
+	private ZoneId utcZone = ZoneId.of("UTC");
 
 	public int getColumnNameCase() {
 		return columnNameCase;
@@ -690,13 +694,13 @@ public class SqlExecutor {
 		} else {
 			switch (columnType) {
 			case Types.DATE:
-				obj = rs.getDate(columnName);
+				obj = rs.getDate(columnName); break;				
 			case Types.TIME:
-				obj = rs.getTime(columnName);
+				obj = rs.getTime(columnName); break;
 			case Types.TIMESTAMP:
-				obj = rs.getTimestamp(columnName);
+				obj = rs.getTimestamp(columnName); break;
 			case Types.TIMESTAMP_WITH_TIMEZONE:
-				obj = rs.getTimestamp(columnName);
+				obj = rs.getTimestamp(columnName); break;
 				// PG 的 TIMESTAMP WITH TIMEZONE 不会真正存储时区信息
 				// 同时 JDBC 也没有适当的方法从数据库提取时区信息
 				// 现在虽然靠 joda 打通了时区，遗憾的是数据库和 jdbc 支持都不好
@@ -765,6 +769,8 @@ public class SqlExecutor {
 			ps.setTimestamp(index + 1, parseDate(arg));
 		} else if(arg instanceof ZonedDateTime){
 			ZonedDateTime zdt = (ZonedDateTime) arg;
+			// ps.setTimestamp(index + 1, new Timestamp(zdt.withZoneSameInstant(utcZone).toInstant().toEpochMilli()));
+			// ps.setTimestamp(index + 1, new Timestamp(zdt.toInstant().toEpochMilli()));
 			ps.setTimestamp(index + 1, new Timestamp(zdt.toInstant().toEpochMilli()), Calendar.getInstance(TimeZone.getTimeZone(zdt.getZone())));
 		} else if (arg instanceof Boolean) {
 			ps.setBoolean(index + 1, JsTypeUtil.isTrue(arg));
@@ -1057,12 +1063,7 @@ public class SqlExecutor {
 			return ((Long) obj).doubleValue();
 		} else if (obj instanceof Timestamp) {
 			Timestamp tstmp = ((java.sql.Timestamp) obj);
-			//return jsTypeUtil.toNativeDate(tstmp.getTime());
-			if(this.isPostgreSQL()){
-				return jsTypeUtil.toNativeDate(tstmp.getTime() - tstmp.getTimezoneOffset() * 60000);
-			} else {
-				return jsTypeUtil.toNativeDate(tstmp.getTime());
-			}
+			return jsTypeUtil.toNativeDate(tstmp.getTime());
 		} else if (obj instanceof java.sql.Date) {
 			return jsTypeUtil.toNativeDate(((java.sql.Date) obj).getTime());
 		} else if (obj instanceof Time) {
