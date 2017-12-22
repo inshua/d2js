@@ -182,10 +182,21 @@ Molecule.registerPrototype = async function(el, baseUrl) {
             script = el.parentNode.querySelector("script[molecule-for='" + fullname + "']");
         }
         if (script) {
-            var fun = new Function(script.innerHTML);
-            el.moleculeConstructor = fun;
-            fun.extends = script.getAttribute('extends') || script.hasAttribute('extends');
-            script.remove();
+        	try{
+	            var fun = new Function(script.innerHTML);
+	            el.moleculeConstructor = fun;
+	            fun.extends = script.getAttribute('extends') || script.hasAttribute('extends');
+	            script.remove();
+        	} catch(e){
+        		// https://stackoverflow.com/questions/18624395/find-where-a-syntax-error-occurs-when-new-function-fails
+        	    (function addCode(js) {
+        	        var e = document.createElement('script');
+        	        e.type = 'text/javascript';
+        	        e.src = 'data:text/javascript;charset=utf-8,' + escape(js);
+        	        document.body.appendChild(e);
+        	        console.warn("Inserted Script for ", js);
+        	      })(script.innerHTML.replace(/;/g,";\n"));
+        	}
         }
         var scripts = Array.prototype.slice.call(el.querySelectorAll('script'));
         scripts = scripts.concat( 
@@ -578,8 +589,8 @@ Molecule.scanMolecules = function(starter, manual) {
 }
 
 Molecule.of = function(ele) {
+	if(ele == null) return;
     if(ele.jquery) ele = ele[0];
-    if(ele == null) return;
     var r = ele.moleculeInstance;
     if(r == null && ele.hasAttribute('molecule')) {
         Molecule.scanMolecules(ele);
