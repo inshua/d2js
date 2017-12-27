@@ -75,6 +75,7 @@ public class D2jsUnitManager extends ServerUnitManager {
 	@Override
 	protected void createEngine(D2jsInitParams initParams) throws Exception {
 		super.createEngine(initParams);
+		this.servletContext.setAttribute("d2js-nashorn-engine", this.engine);
 		// 由 js 根据业务需要创建，创建后由 java 关闭
 		if (initParams.getPreloadJs() != null) {
 			String[] preloadJs = initParams.getPreloadJs(); // [abs path, alias]

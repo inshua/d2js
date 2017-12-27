@@ -126,7 +126,7 @@ public abstract class ServerUnitManager {
 		}
 	}
 
-	protected  void createEngine(D2jsInitParams initParams) throws Exception{
+	protected void createEngine(D2jsInitParams initParams) throws Exception{
 		engine = new ScriptEngineManager().getEngineByName("JavaScript");
 		engine.put("allD2js", allD2js);
 		engine.put("servletContext", this.servletContext);

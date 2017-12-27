@@ -1,6 +1,6 @@
 var datasourceConfig = {
 	driverClassName: "org.postgresql.Driver", 
-	url: "jdbc:postgresql://localhost:5432/bookstore",
+	url: "jdbc:postgresql://192.168.9.234:5432/bookstore",
 	username: "postgres", 
 	password: "pass4postgres",
 	initConnectionSqls: "set time zone 'UTC';",

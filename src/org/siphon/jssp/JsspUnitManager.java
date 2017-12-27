@@ -42,6 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JsEngineUtil;
 import org.siphon.common.js.JsTypeUtil;
@@ -68,5 +69,11 @@ public class JsspUnitManager extends D2jsUnitManager {
 			return super.convertCode(code, src, requestPath);
 		}
 	}
-
+	
+	@Override
+	protected void createEngine(D2jsInitParams initParams) throws Exception {
+		super.createEngine(initParams);
+		// 这样会造成 jssp 的 NashornEngine 覆盖 d2js 的 nashorn engine
+		// 但是 jdk8 141 以后，简单的对象跨 engine 似乎已经没有问题了，所以即使 jssp 放到 session 里的 d2js 也可以访问
+	}
 }
