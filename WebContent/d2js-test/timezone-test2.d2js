@@ -1,5 +1,3 @@
-d2js.executor = d2js.executor.copy(__D2JS_JSON__) // 替换 __JODA_JSON__ 
-
 d2js.exports.createTable = 
 d2js.createTable = function(){
 	sql{.
@@ -28,13 +26,11 @@ d2js.fetch = function(params){
 	sql{.
 		select * from tz_test
 	.}
-	return this.query(sql, params).mergeTimeZone({mail_at: 'mail_at_tz'});
+	return this.query(sql, params);
 }
 
 d2js.validate = function(rcd){
-	$V(this, rcd, {
-		mail_at : T.splitTimeZone('mail_at_tz')
-	});
+	$V(this, rcd, { });
 }
 
 d2js.create = function(rcd){

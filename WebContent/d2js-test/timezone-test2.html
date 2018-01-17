@@ -5,15 +5,11 @@
 <title>d2js</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="../jslib/date.js/Date.js"></script>
+
 <link href="../jslib/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet" media="screen">
 <script src="../jslib/jquery-3.2.1.js"></script>
 <script src="../jslib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
-
-<script src="../jslib/js-joda.js"></script>
-<script src="../jslib/js-joda-timezone.js"></script>
-<script>
-	JSJoda.use(JSJodaTimezone)
-</script>
 
 <script src="../jslib/d2js/dataset.js"></script>
 <script src="../jslib/d2js/render.js"></script>
@@ -88,17 +84,11 @@
 				  </div>
 				  <div class="form-group" data="_error_at,mail_at" renderer="flderr" id="date">
 				    <label>Mail At</label>
-				    <input type="text" class="form-control" data="mail_at" collector="c|zdt|s" renderer="std">
-				  	<button>Asia/Shanghai</button>
-				  	<button>Europe/Berlin</button>
-				  	<button>America/Chicago</button>
+				    <input type="text" class="form-control" data="mail_at" collector="c|d|s" renderer="date|std">
 				  </div>
 				  <div class="form-group" data="_error_at,info,recv_at" renderer="flderr" id="date">
 				    <label>Recv At</label>
-				    <input type="text" class="form-control" data="info,recv_at" collector="c|zdt|s" renderer="std">
-				  	<button>Asia/Shanghai</button>
-				  	<button>Europe/Berlin</button>
-				  	<button>America/Chicago</button>
+				    <input type="text" class="form-control" data="info,recv_at" collector="c|d|s" renderer="date|std">
 				  </div>
 				</form>        
 		      </div>
@@ -169,6 +159,7 @@
 	
 	function save() {
 		d2js.collect();
+		debugger;
 		
 		table.submit({callback : function(error){
 			d2js.render();
@@ -181,11 +172,8 @@
 </script>
 <script>
 
-	d2js.Collectors.zdt = function(element, value){
-		return JSJoda.ZonedDateTime.parse(value);
-	}
 
-	var table = new d2js.DataTable('timezone-test', 'timezone-test.d2js', {pageSize : 5});
+	var table = new d2js.DataTable('timezone-test', 'timezone-test2.d2js', {pageSize : 5});
 	table.on('load',  function(error) {
 		d2js.render(null, this);
 	});
@@ -194,26 +182,10 @@
 	
 	function addRow(){
 		editRow(table.addRow({mail_to:'test@gmail.com', 
-			mail_at: JSJoda.ZonedDateTime.now(),
-			info: {recv_at: JSJoda.ZonedDateTime.now()}
+			mail_at: new Date(),
+			info: {recv_at: new Date()}
 		}));
 	}
-	
-	$(function(){
-		$(document).on('click', '#date button', function(){
-			var $input = $(this).parent().find('input[type=text]');
-			var arr = $input.locateData();
-			var zoneId = JSJoda.ZoneId.of($(this).html());
-			(function(zdt, col, row){
-				zdt = zdt.withZoneSameInstant(zoneId);
-				if(row._set) 
-					row._set(col, zdt);
-				else 
-					row[col] = zdt
-			}).apply(null, arr);
-			$input.render();
-		})
-	});
 	
 	function createTable(){
 		d2js.load('timezone-test.d2js', 'createTable', function(result, error){
