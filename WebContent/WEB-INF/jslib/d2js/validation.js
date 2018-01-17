@@ -34,26 +34,28 @@
 function V(d2js, rcd, validators){
 	var errors = [];
 	for(var fld in validators){
+		var owner = rcd, attr = fld;
 		if(validators.hasOwnProperty(fld)){
 			var value = rcd[fld];
 			if(fld.indexOf(',') != -1){
-				value = fld.split(',').reduce(function(value, fld){return value != null ? value[fld] : value}, rcd);
+				value = fld.split(',').reduce(function(value, fld){
+					owner = value
+					attr = fld
+					return value != null ? value[fld] : value
+				}, rcd);
 			}
 			var vs = validators[fld];
 			vs = (vs.push ? vs : [vs]);	 	// use push test is array
 			for(var i=0; i<vs.length; i++){
 				var validator = vs[i];
 				if(validator.check){					
-					var msg = validator.check(value, fld, rcd, d2js);
+					var msg = validator.check(value, fld, rcd, d2js, owner, attr);
 					if(msg != null){
 						errors.push(new ValidationError(fld, validator.name, msg));
 						break;
 					}
 					if(validator.mutable){
-						value = rcd[fld];
-						if(fld.indexOf(',') != -1){
-							value = fld.split(',').reduce(function(value, fld){return value != null ? value[fld] : value}, rcd);
-						}
+						value = (owner == null ? null : owner[attr]);
 					}
 				} else {
 					logger.error("there is no check function on field {fname} {idx}".format({fname : fld, idx : i}));
@@ -357,23 +359,24 @@ function T(){}
 T.int = {
       name : 'int',
       mutable : true,
-      check : function(v, fld, rcd){
+      check : function(v, fld, rcd, d2js, owner, attr){
     	    if(v == null || v=='') return;
 			var n = v * 1;
 			if(isNaN(n)) return '此处需要填入整数';
 			if(n != Math.floor(n)) return '数字' + n +'不是整数'
-			rcd[fld] = n;
+			owner[attr] = n;
       }
 }
 
 /**
  * 将数据转为字符串，如为 '' 转为 null
  */
-T.string = {name : 'string', mutable : true, check : function(v, fld, rcd){
+T.string = {name : 'string', mutable : true, check : function(v, fld, rcd, d2js, owner, attr){
+	if(owner == null) return
 	if(v == null){
-		rcd[fld] = null;
+		owner[attr] = null;
 	} else {
-		rcd[fld] = v + '';
+		owner[attr] = v + '';
 	}
 }}
 
@@ -384,17 +387,17 @@ T.array = function(elementType){
 	return {
 		name : 'array', 
 		mutable : true,
-		check : function(v, fld, rcd){
+		check : function(v, fld, rcd, d2js, owner, attr){
 			if(v != null){
 				if(typeof v == 'string'){
 					try{
-						v = JSON.parse(v, parseDate);
+						v = JSON.parse(v);
 					}catch(e){
 						return '\"' + v + '\"不是合法的JSON字符串';				
 					}
 				} 
 				if(v instanceof Array){
-					rcd[fld] = $ARRAY(elementType, v);
+					owner[attr] = $ARRAY(elementType, v);
 				} else {
 					return '此处需要填入数组'
 				}
@@ -406,59 +409,59 @@ T.array = function(elementType){
 /**
  * 将JSON字符串转为对象，如果原本是对象则不转换。
  */
-T.object = { name : 'object', mutable : true, check : function(v, fld, rcd){
+T.object = { name : 'object', mutable : true, check : function(v, fld, rcd, d2js, owner, attr){
 	if(v != null){
 		if(typeof v == 'string'){
 			try{
-				v = JSON.parse(v, parseDate);
+				v = JSON.parse(v);
 			}catch(e){
 				return '\"' + v + '\"不是合法的JSON字符串';				
 			}
 		}
 	}
-	rcd[fld] = v;
+	owner[attr] = v;
 }}
 
 /**
  * 将JS对象套上 $JSON() 壳，如为字符串，将试图使用 JSON.parse 转为 JS 对象
  */
-T.json = {name : 'json', mutable : true, check : function(v, fld, rcd){
+T.json = {name : 'json', mutable : true, check : function(v, fld, rcd, d2js, owner, attr){
 	if(v != null){
 		if(typeof v == 'string'){
 			try{
-				v = JSON.parse(v, parseDate);
+				v = JSON.parse(v);
 			}catch(e){
 				return '\"' + v + '\"不是合法的JSON字符串';				
 			}
 		} 
-		rcd[fld] = $JSON(v);
+		owner[attr] = $JSON(v);
 	}
 }}
 
 /**
  * 将JS对象套上 $JSONB() 壳，如为字符串，将试图使用 JSON.parse 转为 JS 对象
  */
-T.jsonb = {name : 'json', mutable : true, check : function(v, fld, rcd){
+T.jsonb = {name : 'json', mutable : true, check : function(v, fld, rcd, d2js, owner, attr){
 	if(v != null){
 		if(typeof v == 'string'){
 			try{
-				v = JSON.parse(v, parseDate);
+				v = JSON.parse(v);
 			}catch(e){
 				return '\"' + v + '\"不是合法的JSON字符串';				
 			}
 		} 
-		rcd[fld] = $JSONB(v);
+		owner[attr] = $JSONB(v);
 	}
 }}
 
 /**
  * 检查数据为 Date 格式。如果为字符串，将先后按 JSON.parse 和 Date.parse 转换，全部失败则失败。
  */
-T.date = {name : 'date', mutable : true, check : function(v, fld, rcd){
+T.date = {name : 'date', mutable : true, check : function(v, fld, rcd, d2js, owner, attr){
 	if(v != null){
 		if(typeof v == 'string'){
 			try{
-				v = JSON.parse(v, parseDate);
+				v = JSON.parse(v);
 			}catch(e){
 				try{
 					v = Date.parse(v);
@@ -470,7 +473,7 @@ T.date = {name : 'date', mutable : true, check : function(v, fld, rcd){
 		if(!v instanceof Date){
 			return '此处需要输入日期';
 		}
-		rcd[fld] = v;
+		owner[attr] = v;
 	}
 }}
 
@@ -481,7 +484,8 @@ T.date = {name : 'date', mutable : true, check : function(v, fld, rcd){
 T.boolean = {
          name : 'boolean',
          mutable : true,
-         check : function(v, fld, rcd){
+         check : function(v, fld, rcd, d2js, owner, attr){
+        	if(owner == null) return
    			var r = false;
    			switch(typeof v){
    			case 'boolean': r = v; break;
@@ -503,7 +507,7 @@ T.boolean = {
    			case 'object':
    				return '不能识别的逻辑值';
    			}
-   			rcd[fld] = r;
+   			owner[attr] = r;
          }
    }
 
