@@ -1,3 +1,5 @@
+d2js.executor = d2js.executor.copy(__D2JS_JSON__) // 替换 __JODA_JSON__ 
+
 d2js.exports.createTable = 
 d2js.createTable = function(){
 	sql{.
