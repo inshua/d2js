@@ -170,14 +170,16 @@ d2js.Collectors.n = d2js.KNOWN_COLLECTORS['n'] = function(element, newValue, col
  * @param newValue
  * @returns {Date}
  */
-d2js.Collectors.d = d2js.KNOWN_COLLECTORS['d'] = function(element, newValue, columnName, row, index, rows, _1, table){
+d2js.Collectors.date = d2js.Collectors.d = 
+d2js.KNOWN_COLLECTORS['d'] =
+d2js.KNOWN_COLLECTORS['date'] = function(element, newValue, columnName, row, index, rows, _1, table){
 	if(newValue instanceof String) newValue = newValue.trim();
 	if(!newValue){
 		return null;
 	} else if(newValue instanceof Date){
 		return newValue;
 	} else {
-		var s = element.getAttribute('format') || 'yyyy-MM-dd hh:mm:ss' 
+		var s = element.getAttribute('format') || 'yyyy-MM-dd HH:mm:ss' 
 		if(typeof JSJoda != 'undefined'){
 			try{
 				var f = JSJoda.DateTimeFormatter.ofPattern(f)

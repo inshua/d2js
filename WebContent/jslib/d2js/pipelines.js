@@ -28,11 +28,13 @@
  */
 d2js.Renderers.date = function(element, value,  columnName, row, index, rows, _1, table){
 	if(value == null) return '';
-	var s = element.getAttribute('format') || 'yyyy-MM-dd hh:mm:ss';
+	var s = element.getAttribute('format') || 'yyyy-MM-dd HH:mm:ss';
 	if(typeof JSJoda != 'undefined' && value instanceof JSJoda.ZonedDateTime){
 		return value.format(JSJoda.DateTimeFormatter.ofPattern(s))
-	} else {
+	} else if(value instanceof Date){
 		return value.format(s);
+	} else {
+		return value;
 	}
 }
 
