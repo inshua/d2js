@@ -177,7 +177,18 @@ d2js.Collectors.d = d2js.KNOWN_COLLECTORS['d'] = function(element, newValue, col
 	} else if(newValue instanceof Date){
 		return newValue;
 	} else {
-		return Date.parse(newValue, element.getAttribute('format'));
+		var s = element.getAttribute('format') || 'yyyy-MM-dd hh:mm:ss' 
+		if(typeof JSJoda != 'undefined'){
+			try{
+				var f = JSJoda.DateTimeFormatter.ofPattern(f)
+				return JSJoda.ZonedDateTime.parse(value, f);
+			} catch(e) {
+				var dt = Date.parse(newValue, s);
+				return JSJoda.ZonedDateTime.from(JSJoda.nativeJs(dt))
+			}
+		} else {
+			return Date.parse(newValue, s);
+		}
 	}
 }
 
