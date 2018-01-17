@@ -93,7 +93,7 @@ public class JsspRunner extends D2jsRunner {
 
 		JsspRequest jsspRequest = new JsspRequest(request, engine);
 
-		ScriptObjectMirror params;
+		String params;
 		try {
 			params = getParams(jsspRequest);
 		} catch (Exception e3) {

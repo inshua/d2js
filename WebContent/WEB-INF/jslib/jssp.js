@@ -36,6 +36,7 @@ function processJsspRequest(d2js, params, request, response, session, out){
 			break;
 		}
 	}
+	params = (clone.json || JSON).parse(params)
 	clone.request = request;
 	clone.response = response;
 	clone.out = out;

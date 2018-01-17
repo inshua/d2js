@@ -94,10 +94,10 @@ public class D2jsRunner {
 		this.json = new JSON(this.engine);
 	}
 	
-	protected ScriptObjectMirror getParams(JsspRequest request) throws Exception {
+	protected String getParams(JsspRequest request) throws Exception {
 		String s = request.getParameter("params");
 		if (s != null) {
-			return (ScriptObjectMirror) json.parse(s);
+			return s;
 		}
 
 		ScriptObjectMirror params = jsTypeUtil.newObject();
@@ -105,7 +105,7 @@ public class D2jsRunner {
 		for (String p : parameterMap.keySet()) {
 			params.put(p, request.get(p));
 		}
-		return params;
+		return com.alibaba.fastjson.JSON.toJSONString(params);
 	}
 
 
@@ -166,7 +166,7 @@ public class D2jsRunner {
 		
 		JsspRequest jsspRequest = new JsspRequest(request, engine);
 
-		ScriptObjectMirror params;
+		String params;
 		try {
 			params = getParams(jsspRequest);
 		} catch (Exception e3) {

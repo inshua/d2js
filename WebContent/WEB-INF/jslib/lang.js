@@ -498,10 +498,13 @@ JSON.wrapReplacer = function(customReplacer, preserveReplacer){
 		}
 	}
 }
+JSON.toString = function(){return '__ORIGIN_JSON__'}
 __ORIGIN_JSON__ = JSON;
 
 __D2JS_JSON__ =
 JSON = {
+    toString: function(){return '__D2JS_JSON'},
+    
     stringify: __ORIGIN_JSON__.stringify,
     parse: function(s){
     	return __ORIGIN_JSON__.parse(s, parseDate)

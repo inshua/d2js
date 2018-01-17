@@ -67,6 +67,7 @@ function processRequest(d2js, method, params, request, response, session, out, t
 	clone.out = out;
 	clone.session = session;
 	clone.taskDocker = taskDocker;
+	params = (clone.json || JSON).parse(params)	
 	var r = clone[method].call(clone, params);
 	
 	if(!out.isDirty()){
