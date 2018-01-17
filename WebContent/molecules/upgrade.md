@@ -200,6 +200,16 @@
 	</div>
 ```
 
+### 引用 molecule
+
+以前通过 loadHtml('bootstrap-basic.html') 引用组件，现在改为 
+
+```html
+<molecule src="bootstrap-basic.html"></molecule>
+```
+
+在组件定义中也可以通过该形式可以引用其它组件。
+
 ### 自动升级 upgrade.html
 
 将文件提交到 upgrade.html，可以实现自动升级。但这个过程存在瑕疵，需要人工编辑。
@@ -211,3 +221,4 @@
 1. 有时 style 会溢出 template，需要人工放进去。
 
 除了这些缺陷外，基本上能满足使用。
+
