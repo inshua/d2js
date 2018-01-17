@@ -40,11 +40,13 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	}
 	
 	__JODA_JSON__ = JSON = {
+	    toString: function(){return '__JODA_JSON__'},
+	    
         stringify: function(value, replacer, space){
         	if(replacer == null){
     			return __ORIGIN_D2JS_JSON__.stringify.call(this, value, zonedDatetimeReplacer, space);
     		} else {
-    			return __ORIGIN_D2JS_JSON__.stringify.call(this, value, wrapReplacer(replacer, zonedDatetimeReplacer), space);
+    			return __ORIGIN_D2JS_JSON__.stringify.call(this, value, __ORIGIN_JSON__.wrapReplacer(replacer, zonedDatetimeReplacer), space);
     		}
         },
         parse: function(s){
