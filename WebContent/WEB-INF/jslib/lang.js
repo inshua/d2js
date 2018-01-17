@@ -484,3 +484,34 @@ Function.prototype.override = function(newFun){
 	return newFun;
 }
 
+JSON.wrapReplacer = function(customReplacer, preserveReplacer){
+	return function(key, value){
+		if(customReplacer instanceof Function){
+			value = customReplacer(key, value);
+			return preserveReplacer(key, value);
+		} else {
+			if(customReplacer.indexOf(key) == -1){
+				return undefined;
+			} else {
+				return preserveReplacer(key, value);
+			}
+		}
+	}
+}
+__ORIGIN_JSON__ = JSON;
+
+__D2JS_JSON__ =
+JSON = {
+    stringify: __ORIGIN_JSON__.stringify,
+    parse: function(s){
+    	return __ORIGIN_JSON__.parse(s, parseDate)
+    },
+    tryStringify: function(obj){
+		try{
+			return JSON.stringify(obj)
+		} catch(e){
+			return obj == null ? 'null' : obj.toString()
+		}
+    }
+};
+

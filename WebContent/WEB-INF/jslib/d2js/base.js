@@ -174,7 +174,7 @@ D2JS.prototype.query = function(sql, args, pageDef){
 	
 	if(pageDef){
 		if(typeof pageDef == 'string'){
-			pageDef = JSON.parse(pageDef, parseDate);
+			pageDef = JSON.parse(pageDef);
 		}
 		if(logger && logger.isDebugEnabled()) logger.debug("do page query " + sql + " with args: " + JSON.stringify(args));
 		return this.executor.pageQuery(this.transactConnection||null, sql,pageDef.start, pageDef.limit, args) 
@@ -959,7 +959,7 @@ D2JS.init = function(){
 		return Java.type('org.apache.commons.dbcp2.BasicDataSourceFactory').createDataSource(properties);
 	}()));
 	
-	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine);
+	var sqlExecutor = new org.siphon.jssql.SqlExecutor(datasource, engine, JSON);
 	sqlExecutor.defaultJsonDbType = datasourceConfig.defaultJsonDbType || 'JSONB';
 	sqlExecutor.columnNameCase = datasourceConfig.columnNameCase || 0;	// LOWER
 	sqlExecutor.useColumnLabelAsName = datasourceConfig.useColumnLabelAsName || false;	;

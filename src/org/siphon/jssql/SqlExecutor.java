@@ -155,11 +155,11 @@ public class SqlExecutor {
 
 	private boolean useColumnLabelAsName;
 
-	public SqlExecutor(DataSource dataSource, ScriptEngine jsEngine) throws ScriptException {
+	public SqlExecutor(DataSource dataSource, ScriptEngine jsEngine, org.siphon.common.js.JSON json) throws ScriptException {
 		this.dataSource = dataSource;
 		this.jsEngine = jsEngine;
 		jsTypeUtil = new JsTypeUtil(jsEngine);
-		this.JSON = new org.siphon.common.js.JSON(jsEngine);
+		this.JSON = json;
 
 		if (this.dataSource instanceof org.apache.commons.dbcp2.BasicDataSource) {
 			BasicDataSource bds = (BasicDataSource) this.dataSource;
@@ -174,6 +174,10 @@ public class SqlExecutor {
 				this.mySql = true;
 			}
 		}
+	}
+	
+	public SqlExecutor(DataSource dataSource, ScriptEngine jsEngine, ScriptObjectMirror json) throws ScriptException {
+		this(dataSource, jsEngine, new org.siphon.common.js.JSON(json));
 	}
 
 	public void release() {
@@ -1289,6 +1293,26 @@ public class SqlExecutor {
 		} else {
 			this.defaultJsonDbType = defaultJsonDbType;
 		}
+	}
+	
+	public SqlExecutor copy(ScriptEngine engine, ScriptObjectMirror json) throws ScriptException {
+		SqlExecutor result = new SqlExecutor(this.dataSource, engine, new org.siphon.common.js.JSON(json));
+		result.defaultJsonDbType = this.defaultJsonDbType;
+		result.columnNameCase = this.columnNameCase;
+		result.useColumnLabelAsName = this.useColumnLabelAsName;
+		return result;
+	}
+	
+	public SqlExecutor copy(ScriptObjectMirror json) throws ScriptException {
+		return this.copy(this.jsEngine, json);
+	}
+	
+	public SqlExecutor copy() throws ScriptException {
+		SqlExecutor result = new SqlExecutor(this.dataSource, this.jsEngine, this.JSON);
+		result.defaultJsonDbType = this.defaultJsonDbType;
+		result.columnNameCase = this.columnNameCase;
+		result.useColumnLabelAsName = this.useColumnLabelAsName;
+		return result;
 	}
 
 }

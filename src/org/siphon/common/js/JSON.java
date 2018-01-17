@@ -40,17 +40,17 @@ import org.apache.commons.lang3.ObjectUtils;
 public class JSON {
 
 
-	NashornScriptEngine engine;
 	private ScriptObjectMirror json;
-	private Object parseDate;
 	
 	public JSON(ScriptEngine jsEngine) {
-		this.engine = (NashornScriptEngine) jsEngine;
 		try {
 			this.json = (ScriptObjectMirror) jsEngine.eval("JSON");
-			this.parseDate = ((ScriptObjectMirror)jsEngine.get("parseDate")).to(Object.class);
 		} catch (ScriptException e) {
 		}
+	}
+
+	public JSON(ScriptObjectMirror json) {
+		this.json = json;
 	}
 
 	public String stringify(Object obj) throws UnsupportedConversionException {
@@ -78,7 +78,7 @@ public class JSON {
 
 	public Object parse(String jsonStr) throws Exception {
 		try {
-			return this.json.callMember("parse", jsonStr, this.parseDate);
+			return this.json.callMember("parse", jsonStr);
 		} catch (Exception e) {
 			throw new Exception(json + " cannot parsed", e);
 		} finally {
