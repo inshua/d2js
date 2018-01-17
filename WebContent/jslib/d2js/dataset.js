@@ -323,16 +323,20 @@ function parseDate(key, value) {
 parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d))?)?$/;
 
 if(typeof JSJoda != 'undefined'){
-	parseDate = function(key, value) {
-	    if (typeof value === 'string') {
-	    	if(parseDate.reg.test(value)){
-	    		return JSJoda.ZonedDateTime.parse(value);
-	    	}
-	    }
-	    return value;
-	}
-	parseDate.reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d(\[\w+\/\w+\])?))?)?$/;
-
+	(function(){
+		prevParseDate = parseDate
+		var reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2})(:(\d{2}(?:\.\d*)?))?(Z|((\+|\-)\d\d:\d\d(\[\w+\/\w+\])?))?)?$/
+		parseDate = function(key, value) {
+		    if (typeof value === 'string') {
+		    	if(reg.test(value)){
+		    		return JSJoda.ZonedDateTime.parse(value);
+		    	} else if(prevParseDate.reg.test(value)){
+		    		return JSJoda.ZonedDateTime.from(JSJoda.nativeJs(prevParseDate(key, value))).toString()
+		    	}
+		    }
+		    return value;
+		}
+	})()
 }
 
 /**
