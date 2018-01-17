@@ -53,7 +53,6 @@ import org.siphon.common.js.JsEngineUtil;
 import org.siphon.d2js.D2jsRunner;
 import org.siphon.d2js.D2jsUnitManager;
 import org.siphon.d2js.jshttp.D2jsInitParams;
-import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.JsServlet;
 import org.siphon.d2js.jshttp.ServerUnitManager;
 import org.siphon.d2js.jshttp.Task;

@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.siphon.common.js.JSON;
 import org.siphon.common.js.UnsupportedConversionException;
-import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 
 public class JsspWriter {
 

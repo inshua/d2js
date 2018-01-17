@@ -14,7 +14,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.log4j.Logger;
 import org.siphon.common.js.JsTypeUtil;
 import org.siphon.d2js.jshttp.D2jsInitParams;
-import org.siphon.d2js.jshttp.JsEngineHandlerContext;
 import org.siphon.d2js.jshttp.JsServlet;
 import org.siphon.d2js.jshttp.Task;
 import org.siphon.jssp.JsspRequest;
