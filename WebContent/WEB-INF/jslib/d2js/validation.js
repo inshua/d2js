@@ -34,9 +34,9 @@
 function V(d2js, rcd, validators){
 	var errors = [];
 	for(var fld in validators){
-		var owner = rcd, attr = fld;
 		if(validators.hasOwnProperty(fld)){
 			var value = rcd[fld];
+			var owner = rcd, attr = fld;
 			if(fld.indexOf(',') != -1){
 				value = fld.split(',').reduce(function(value, fld){
 					owner = value
