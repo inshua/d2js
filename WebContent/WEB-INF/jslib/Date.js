@@ -308,7 +308,7 @@ dp.setTimezoneOffset = function (o) {
  * @see i18n
  */
 dp.format = function (p, l) {
-  p = p || 'yyyy-MM-dd hh:mm:ss';
+  p = p || 'yyyy-MM-dd HH:mm:ss';
   var i18n = Date.i18n(l);
   var d = this;
   var pad = function (n, l) {
