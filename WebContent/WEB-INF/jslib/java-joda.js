@@ -3,7 +3,6 @@ imports("./Date.js");
 
 var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	ZoneId = Java.type('java.time.ZoneId'),
-	UtcZoneId = ZoneId.of("Z"),
 	LocalDateTime = Java.type('java.time.LocalDateTime'),
 	LocalDate = Java.type('java.time.LocalDate'),
 	LocalTime = Java.type('java.time.LocalTime'),
@@ -13,7 +12,7 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 
 
 (function(){
-	var reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|((\+|\-)\d\d:\d\d(\[\w+\/\w+\])?))?)?$/;
+	var reg = /^(\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2})(:(\d{2}(?:\.\d*)?))?(Z|((\+|\-)\d\d:\d\d(\[\w+\/\w+\])?))?)?$/;
 	var prevParseDate = parseDate;
 	parseDate = function(key, value){
 		if(typeof value === 'string' && reg.test(value)){
@@ -89,13 +88,13 @@ Date.prototype.toInstant = function(){
  */
 Date.prototype.toZonedDateTime = function(zoneId){
 	if(zoneId == null){
-		zoneId = UtcZoneId;
+		zoneId = ZoneId.of("Z")
 	} else if(ZoneId.class.isInstance(zoneId)){
 		//
 	} else {
 		zoneId = ZoneId.of(zoneId);
 	}
-	return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getTime() * 1), zoneId)
+	return ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.getTime() * 1), zoneId);
 }
 
 
