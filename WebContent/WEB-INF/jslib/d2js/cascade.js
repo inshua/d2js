@@ -146,9 +146,9 @@ D2JS.prototype.update = function(params){
 
 D2JS.prototype.updateTable = function(table, parentRow, errors){
 	if(table == null) return;
-	var path = this.request.getServletContext().getContextPath();
+	var path = servletContext.getContextPath();
 	var src = table.src.replace(path, '');
-	src = this.request.getServletContext().getRealPath(src);
+	src = servletContext.getRealPath(src);
 	var isSelf = parentRow == null;
 	
 	this.doTransaction(function(){
@@ -195,6 +195,7 @@ D2JS.prototype.updateTable = function(table, parentRow, errors){
 					var err = e;
 					if(e instanceof Throwable){
 						err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
+						err = new Error(err);
 					} else if(typeof e == 'string'){
 						err = new Error(e);
 					}
@@ -210,19 +211,71 @@ D2JS.prototype.updateTable = function(table, parentRow, errors){
 			}
 		}
 		
-		if(isSelf && errors.length){
+		if(isSelf){
+			if(errors.length == 0){
+				willCommit.call(this)
+			}
 			if(errors.length == 1){ 
 				throw errors[0];
 			} else { 
 				throw new MultiError(errors);
 			}
 		}
+		
 	});
 	
 	
 	function updateChildren(row){
 		for(var i=0;i<row._children.length; i++){
 			this.updateTable(row._children[i], row, errors);
+		}
+	}
+	
+	function willCommit(){
+		var me = this;
+		var stk = table.rows.map(function(row){return [me, table, row, null]});
+		while(stk.length){
+			try{
+				arr = stk.pop();
+				var d2js = arr[0], currTable = arr[1], row = arr[2], parentRow = arr[3];
+				row.willCommit && row.willCommit(row._state, row, parentRow)
+				d2js.willCommit && d2js.willCommit(row._state, row, parentRow)
+				if(row._children){
+					for(var i = 0;i<row._children.length; i++){
+						var childTable = row._children[i]
+						var path = servletContext.getContextPath();
+						var src = childTable.src.replace(path, '');
+						src = servletContext.getRealPath(src);
+						stk = stk.concat(childTable.rows.map(function(crow){
+							return [me.findD2js(src), childTable, crow, row]
+						}))
+					}
+				}				
+			} catch(e){
+				if(e.name == 'MultiError'){
+					for(var i=0; i<e.errors.length; i++){
+						var e2 = e.errors[i];
+						e2._object_id = row._object_id;
+						errors.push(e2) ;
+					}
+				} else {
+					var err = e;
+					if(e instanceof Throwable){
+						err = org.siphon.common.js.JsEngineUtil.parseJsException(e);
+						err = new Error(err);
+					} else if(typeof e == 'string'){
+						err = new Error(e);
+					}
+					err.table = currTable.name;
+					err.idx = row._idx;
+					err._object_id = row._object_id;
+					err.table_id = currTable._object_id;
+					errors.push(err);
+					if(e.name != 'ValidationError'){
+						logger.error('error occurs when process row ' + JSON.stringify(row), Error.toJava(err));
+					}
+				}
+			}
 		}
 	}
 }
