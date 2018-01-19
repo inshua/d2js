@@ -215,7 +215,9 @@ D2JS.prototype.updateTable = function(table, parentRow, errors){
 			if(errors.length == 0){
 				willCommit.call(this)
 			}
-			if(errors.length == 1){ 
+			if(errors.length == 0){
+				// pass
+			} else if(errors.length == 1){ 
 				throw errors[0];
 			} else { 
 				throw new MultiError(errors);
