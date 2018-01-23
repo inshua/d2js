@@ -257,6 +257,9 @@ Molecule.registerPrototype = async function(el, baseUrl) {
     			await Molecule.loadHtml(src);
     			next(resolve, reject);
     		} else {
+    			if(script.baseURI == 'about:blank'){	//safari
+    				script.src = absolute(baseUrl, script.src)
+    			}
 				script.onload = function(){
 					if(Molecule.debug) console.log(this.src + ' loaded')
 					next(resolve, reject);
@@ -268,6 +271,7 @@ Molecule.registerPrototype = async function(el, baseUrl) {
     
     function absolute(base, relative) {
     	if(relative.charAt(0) == '/') return relative;
+    	if(/^http[s]?:\/\//.test(relative)) return relative;
     	
         var stack = base.split("/"),
             parts = relative.split("/");
@@ -597,36 +601,6 @@ Molecule.of = function(ele) {
         return ele.moleculeInstance;
     }
     return r;
-}
-
-while(Array.prototype.defCss == null){		// i dont known why plug this
-											// function always faild, so...
-	/**
-	 * 使用 js 定义 css [{$ : 'p', color : 'red', 'font-size' : 'large'}, {$ : 'h1',
-	 * color : 'blue'}];
-	 */
-	Array.prototype.defCss = function(container){
-		container = container || document.head;
-		var styleElement = document.createElement("style");
-        styleElement.type = "text/css";
-        container.appendChild(styleElement);
-        
-        var styleSheet = styleElement.sheet;
-		for(var i=0; i<this.length; i++){
-			var rule = this[i];
-			var selector = rule.$;
-			var rules = '';
-			for(var attr in rule){ if(rule.hasOwnProperty(attr) && attr != '$'){
-				rules += attr.replace(/_/g, '-') + ':' + rule[attr] + ';';
-			}}
-			if (styleSheet.insertRule)
-	            styleSheet.insertRule(selector + ' {' + rules + '}', styleSheet.cssRules.length);
-	        else if (styleSheet.addRule)
-	            styleSheet.addRule(selector, rules);
-	        			
-		}
-        return styleElement;
-	}
 }
 
 jQuery.holdReady(true);
