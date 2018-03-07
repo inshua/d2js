@@ -40,8 +40,6 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
 	}
 	
 	__JODA_JSON__ = JSON = {
-	    toString: function(){return '__JODA_JSON__'},
-	    
         stringify: function(value, replacer, space){
         	if(replacer == null){
     			return __ORIGIN_D2JS_JSON__.stringify.call(this, value, zonedDatetimeReplacer, space);
@@ -62,6 +60,27 @@ var ZonedDateTime = Java.type('java.time.ZonedDateTime'),
     };
 	
 })();
+
+/**
+ * 使用何种类型的 JSON 工具
+ * @param [jsonType='joda'] {string} 'd2js' or 'joda', default is joda
+ * usage:
+ ```js
+    d2js.initD2js = function(){
+   		this.useJSON('d2js')
+   	}
+```
+ */
+D2JS.prototype.useJSON = function(jsonType){
+	switch(jsonType){
+	case 'd2js':
+		this.executor = this.executor.copy(d2js.json = __D2JS_JSON__) // 替换 __JODA_JSON__
+		break;
+	case 'joda':
+		this.executor = this.executor.copy(d2js.json = __JODA_JSON__) 
+		break;
+	}
+}
 
 /**
  * 将 js Date 类型转为 java.time.Instant
