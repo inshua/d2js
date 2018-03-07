@@ -503,7 +503,7 @@ __ORIGIN_JSON__ = JSON;
 
 __D2JS_JSON__ =
 JSON = {
-    toString: function(){return '__D2JS_JSON'},
+    toString: function(){return '__D2JS_JSON__'},
     
     stringify: __ORIGIN_JSON__.stringify,
     parse: function(s){
