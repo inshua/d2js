@@ -994,6 +994,7 @@ if(Array.prototype.indexBy == null){
 	 * 这里值部分为对象引用。
 	 */
 	Array.prototype.indexBy = function(key){
+		if(key == null) return
 		var result = {};
 		for(var i=0; i<this.length; i++){
 			var el = this[i];
