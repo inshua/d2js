@@ -139,7 +139,7 @@
 		<input molecule-def="SearchInput" type="text" class="form-control" renderer="std" collector="c|s">
 		<script molecule-for="SearchInput" constructor>
 			var table = this.$el.closest('[table]').attr('table');
-			var col = this.$el.closest('.field').attr('col');
+			var col = this.$el.closest('.field,.form-group').attr('col');
 
 			this.$el.attr('data', 'search,params,' + col);
 		</script>
@@ -153,7 +153,7 @@
 		<select molecule-def="SearchSelect" class="form-control ui nullable dropdown" renderer="std" collector="c|s"></select>
 		<script molecule-for="SearchSelect" constructor>
 			var table = this.$el.findRoot().root;
-			var col = this.$el.closest('.field').attr('col');
+			var col = this.$el.closest('.field,.form-group').attr('col');
 			this.$el.attr('data', 'search,params,' + col);
 			d2js.render(this.$el.parent());
 			var me = this;
@@ -194,7 +194,7 @@
 			</div>
 			<script constructor>
 				var me = this;
-				var $fld = this.$el.closest('.field');
+				var $fld = this.$el.closest('.field,.form-group');
 				var col = $fld.attr('col');
 				this.$el.attr("data", col);
 
