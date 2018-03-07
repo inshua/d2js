@@ -78,3 +78,17 @@ function processRequest(d2js, method, params, request, response, session, out, t
 		}
 	}	
 }
+
+
+function withApplicationLock(lockname, fun, scope){
+	var lock = application[lockname]
+	if(lock == null){
+		Java.synchronized(function(){
+			if(lock = application[lockname]) return;
+			lock = application[lockname] = new java.lang.Object();
+		}, application)();
+	}
+	return Java.synchronized(function(){
+		return fun.call(scope)
+	}, lock)();
+}
