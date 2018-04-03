@@ -501,3 +501,10 @@ d2js.Renderers.hideIfEmpty = d2js.KNOWN_RENDERERS['hideIfEmpty'] = function(elem
 d2js.Renderers.json = function(element, v){
 	return v && JSON.stringify(v, null, '\t');
 }
+
+d2js.Renderers.expr = function(expr){
+	return function(element, v){
+		var s = new Function('v', 'return ' + expr);
+		return s.call(element, v)
+	}
+}
