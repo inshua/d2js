@@ -50,6 +50,9 @@ public class D2jsExecutor extends JsServlet {
 		this.d2jsUnitManager = new D2jsUnitManager(this.getServletContext());
 		this.d2jsUnitManager.init(d2jsInitParams);
 
+		D2jsRunner d2jsRunner = new D2jsRunner(d2jsUnitManager);	// only init once
+		this.getServletContext().setAttribute("d2jsRunner", d2jsRunner);
+
 	}
 
 	protected Object execute(String jsfile, String method, Object... params) throws Exception {
