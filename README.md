@@ -12,22 +12,8 @@
 * d2js 框架允许网页设计与开发分离，先设计再开发
 * d2js 切割分明，依托于 html 技术，可以和其它 ui 框架如 bootstrap, semantic-ui 等，及 molecule 一同使用
 
-d2js 框架学习成本低，可以利用可视化SQL设计器，一般1天就可以上手。由于概念完整，开发中常见的主从表等等问题都可以轻松解决。
+d2js 框架学习成本低，可以利用可视化SQL设计器，一般1天就可以上手。
 
-现在 d2js 已支持 mongodb 数据库, 包括在服务器上执行JavaScript函数：
-
-```js
-d2js.eval1 = function(){
-	return this.eval(function(x, y){
-		return x + y;
-	}, [1,2]);
-}
-
-d2js.eval2 = function(){
-	return this.eval(function(){
-		return db.author.find().toArray(); 
-	});
-}
 ```
 
 ## jssp 
@@ -97,20 +83,11 @@ d2js 和你的 java 项目使用的是同一个容器，可以顺利访问容器
 
 项目的 `build.xml` 中有一个名为 `update-d2js` 的任务，通常只需运行该任务，d2js 相关的源文件即会自动更新到最新版本。
 
-## QA
+### 重要资源
 
-### 我不想使用 java 容器，想在 node.js/.net/php/native app 项目中使用 d2js 前端，如何实现？
-
-只要好好分析一番 d2js 服务器所给出的数据响应以及前端提交数据的处理，实际上很容易使用 php 或其它技术实现一个类似的后端平台。
-
-如果你不与数据库打交道，只是欣赏渲染、收集的思路（嵌入到native app的页面需要这样），只要不调用 DataTable.load 及 DataTable.submit，d2js 可以工作的很正常。
-
-### 我想使用 extjs 作为前端，如何实现？
-
-请放心，你不是来砸场子的，我自己就这么干过。请见[d2js指南](WebContent/guide/d2js-2.md)， 里面提供了一个extjs的 Store类。此外，通过编程，.net 客户端也可以很好的衔接。
-
-### 为什么不提供 d2js.min.js？
-
-我认为这种 js 你在开发中会无法定位错误，无法理解到底发生了什么，请好好学习 ant 或其它打包技术，在打包时生成 min.js 吧。让打包的技术发生在打包阶段，不要干扰开发。
+0. UAC 实体权限框架。采用 d2js 技术编写的权限框架。已应用于多个商业项目。https://github.com/inshua/uac
+0. [d2js + activiti 备忘 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/12036343.html)
+0. [在 d2js 使用多种数据源如spring数据源 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/8488643.html)
+0. [d2js 中实现 memcached 共享 session 的过程 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/8135192.html)
 
 
