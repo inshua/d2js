@@ -90,37 +90,37 @@ d2js jssp 及 molecule 框架之间具有可分可合既互相扶持又能独立
 ## 初始化环境
 
 ### 研究与参与开发 d2js 项目
-0. 安装  [jdk8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-0. 安装 [postgres9.4](http://www.postgresql.org/) 以上版本数据库
-0. 在 postgres 中建立数据库，名为`bookstore`, 从 `WebContent/bookstore/bookstore.backup` 恢复该数据库。
-0. 下载解压[eclipse wtp](http://www.eclipse.org/webtools/)
-0. 下载解压[tomcat7](http://tomcat.apache.org/download-70.cgi) 或以上版本
-0. 在 eclipse 中导入 git 项目 [https://github.com/inshua/d2js.git](https://github.com/inshua/d2js.git)，这是一个 web 项目
-0. 设置 tomcat `server.xml` 中 `connector` 的 `URIEncoding=”utf-8”`。
-0. 在 `WebContent/WEB-INF/config/database.js`中修改数据库连接。
+1. 安装  [jdk8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+1. 安装 [postgres9.4](http://www.postgresql.org/) 以上版本数据库
+1. 在 postgres 中建立数据库，名为`bookstore`, 从 `WebContent/bookstore/bookstore.backup` 恢复该数据库。
+1. 下载解压[eclipse wtp](http://www.eclipse.org/webtools/)
+1. 下载解压[tomcat7](http://tomcat.apache.org/download-70.cgi) 或以上版本
+1. 在 eclipse 中导入 git 项目 [https://github.com/inshua/d2js.git](https://github.com/inshua/d2js.git)，这是一个 web 项目
+1. 设置 tomcat `server.xml` 中 `connector` 的 `URIEncoding=”utf-8”`。
+1. 在 `WebContent/WEB-INF/config/database.js`中修改数据库连接。
 
 启动网站后，打开 [http://localhost:8080/d2js/](http://localhost:8080/d2js/) 即可看到功能展示页面。
 
 ### 使用 ANT 脚本创建使用 d2js 框架的新项目
-0. 按前面步骤下载本项目后，在项目根目录下找到 `build.xml`
-0. 运行该 ant 脚本的 `crate-d2js-project` 任务
-0. 在弹出的提示框依次输入项目名称、workspace 路径、数据库连接等信息，项目即创建成功
-0. 使用 eclipse 的导入现存项目功能导入 eclipse
+1. 按前面步骤下载本项目后，在项目根目录下找到 `build.xml`
+1. 运行该 ant 脚本的 `crate-d2js-project` 任务
+1. 在弹出的提示框依次输入项目名称、workspace 路径、数据库连接等信息，项目即创建成功
+1. 使用 eclipse 的导入现存项目功能导入 eclipse
 
 该 ant 脚本可根据提供的信息自动创建项目，以后也可以改变项目名称或其它设定：
 
-0. 在 `WebContent/WEB-INF/config/database.js`中修改数据库连接。
-0. 修改 `WebContent/jslib/molecule.js`，将 `Molecule.ModulesPath` 中的网站名称修改为你的项目名称，或自己用其它方式在其它地方设置`Molecule.ModulesPath`
-0. 该站其它自定义特性可在 `application.d2js.js`, `application.jssp.js` 中单独编写（如 productName 等）
+1. 在 `WebContent/WEB-INF/config/database.js`中修改数据库连接。
+1. 修改 `WebContent/jslib/molecule.js`，将 `Molecule.ModulesPath` 中的网站名称修改为你的项目名称，或自己用其它方式在其它地方设置`Molecule.ModulesPath`
+1. 该站其它自定义特性可在 `application.d2js.js`, `application.jssp.js` 中单独编写（如 productName 等）
 
 ### 在现有 web 项目中使用 d2js 技术
 
 本框架可以和大部分 java web 框架并存。
 
-0. 获取 d2js 代码
-0. 把 `WebContent/jslib` 和 `WebContent/WEB-INF/jslib`, `WebContent/WEB-INF/lib` 复制到你的项目中
-0. 打开 `WEB-INF/web.xml`，增加 `<web-fragment>d2js-fragment</web-fragment>`
-0. 仿照`WebContent/WEB-INF/config/database.js`，设置好数据库路径 
+1. 获取 d2js 代码
+1. 把 `WebContent/jslib` 和 `WebContent/WEB-INF/jslib`, `WebContent/WEB-INF/lib` 复制到你的项目中
+1. 打开 `WEB-INF/web.xml`，增加 `<web-fragment>d2js-fragment</web-fragment>`
+1. 仿照`WebContent/WEB-INF/config/database.js`，设置好数据库路径 
 
 d2js 和你的 java 项目使用的是同一个容器，可以顺利访问容器提供的 session，也支持从 springmvc、mybatis 等框架获取 DataSource。
 
@@ -132,9 +132,9 @@ d2js 和你的 java 项目使用的是同一个容器，可以顺利访问容器
 
 ### 重要资源
 
-0. UAC 实体权限框架。采用 d2js 技术编写的权限框架。已应用于多个商业项目。https://github.com/inshua/uac
-0. [d2js + activiti 备忘 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/12036343.html)
-0. [在 d2js 使用多种数据源如spring数据源 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/8488643.html)
-0. [d2js 中实现 memcached 共享 session 的过程 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/8135192.html)
+1. UAC 实体权限框架。采用 d2js 技术编写的权限框架，可作为不少项目的基础。已应用于多个商业项目。https://github.com/inshua/uac
+1. 在 d2js 中使用 activiti。[d2js + activiti 备忘 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/12036343.html)
+1. 在 d2js 使用多种数据源。 [在 d2js 使用多种数据源如spring数据源 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/8488643.html)
+1. tomcat 集群共享session。[d2js 中实现 memcached 共享 session 的过程 - Inshua - 博客园](https://www.cnblogs.com/inshua/p/8135192.html)
 
 
