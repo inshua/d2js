@@ -14,6 +14,53 @@
 
 d2js 框架学习成本低，可以利用可视化SQL设计器，一般1天就可以上手。
 
+```js
+d2js.fetch = function(params){
+	this.checkPrivilege("uac.sys_role.query");
+	
+	params.node = params.node || this.session.user.node.id;
+	
+	sql{.
+		select t.id,t.node,t.name,t.code,t.node_scope,t.role_level,t.state,t.remarks,nd.name node_name from uac.sys_role t, 
+		uac.node nd 
+		where t.node = nd.id and (nd.id = :node or nd.path @> array[:node])
+		
+		sql{.?(params.name)
+				and strpos(t.name, :name) > 0
+		.}
+		sql{.?(params.state)
+				and t.state = :state
+		.}
+		and t.role_level >= :role_level
+	.}
+	
+	params.role_level = this.session.user.role.role_level; 
+	
+	sql = this.orderBy(sql, params._sorts, {name: 'asc'});
+	
+	return this.query(sql, params, params._page);
+};
+
+d2js.create = function(rcd){
+	this.checkPrivilege("uac.sys_role.add");
+	$V(this,rcd, {id : [],  
+		node : [V.notNull],  
+		name : [V.longest(100),V.uniqueInNode('uac.sys_role')],
+		code : [V.longest(100),V.uniqueInNode('uac.sys_role')],  
+		role_level : [V.longest(5)],		
+		state : [V.longest(1),V.inside(["N","P"])]  
+		
+	});	
+	
+	this.doTransaction(function(){
+		rcd.id = this.nextId("uac.SEQ_ENTITY");
+		this.actas('uac.sys_role.add', 'uac.sys_role', rcd.id, rcd);
+		this.insertRow('uac.sys_role', rcd, ["id","node","name","code","node_scope","role_level","state","remarks"]);
+		this.updateDispatchedFunctions(rcd.dispatched_functions, rcd.id);
+	});
+		
+};
+
 ```
 
 ## jssp 
