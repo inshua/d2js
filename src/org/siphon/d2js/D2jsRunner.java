@@ -99,12 +99,7 @@ public class D2jsRunner {
 			return s;
 		}
 
-		ScriptObjectMirror params = jsTypeUtil.newObject();
-		Map<String, String[]> parameterMap = request.getParameterMap();
-		for (String p : parameterMap.keySet()) {
-			params.put(p, request.get(p));
-		}
-		return com.alibaba.fastjson.JSON.toJSONString(params);
+		return com.alibaba.fastjson.JSON.toJSONString(request.getParameterMap());
 	}
 
 
@@ -188,19 +183,6 @@ public class D2jsRunner {
 			
 			// 可能由于 native 已经编译为 JO 之类，导致使用 ScrpiteObjectMirror 方式访问反而效率更低
 			((Invocable)engine).invokeFunction("processRequest", jsfile, method, params, jsspRequest, response, session, out, taskDocker);
-//			d2js = (ScriptObjectMirror) d2js.callMember("clone");
-//			d2js.put("request", jsspRequest);
-//			d2js.put("response", response);
-//			d2js.put("session", session);
-//			d2js.put("out", out);
-//			d2js.put("task", task);
-//			Object result = d2js.callMember(method, params);
-//			if(JsTypeUtil.isNull(result)){
-//				out.print("{\"success\":true}");
-//			} else {
-//				out.print(this.json.stringify(result));
-//			}
-//
 			Task task = taskDocker.getValue();
 			if(task != null && task.getCallbacker() != null){
 				this.completeTask(taskDocker.getValue(), null);
